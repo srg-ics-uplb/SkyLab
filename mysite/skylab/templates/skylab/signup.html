@@ -1,0 +1,13 @@
+{% extends '_layouts/base.html' %}
+
+{% block title %}Register | {{ block.super }}{% endblock %}
+
+{% block headline %}<h1>Register for the PyCon Survival Guide</h1>{% endblock %}
+
+{% block content %}
+    <form action='' method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <input type="submit" value="Sign Up">
+    </form>
+{% endblock %}
