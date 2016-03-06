@@ -28,11 +28,12 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
-CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
 
 # Application definition
 
 INSTALLED_APPS = [
+    'registration',
     'crispy_forms',
     'skylab.apps.SkylabConfig',
     'django.contrib.admin',
@@ -59,7 +60,7 @@ ROOT_URLCONF = 'mysite.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -78,14 +79,25 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
+
+# For final deployment
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'skylab',
+#         'USER': 'root',
+#         'PASSWORD': 'pass',
+#         'HOST': 'localhost',
+#         'PORT': '',
+#     }
+# }
+
+#For development only
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'skylab',
-        'USER': 'root',
-        'PASSWORD': 'pass',
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
@@ -128,3 +140,16 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
+
+#django-registration-redux settings
+ACCOUNT_ACTIVATION_DAYS = 14
+
+#crispy form settings
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
+
+#email server settings
+EMAIL_HOST = 'localhost'
+EMAIL_PORT = 1025
+
+#displays email in console instead of sending it
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

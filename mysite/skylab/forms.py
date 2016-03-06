@@ -1,32 +1,18 @@
-from __future__ import absolute_import
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from registration.forms import RegistrationForm
+from django import forms
+from registration.signals import user_registered
 
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, ButtonHolder, Submit
+class MyRegistrationForm(RegistrationForm):
+	first_name = forms.CharField(widget=forms.TextInput(label="first_name"))
+	last_name = forms.CharField(widget=forms.TextInput(label="last_name"))
 
-class LoginForm(AuthenticationForm):
-    def __init__(self, *args, **kwargs):
-        super(LoginForm, self).__init__(*args, **kwargs)
+	def user_created(sender, user, request, **kwargs):
+		"""
+		Called when user registers
+		"""
+		form = MyRegistrationForm(request.Post)
+		user.first_name=form.data['first_name']
+		user.last_name=form.data['last_name']
+		user.save()
 
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            'username',
-            'password',
-            ButtonHolder(
-                Submit('login', 'Login', css_class='btn-primary')
-            )
-        )
-
-class RegistrationForm(UserCreationForm):
-    def __init__(self, *args, **kwargs):
-        super(RegistrationForm, self).__init__(*args, **kwargs)
-
-        self.helper = FormHelper()
-        self.helper.layout = Layout(
-            'username',
-            'password1',
-            'password2',
-            ButtonHolder(
-                Submit('register', 'Register', css_class='btn-primary')
-            )
-        )
+	user_registered.connect(user_created)
