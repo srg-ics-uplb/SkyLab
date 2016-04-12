@@ -35,7 +35,8 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'registration',
     'crispy_forms',
-    'skylab.apps.SkylabConfig',
+    'skylab',
+    # 'skylab.apps.SkylabConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -153,3 +154,6 @@ EMAIL_PORT = 1025
 
 #displays email in console instead of sending it
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'
