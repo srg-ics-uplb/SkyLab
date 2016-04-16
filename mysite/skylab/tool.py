@@ -6,76 +6,105 @@ import time
 import spur
 
 
-class P2CToolGeneric(object):
+class _MPICluster(object):
 	frontend_ip = "10.0.3.101"
 	frontend_username = "user"
 	frontend_password = "excellence"
 
 	def __init__(self, **kwargs):
-		self.tool_name = kwargs.get('tool_name', "untitled_tool")
-		mpi_cluster_name = kwargs.get('mpi_cluster_name',"testcluster")
-		mpi_cluster_size = kwargs.get('mpi_cluster_size',"1")
-		self.auto_destroy = kwargs.get('auto_destroy', True)
-		self.changeStatus("Status: Initializing")
-		self.create_mpi_cluster(mpi_cluster_name, mpi_cluster_size)
-		# self.activate_tool()
+		self.cluster_name = kwargs.get('cluster_name', 'skylab-default')
+		self.cluster_username = kwargs.get('cluster_username', 'mpiuser')
+		self.cluster_password = kwargs.get('cluster_password', 'mpiuser')
+		self.cluster_size = kwargs.get('cluster_size', '1')
+		self.connect_to_frontend()
 
+	def connect_to_frontend(self):
+		self.frontend_shell = spur.SshShell(hostname=_MPICluster.frontend_ip,
+											username=_MPICluster.frontend_username,
+											password=_MPICluster.frontend_password,
+											missing_host_key=spur.ssh.MissingHostKey.accept)
+
+		return self.frontend_shell
+
+	def create_cluster(self):
+		try:
+			print "Creating MPI Cluster"
+			self.connect_to_frontend()
+			# self.changeStatus("Creating MPI Cluster")
+			result_cluster_ip = self.frontend_shell.run(
+				["./vcluster-start", self.cluster_name, self.cluster_size],
+				cwd="vcluster")
+			p = re.compile("(?P<username>\S+)@(?P<floating_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
+			m = p.search(result_cluster_ip.output)
+			self.cluster_username = m.group('username')
+			self.cluster_password = self.cluster_username
+			self.cluster_ip = m.group('floating_ip')
+			# print "%s@%s" % (self.cluster_username, self.cluster_ip)
+
+		except:  # spur.ssh.ConnectionError
+			print sys.exc_info()
+			# self.changeStatus("Error: Failed to connect to frontend.")
+			return None
+
+	def connect_to_cluster(self, **kwargs):
+		self.cluster_ip = kwargs.get('cluster_ip', self.cluster_ip)
+		if self.cluster_ip is not None:
+			try:
+				self.cluster_shell = spur.SshShell(hostname=self.cluster_ip, username=self.cluster_username,
+												   password=self.cluster_password,
+												   missing_host_key=spur.ssh.MissingHostKey.accept)
+				print "Connecting to MPI Cluster"
+				self.update_p2c()
+				return self.cluster_shell
+			except:  # spur.ssh.ConnectionError
+				print sys.exc_info()
+				# self.changeStatus("Error: Failed to connect to MPI cluster.")
+				return None
+
+	def destroy_cluster(self):
+		self.connect_to_frontend()
+		print "Destroying MPI Cluster"
+		# self.changeStatus("Destroying MPI Cluster")
+		self.frontend_shell.run(["./vcluster-stop", self.cluster_name, self.cluster_size], cwd="vcluster")
 
 	def update_p2c(self):
 		print "Updating p2c-tools"
 		self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
 		self.cluster_shell.run(["chmod", "755", "p2c-tools"])
 		p2c_updater = self.cluster_shell.spawn(["./p2c-tools"], use_pty=True)
-		p2c_updater.stdin_write(self.cluster_password+"\n")
+		p2c_updater.stdin_write(self.cluster_password + "\n")
 		print p2c_updater.wait_for_result().output
 		print self.cluster_shell.run(["p2c-tools"]).output
 
 
-	def create_mpi_cluster(self,  mpi_cluster_name, mpi_cluster_size):
-		self.mpi_cluster_name = mpi_cluster_name
-		self.mpi_cluster_size = mpi_cluster_size
-		self.frontend_shell = spur.SshShell(hostname=P2CToolGeneric.frontend_ip, username=P2CToolGeneric.frontend_username,
-											password=P2CToolGeneric.frontend_password,
-											missing_host_key=spur.ssh.MissingHostKey.accept)
-		# insert code for creating mpi_cluster
-		try:
-			print "Creating MPI Cluster"
-			self.changeStatus("Creating MPI Cluster")
-			result_cluster_ip = self.frontend_shell.run(["./vcluster-start", self.mpi_cluster_name, self.mpi_cluster_size],
-														cwd="vcluster")
-			p = re.compile("(?P<username>\S+)@(?P<floating_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
-			m = p.search(result_cluster_ip.output)
-			self.cluster_username = m.group('username')
-			self.cluster_password = self.cluster_username
-			self.cluster_floating_ip = m.group('floating_ip')
-			print "%s@%s" % (self.cluster_username,self.cluster_floating_ip)
+class P2CToolGeneric(object):
+	# frontend_ip = "10.0.3.101"
+	# frontend_username = "user"
+	# frontend_password = "excellence"
 
-		except:  # spur.ssh.ConnectionError
-			print sys.exc_info()
-			self.changeStatus("Error: Failed to connect to frontend.")
-			return None
+	def __init__(self, **kwargs):
+		self.tool_name = kwargs.get('tool_name', "untitled_tool")
+		mpi_cluster_name = kwargs.get('mpi_cluster_name',"testcluster")
+		mpi_cluster_size = kwargs.get('mpi_cluster_size',"1")
+		self.auto_destroy = kwargs.get('auto_destroy', True)
+		self.mpi_cluster = _MPICluster(cluster_name=mpi_cluster_name, cluster_size=mpi_cluster_size)
+		# self.changeStatus("Status: Initializing")
+		# self.create_mpi_cluster(mpi_cluster_name, mpi_cluster_size)
+		# self.activate_tool()
 
-		try:
-			self.cluster_shell = spur.SshShell(hostname=self.cluster_floating_ip, username=self.cluster_username,
-											   password=self.cluster_password,
-											   missing_host_key=spur.ssh.MissingHostKey.accept)
-			print "Connecting to MPI Cluster"
-			self.update_p2c()
-		except:  # spur.ssh.ConnectionError
-			print sys.exc_info()
-			self.changeStatus("Error: Failed to connect to MPI cluster.")
-			return None
+	def create_mpi_cluster(self):
+		self.mpi_cluster.create_cluster()
 
 	def destroy_mpi_cluster(self):
-		print "Destroying MPI Cluster"
-		self.changeStatus("Destroying MPI Cluster")
-		self.frontend_shell.run(["./vcluster-stop", self.mpi_cluster_name, self.mpi_cluster_size], cwd="vcluster")
+		self.mpi_cluster.destroy_cluster()
 
+	def connect_to_cluster(self):
+		self.cluster_shell = self.mpi_cluster.connect_to_cluster()
 
 	def activate_tool(self):
+		self.connect_to_cluster()
 		print "Activating p2c-tools %s" % self.tool_name
-		self.changeStatus("Activating p2c-tools %s" % self.tool_name)
-
+		# self.changeStatus("Activating p2c-tools %s" % self.tool_name)
 		self.cluster_shell.run(["p2c-tools", "activate", self.tool_name])
 
 	def handle_input_files(self, **kwargs):
@@ -96,7 +125,7 @@ class Impi(P2CToolGeneric):
 	# 6, 11, 12 (segmentation fault) inherent error
 	# 3, 4 secondary numeric input needed
 	def __init__(self, **kwargs):
-		mpi_cluster_name = kwargs.get('mpi_cluster_name',"testcluster")
+		mpi_cluster_name = kwargs.get('mpi_cluster_name',"impi-cluster")
 		mpi_cluster_size = kwargs.get('mpi_cluster_size',"1")
 		auto_destroy = kwargs.get('auto_destroy',True)
 		super(Impi, self).__init__(tool_name="impi", mpi_cluster_name=mpi_cluster_name, mpi_cluster_size=mpi_cluster_size, auto_destroy=auto_destroy)
@@ -113,6 +142,7 @@ class Impi(P2CToolGeneric):
 		input_file = kwargs.get('input_file', "Lenna.jpg")
 		output_file = kwargs.get('output_file', "custom_out.jpg")
 		parameters = kwargs.get('parameters', [])
+		self.create_mpi_cluster()
 		self.activate_tool()
 		self.handle_input_files(input_file=input_file)
 
@@ -146,4 +176,7 @@ class Impi(P2CToolGeneric):
 			remote_file.close()
 
 newtool = Impi(auto_destroy=True)
-newtool.run_tool(input_file="test.jpg",parameters=["1","2","4","5","7","8"])
+newtool.run_tool(input_file="test.jpg",parameters=["1","2","4","5","7"])
+
+# cluster = _MPICluster()
+# cluster.create_cluster()
