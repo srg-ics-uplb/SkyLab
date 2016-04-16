@@ -78,10 +78,6 @@ class _MPICluster(object):
 
 
 class P2CToolGeneric(object):
-	# frontend_ip = "10.0.3.101"
-	# frontend_username = "user"
-	# frontend_password = "excellence"
-
 	def __init__(self, **kwargs):
 		self.tool_name = kwargs.get('tool_name', "untitled_tool")
 		mpi_cluster_name = kwargs.get('mpi_cluster_name',"testcluster")
@@ -113,7 +109,7 @@ class P2CToolGeneric(object):
 
 	def run_tool(self, **kwargs):
 		raise NotImplementedError
-		#raise not 
+		#raise not implemented error
 
 	def handle_output_files(self, **kwargs):
 		raise NotImplementedError
@@ -165,7 +161,7 @@ class Impi(P2CToolGeneric):
 		self.handle_output_files(output_file=output_file)
 
 		if self.auto_destroy:
-			self.destroy_mpi_cluster()
+			self.mpi_cluster.destroy_cluster()
 
 	def handle_output_files(self, **kwargs):
 		output_file = kwargs.get('output_file', "custom_out.jpg")
