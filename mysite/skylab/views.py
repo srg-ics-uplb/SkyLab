@@ -4,12 +4,12 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views.generic.edit import FormView
 
-from forms import ImpiForm
+from forms import Create_MPI_Cluster_Form
 
 
 class HomePageView(FormView):
 	template_name = 'home.html'
-	form_class = ImpiForm
+	form_class = Create_MPI_Cluster_Form
 	success_url = ''
 
 	def form_valid(self, form):
