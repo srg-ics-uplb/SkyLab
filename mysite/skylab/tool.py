@@ -67,6 +67,12 @@ class _MPICluster(object):
 		# self.changeStatus("Destroying MPI Cluster")
 		self.frontend_shell.run(["./vcluster-stop", self.cluster_name, self.cluster_size], cwd="vcluster")
 
+	def activate_tool(self, tool_name):
+		self.connect_to_cluster()
+		print "Activating p2c-tools %s" % tool_name
+		# self.changeStatus("Activating p2c-tools %s" % self.tool_name)
+		self.cluster_shell.run(["p2c-tools", "activate", tool_name])
+
 	def update_p2c(self):
 		print "Updating p2c-tools"
 		self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
@@ -97,11 +103,7 @@ class P2CToolGeneric(object):
 	def connect_to_cluster(self):
 		self.cluster_shell = self.mpi_cluster.connect_to_cluster()
 
-	def activate_tool(self):
-		self.connect_to_cluster()
-		print "Activating p2c-tools %s" % self.tool_name
-		# self.changeStatus("Activating p2c-tools %s" % self.tool_name)
-		self.cluster_shell.run(["p2c-tools", "activate", self.tool_name])
+
 
 	def handle_input_files(self, **kwargs):
 		raise NotImplementedError

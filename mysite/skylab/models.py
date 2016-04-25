@@ -1,14 +1,14 @@
 from __future__ import unicode_literals
 
+import json
 import os
 
 from django.contrib.auth.models import User
+from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
-
-
 
 # @python_2_unicode_compatible
 # class
@@ -18,24 +18,31 @@ def get_available_tools():
 
 @python_2_unicode_compatible
 class MPI_Cluster(models.Model):
+
     MAX_MPI_CLUSTER_SIZE = 10
 
-    cluster_ip = models.GenericIPAddressField()
+    cluster_ip = models.GenericIPAddressField(null=True)
 
-    alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', 'Only alphanumeric characters are allowed.')
-    cluster_name = models.CharField(max_length=50, unique=True, validators=[alphanumeric], help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
+    cluster_name_validator = RegexValidator(r'^[a-zA-Z]+[0-9a-zA-Z\-]*$', 'Must start with a letter. Only alphanumeric characters, - are allowed.')
+    cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator], help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
 
     CLUSTER_SIZE_CHOICES = zip(range(1, MAX_MPI_CLUSTER_SIZE+1), range(1, MAX_MPI_CLUSTER_SIZE+1))
-    cluster_size = models.SmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)], help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
+    cluster_size = models.SmallIntegerField(default=1, choices=CLUSTER_SIZE_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)], help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
 
     tool_list = get_available_tools()
-    print tool_list
-    supported_tool = models.CharField(choices=tool_list, max_length=100, help_text='A cluster only supports one tool in this version')
-    creator_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    # print tool_list
+    supported_tools = models.CharField(choices=tool_list,  default=json.dumps([tool_list[0][1]]), max_length=200, help_text='A cluster only supports one tool in this version')
+    creator= models.ForeignKey(User, on_delete=models.CASCADE)
     shared_to_public = models.BooleanField(default=True)
+    status = models.SmallIntegerField(default=0)
+
+    def get_absolute_url(self):
+        return reverse('mpi-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.cluster_name
+
+
 
 
 

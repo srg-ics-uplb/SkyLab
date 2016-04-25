@@ -1,3 +1,6 @@
+import json
+
+import pika
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Submit
 from django import forms
@@ -20,14 +23,38 @@ from skylab.models import MPI_Cluster
 #
 # 	user_registered.connect(user_created)
 
+def send_mpi_message(routing_key, body):
+	connection = pika.BlockingConnection(pika.ConnectionParameters(
+		host='localhost'))
+
+	channel = connection.channel()
+
+	channel.exchange_declare(exchange='topic_logs',
+							 type='topic')
+
+	# routing_key = 'skylab.msg'
+
+	channel.basic_publish(exchange='topic_logs',
+						  routing_key=routing_key,
+						  body=body,
+						  properties=pika.BasicProperties(
+							  delivery_mode=2,  # make message persistent
+						  ))
+
+	print(" [x] Sent %r:%r" % (routing_key, "body:%r" %body))
+	connection.close()
+
 class Create_MPI_Cluster_Form(forms.ModelForm):
 	class Meta:
 		model = MPI_Cluster
-		fields = ['cluster_name','cluster_size', 'supported_tool', 'shared_to_public']
+		fields = ['cluster_name', 'cluster_size', 'supported_tools', 'shared_to_public']
 
 		# widgets = {'cluster_size' : forms.NumberInput()}
+
 	def __init__(self, *args, **kwargs):
+		self.user = kwargs.pop('user')
 		super(Create_MPI_Cluster_Form, self).__init__(*args, **kwargs)
+
 		self.helper = FormHelper()
 		self.helper.form_id = 'id-mpiForm'
 		self.helper.form_class = 'create-mpi-cluster-form'
@@ -38,12 +65,40 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 				'Create a MPI Cluster',
 				'cluster_name',
 				'cluster_size',
-				'supported_tool',
+				'supported_tools',
 				'shared_to_public',
 			),
 			Submit('submit', 'Create MPI Cluster')
 
 		)
+
+	def save(self):
+		result = super(Create_MPI_Cluster_Form, self).save(commit=False)
+		result.creator = self.user
+		supp_tools = result.supported_tools
+		result.supported_tools = json.dumps([result.supported_tools])
+		# cluster.activate_tool(result.supported_tool)
+		# result.cluster_ip = cluster.cluster_ip
+		result.save()
+		# result.id = 5
+		data = {
+			"actions"		:	"create_cluster",
+			"pk"			:	result.id,
+			"cluster_name"	:	result.cluster_name,
+			"cluster_size"	:	result.cluster_size,
+			"tools"			:	[supp_tools]
+		}
+		message = json.dumps(data)
+		print message
+		# find a way to know if thread is already running
+		send_mpi_message("skylab.mpi.create", message)
+		# time.sleep(10)
+		send_mpi_message("skylab.consumer.3", "First")
+		send_mpi_message("skylab.consumer.3", "Second")
+		send_mpi_message("skylab.consumer.3", "Third")
+		return result
+
+
 
 
 

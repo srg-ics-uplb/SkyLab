@@ -37,9 +37,10 @@ cls = getClassByName(mods["impi"], "Dummy")
 obj = cls()
 obj.talk()
 # print mods
-
-# newtool = Impi(auto_destroy=True)
-# newtool.run_tool(input_file="test.jpg",parameters=["1","2","4","5","7"])
+# def cluster_shit(cluster_name, cluster_size):
+#     cls = getClassByName(mods["_base_tool"], "_MPICluster")
+#     newtool = cls(cluster_name=cluster_name, cluster_size=cluster_size)
+#     newtool.create_cluster()
 
 
 

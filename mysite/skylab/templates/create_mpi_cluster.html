@@ -1,0 +1,14 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+
+
+{% block headline %}<h1>SkyLab Home Page</h1>{% endblock headline %}
+
+
+{% block content %}
+<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+{% crispy form %}
+
+
+
+{% endblock %}
