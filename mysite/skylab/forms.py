@@ -93,9 +93,6 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		# find a way to know if thread is already running
 		send_mpi_message("skylab.mpi.create", message)
 		# time.sleep(10)
-		send_mpi_message("skylab.consumer.3", "First")
-		send_mpi_message("skylab.consumer.3", "Second")
-		send_mpi_message("skylab.consumer.3", "Third")
 		return result
 
 

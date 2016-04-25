@@ -24,8 +24,12 @@ class ResultHandler(threading.Thread):
         self.binding_key = "skylab.results.#"
         super(ResultHandler, self).__init__()
 
+    def print_to_console(self, msg):
+        print "ResultHandler: %r" % msg
+
     def callback(self, channel, method, properties, body):
         data = json.loads(body)
+        self.print_to_console("Received %s" % data)
         # obj = MPI_Cluster.objects.filter(pk=data['pk'])
         if data['model'] == "mpi_cluster":
             for act in data['actions']:
@@ -38,8 +42,6 @@ class ResultHandler(threading.Thread):
                     tools = json.loads(MPI_Cluster.objects.filter(pk=data['pk']).supported_tools)
                     tools.append(data['tool'])
                     MPI_Cluster.objects.filter(pk=data['pk']).update(json.dumps(tools))
-
-        # MPI_Cluster.objects.filter(pk=3).update(cluster_ip=data['cluster_ip'])
 
         pass
     # TODO: handle body then save updates to database
@@ -60,7 +62,7 @@ class ResultHandler(threading.Thread):
         self.channel.basic_consume(self.callback,
                                    queue=result.method.queue,
                                    no_ack=True)
-        print "Started Result Handler Thread"
+        self.print_to_console("Started Result Handler Thread")
         # print MPI_Cluster.objects.filter(pk=1)
         self.channel.start_consuming()
 

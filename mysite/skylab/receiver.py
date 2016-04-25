@@ -20,39 +20,6 @@ cluster_password = "mpiuser"
 
 MAX_CONSUMERS_PER_CLUSTER = 1
 
-def send_mpi_message(routing_key, body):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
-
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange='topic_logs',
-                             type='topic')
-
-    channel.basic_publish(exchange='topic_logs',
-                          routing_key=routing_key,
-                          body=body,
-                          properties=pika.BasicProperties(
-                              delivery_mode=2,  # make message persistent
-                          ))
-
-    print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
-    connection.close()
-
-
-def create_mpi_cluster(cluster_name, cluster_size):
-    # TODO: Implement
-    # ssh shell -> /.vcluster-start cluster_name cluster_size
-    # wait_for_output
-    # add consumer thread for cluster_name (binding_key = "*.cluster_name.*"
-    pass
-
-# TODO: Consumer thread function
-def activate_tool(tool_name):
-    # check database for supported tools of this mpi
-    # if not found activate_tool else do nothing
-    pass
-
 
 
 class ConsumerThreadManager(threading.Thread):
@@ -61,20 +28,13 @@ class ConsumerThreadManager(threading.Thread):
         # TODO: check database for current mpi clusters -> create consumer threads for each
         self.threadHash = {}
         self.binding_key = "skylab.mpi.*"
-        # try:
-        #     self.frontend_shell = spur.SshShell(hostname=frontend_ip,
-        #                                    username=frontend_username,
-        #                                    password=frontend_password,
-        #                                    missing_host_key=spur.ssh.MissingHostKey.accept)
-        # except:
-        #     print sys.exc_info()
         super(ConsumerThreadManager, self).__init__()
 
     def callback(self, channel, method, properties, body):
         # TODO: run create_mpi_cluster()
         #        on success add consumer thread
         data = json.loads(body)
-        print data
+        print "ConsumerThreadManager: Received %s" % data
         if data['actions'] == "create_cluster":
             self.threadHash[data['pk']] = ConsumerThread(pk=data['pk'],binding_key="skylab.consumer.%r" % data['pk'],
                                                          cluster_name=data['cluster_name'],cluster_size=data['cluster_size'],
@@ -87,24 +47,8 @@ class ConsumerThreadManager(threading.Thread):
         elif data['actions'] == "stop_cluster":
             pass
 
-
-
         self.threadHash[data['pk']].start()
-        # result = {}
-        # result['pk'] = data['pk']
-        # result['model'] = "mpi_cluster"
-        # result['actions'] = ["update_ip"]
-        # result['cluster_ip'] = '127.1.2.3'
-        #
-        # result = json.dumps(result)
-        # print result
-        # print("Action: {}".format(data['action']))
-        # print("ID: {}".format(data['cluster_id']))
-        # print("Name: {}".format(data['cluster_name']))
-        # print('Size: {}'.format(data['cluster_size']))
-        # send_mpi_message("skylab.results.*", result)
         self.status = 0
-        channel.basic_ack(delivery_tag=method.delivery_tag)
 
     def remove(self, consumer_id):
         self.threadHash[consumer_id].stop()
@@ -129,10 +73,6 @@ class ConsumerThreadManager(threading.Thread):
 
         self.channel.start_consuming()
 
-
-
-
-
 class ConsumerThread(threading.Thread):
     def __init__(self, *args, **kwargs):
         self.mpi_pk = kwargs.pop('pk')
@@ -141,15 +81,41 @@ class ConsumerThread(threading.Thread):
         self.cluster_size = kwargs.pop('cluster_size')
         self.supported_tools = kwargs.pop('supported_tools')
         self.cluster_ip = kwargs.pop('cluster_ip', None)
-        print "Created Consumer Thread ID: %d, Key: %s Cluster {name: %s, size: %d, ip:%r}" % (self.mpi_pk,self.binding_key,
-                                                                                               self.cluster_name, self.cluster_size, self.cluster_ip)
+        self.print_to_console("Created Consumer Thread ID: %d, Key: %s Cluster {name: %s, size: %d, ip:%r}" % (self.mpi_pk,self.binding_key,
+                                                                                               self.cluster_name, self.cluster_size, self.cluster_ip))
         self.status = 0
-
         super(ConsumerThread, self).__init__(*args, **kwargs)
+
+    def print_to_console(self, msg):
+        print "Consumer Thread %d: %s" % (self.mpi_pk, msg)
+
+    def send_mpi_message(self,routing_key, body):
+        connection = pika.BlockingConnection(pika.ConnectionParameters(
+            host='localhost'))
+
+        channel = connection.channel()
+
+        channel.exchange_declare(exchange='topic_logs',
+                                 type='topic')
+
+        channel.basic_publish(exchange='topic_logs',
+                              routing_key=routing_key,
+                              body=body,
+                              properties=pika.BasicProperties(
+                                  delivery_mode=2,  # make message persistent
+                              ))
+
+        self.print_to_console(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+        connection.close()
 
     def callback(self, channel, method, properties, body):
         self.status = 1
-        print "Received : %r" % body
+        self.print_to_console("Received : %r" % body)
+        result = {}
+        result['received_body'] = body
+        result = json.dumps(result)
+        self.send_mpi_message("skylab.results.%d" % self.mpi_pk, result)
+        result = json.dumps(result)
         # TODO: if data['tool'] .. .
         # print("Method: {}".format(method))
         # print("Properties: {}".format(properties))
@@ -161,66 +127,70 @@ class ConsumerThread(threading.Thread):
         # print('Size: {}'.format(data['cluster_size']))
         self.status = 0
 
-        channel.basic_ack(delivery_tag=method.delivery_tag)
-
     def connect_to_frontend(self):
         try:
-            print "Connecting to Frontend {ip: %s; username: %s, pass: %s}" % (
-            frontend_ip, frontend_username, frontend_password)
+            self.print_to_console( "Connecting to Frontend {ip: %s; username: %s, pass: %s}" % (
+                                frontend_ip, frontend_username, frontend_password))
             self.frontend_shell = spur.SshShell(hostname=frontend_ip,
                                                 username=frontend_username,
                                                 password=frontend_password,
                                                 missing_host_key=spur.ssh.MissingHostKey.accept)
         except:
-            print "Error: Failed to connect to frontend"
-            print sys.exc_info()
+            self.print_to_console("Error: Failed to connect to frontend")
+            self.print_to_console(sys.exc_info())
 
     def connect_to_cluster(self):
         try:
             self.cluster_shell = spur.SshShell(hostname=self.cluster_ip, username=cluster_username,
                                                password=cluster_password,
                                                missing_host_key=spur.ssh.MissingHostKey.accept)
-            print "Connecting to MPI Cluster"
+            self.print_to_console("Connecting to MPI Cluster")
             self.update_p2c()
 
         except:  # spur.ssh.ConnectionError
-            print "Error: Failed to connect to MPI cluster."
-            print sys.exc_info()
+            self.print_to_console("Error: Failed to connect to MPI cluster.")
+            self.print_to_console(sys.exc_info())
 
     def activate_tool(self,tool_name):
-        print "Activating %s" % tool_name
-        self.cluster_shell.run(["p2c-tools", "activate", tool_name])
+        self.print_to_console("Activating %s" % tool_name)
+        output = self.cluster_shell.run(["p2c-tools", "activate", tool_name])
+        self.print_to_console(output.output)
+        p = re.compile("export\s(?P<path>PATH.+)")
+        m = p.search(output.output)
+        if m is not None:
+            output = self.cluster_shell.run(["sh","-c","export",m.group('path')])
+            self.print_to_console(output.output)
+
+
 
     def update_p2c(self):
-        print "Updating p2c-tools"
+        self.print_to_console("Updating p2c-tools")
         self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
         self.cluster_shell.run(["chmod", "755", "p2c-tools"])
         p2c_updater = self.cluster_shell.spawn(["./p2c-tools"], use_pty=True)
         p2c_updater.stdin_write(cluster_password + "\n")
-        print p2c_updater.wait_for_result().output
-        print self.cluster_shell.run(["p2c-tools"]).output
+        self.print_to_console(p2c_updater.wait_for_result().output)
+        self.print_to_console(self.cluster_shell.run(["p2c-tools"]).output)
 
     def connect_or_create(self):    #TODO: chec
         if self.cluster_ip is None: #exec vcluster-create
             self.connect_to_frontend()
             try:
-                print "Creating MPI Cluster"
-
-                self.frontend_shell.run(["echo","Hi"])
+                self.print_to_console("Creating MPI Cluster")
                 # self.changeStatus("Creating MPI Cluster")
-                print "Execute vcluster-start %s %s" % (self.cluster_name, self.cluster_size)
+                self.print_to_console("Execute vcluster-start %s %s" % (self.cluster_name, self.cluster_size))
                 result_cluster_ip = self.frontend_shell.run(
                     ["./vcluster-start", self.cluster_name, str(self.cluster_size)],
                     cwd="vcluster")
 
-                print result_cluster_ip.output
+                self.print_to_console(result_cluster_ip.output)
                 p = re.compile("(?P<username>\S+)@(?P<floating_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
                 m = p.search(result_cluster_ip.output)
                 self.cluster_username = m.group('username')
                 self.cluster_password = self.cluster_username
                 self.cluster_ip = m.group('floating_ip')
                 # print "%s@%s" % (self.cluster_username, self.cluster_ip)
-                print "Cluster ip: %s" % self.cluster_ip
+                self.print_to_console("Cluster ip: %s" % self.cluster_ip)
 
                 result = {}
                 result['pk'] = self.mpi_pk
@@ -229,7 +199,7 @@ class ConsumerThread(threading.Thread):
                 result['cluster_ip'] = self.cluster_ip
                 result = json.dumps(result)
 
-                send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
+                self.send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
 
                 self.connect_to_cluster()
                 for tool in self.supported_tools:
@@ -247,10 +217,9 @@ class ConsumerThread(threading.Thread):
         result['status'] = 1
         result = json.dumps(result)
 
-        send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
+        self.send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
 
     def run(self):
-        print "Thread %d" % self.mpi_pk
         self.connect_or_create()
         connection = pika.BlockingConnection(pika.ConnectionParameters(
             host='localhost'))
