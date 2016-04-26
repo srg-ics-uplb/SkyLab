@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import json
 import os
 
 from django.contrib.auth.models import User
@@ -21,7 +20,7 @@ class MPI_Cluster(models.Model):
 
     MAX_MPI_CLUSTER_SIZE = 10
 
-    cluster_ip = models.GenericIPAddressField(null=True)
+    cluster_ip = models.GenericIPAddressField(null=True, default=None)
 
     cluster_name_validator = RegexValidator(r'^[a-zA-Z]+[0-9a-zA-Z\-]*$', 'Must start with a letter. Only alphanumeric characters, - are allowed.')
     cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator], help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
@@ -31,7 +30,7 @@ class MPI_Cluster(models.Model):
 
     tool_list = get_available_tools()
     # print tool_list
-    supported_tools = models.CharField(choices=tool_list,  default=json.dumps([tool_list[0][1]]), max_length=200, help_text='A cluster only supports one tool in this version')
+    supported_tools = models.CharField(choices=tool_list, max_length=200, help_text='A cluster only supports one tool in this version')
     creator= models.ForeignKey(User, on_delete=models.CASCADE)
     shared_to_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
@@ -56,6 +55,7 @@ class SkyLabFile(models.Model):
 class ToolActivity(models.Model):
     tool_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
     status = models.CharField(default="Task Created",max_length=200)
     input_files = models.ManyToManyField(SkyLabFile, blank=True)
     # output_files = models.ManyToManyField(SkyLabFile)

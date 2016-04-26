@@ -31,6 +31,7 @@ class Use_Gamess_View(FormView):
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form
 		kwargs = super(Use_Gamess_View, self).get_form_kwargs()
+		kwargs['user'] = self.request.user
 		return kwargs
 
 	def form_valid(self, form):
