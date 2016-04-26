@@ -160,7 +160,11 @@ class ConsumerThread(threading.Thread):
         if m is not None:
             output = self.cluster_shell.run(["sh","-c","export",m.group('path')])
             self.print_to_console(output.output)
-
+        result = {}
+        result['pk'] = self.mpi_pk
+        result['actions'] = ["update_tool"]
+        result['model'] = 'mpi-cluster'
+        result['tool']  = tool_name
 
 
     def update_p2c(self):

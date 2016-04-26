@@ -36,11 +36,35 @@ class MPI_Cluster(models.Model):
     shared_to_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
+    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
+    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+
     def get_absolute_url(self):
         return reverse('mpi-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
         return self.cluster_name
+
+def user_directory_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    return 'user_{0}/{1}'.format(instance.user.id, filename)
+
+class SkyLabFile(models.Model):
+    file = models.FileField()
+
+@python_2_unicode_compatible
+class ToolActivity(models.Model):
+    tool_name = models.CharField(max_length=50)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    status = models.CharField(default="Task Created",max_length=200)
+    input_files = models.ManyToManyField(SkyLabFile, blank=True)
+    # output_files = models.ManyToManyField(SkyLabFile)
+    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
+    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+
+    def __str__(self):
+        return self.tool_name
+
 
 
 
@@ -62,9 +86,7 @@ class MPI_Cluster(models.Model):
 # 	user_id = models.ForeignKey(User, on_delete=models.CASCADE)
 # 	tool_name = models.CharField(max_length=50)
 # 	status = models.CharField(max_length=200)
-# 	cluster_ip = models.CharField(max_length=16)
-# 	cluster_size = models.IntegerField()
-# 	# input_directory 
+# 	# input_directory
 # 	# output_directory
 # 	time_started = models.DateTimeField('time_started')
 # 	time_finished = models.DateTimeField('time_finished')

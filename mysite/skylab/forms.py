@@ -61,6 +61,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		self.helper.form_method = 'post'
 		self.helper.form_action = ''
 		self.helper.layout = Layout(
+
 			Fieldset(
 				'Create a MPI Cluster',
 				'cluster_name',
@@ -76,7 +77,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		result = super(Create_MPI_Cluster_Form, self).save(commit=False)
 		result.creator = self.user
 		supp_tools = result.supported_tools
-		result.supported_tools = json.dumps([result.supported_tools])
+		result.supported_tools = json.dumps([])
 		# cluster.activate_tool(result.supported_tool)
 		# result.cluster_ip = cluster.cluster_ip
 		result.save()
@@ -95,8 +96,18 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		# time.sleep(10)
 		return result
 
+class Use_Gamess_Form(forms.Form):
+	inp_file = forms.FileField()
 
+	def __init__(self, *args, **kwargs):
+			super(Use_Gamess_Form, self).__init__(*args, **kwargs)
+			self.helper = FormHelper()
+			self.helper.form_id = 'id-impiForm'
+			self.helper.form_class = 'use-tool-forms'
+			self.helper.form_method = 'post'
+			self.helper.form_action = ''
 
+			self.helper.add_input(Submit('submit','Execute'))
 
 
 # class ImpiForm(forms.Form):

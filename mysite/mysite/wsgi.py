@@ -69,4 +69,16 @@ class ResultHandler(threading.Thread):
 ResultHandler().start()
 # print "Kappa is here"
 
+def handle_uploaded_file(f):
+    with open('pogi.txt', 'wb+') as destination:
+        for chunk in f.chunks():
+            destination.write(chunk)
+
+# x = SkyLabFile.objects.get(pk=1).file #works
+
+# x = SkyLabFile.objects.filter(toolactivity__pk=2) #using reverse m2m
+# x = x[0].file
+
+# handle_uploaded_file(x)
+
 application = get_wsgi_application()
