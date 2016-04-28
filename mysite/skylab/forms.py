@@ -78,18 +78,13 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 	def save(self):
 		result = super(Create_MPI_Cluster_Form, self).save(commit=False)
 		result.creator = self.user
-		supp_tools = result.supported_tools
-		result.supported_tools = json.dumps([])
-		# cluster.activate_tool(result.supported_tool)
-		# result.cluster_ip = cluster.cluster_ip
 		result.save()
-		# result.id = 5
 		data = {
 			"actions"		:	"create_cluster",
 			"pk"			:	result.id,
 			"cluster_name"	:	result.cluster_name,
 			"cluster_size"	:	result.cluster_size,
-			"tools"			:	[supp_tools]
+			"tools"			:	result.supported_tools
 		}
 		message = json.dumps(data)
 		print message

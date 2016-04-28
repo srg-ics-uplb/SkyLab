@@ -15,6 +15,11 @@ def get_available_tools():
     dirs =  [(lst,lst)  for lst in os.listdir('skylab/modules') if not os.path.isfile(os.path.join('skylab/modules',lst)) and not lst.startswith("_")]
     return dirs
 
+
+# @python_2_unicode_compatible      for future use
+# class SkylabTool(models.Model):
+#     name = models.CharField(max_length=100)
+
 @python_2_unicode_compatible
 class MPI_Cluster(models.Model):
 

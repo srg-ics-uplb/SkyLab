@@ -171,13 +171,12 @@ class ConsumerThread(threading.Thread):
         # self.print_to_console(output.output)  #might be text-heavy skipped
 
         x = MPI_Cluster.objects.get(pk=self.mpi_pk)
-        curr_tool = json.loads(x.supported_tools)
-        curr_tool.append(tool_name)
-        x.supported_tools = json.dumps(curr_tool)
+        # curr_tool = json.loads(x.supported_tools)
+        # curr_tool.append(tool_name)
+        # x.supported_tools = json.dumps(curr_tool)
+        x.supported_tools = tool_name
         x.save()
         self.print_to_console("%s is now activated" % tool_name)
-
-
 
     def update_p2c(self):
         self.print_to_console("Updating p2c-tools")
@@ -208,19 +207,11 @@ class ConsumerThread(threading.Thread):
                 # print "%s@%s" % (self.cluster_username, self.cluster_ip)
                 self.print_to_console("Cluster ip: %s" % self.cluster_ip)
 
-                # result = {}
-                # result['pk'] = self.mpi_pk
-                # result['model'] = "mpi_cluster"
-                # result['actions'] = ["update_ip"]
-                # result['cluster_ip'] = self.cluster_ip
-                # result = json.dumps(result)
-                #
-                # self.send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
                 MPI_Cluster.objects.filter(pk=self.mpi_pk).update(cluster_ip=self.cluster_ip)
 
                 self.connect_to_cluster()
-                for tool in self.supported_tools:
-                    self.activate_tool(tool)
+                # for tool in self.supported_tools:
+                self.activate_tool(self.supported_tools)
             except:  # spur.ssh.ConnectionError
                 print sys.exc_info()
                 # self.changeStatus("Error: Failed to connect to frontend.")
@@ -229,14 +220,6 @@ class ConsumerThread(threading.Thread):
 
         # update mpi_cluster status to ready
         MPI_Cluster.objects.filter(pk=self.mpi_pk).update(status=1)
-        # result = {}
-        # result['pk'] = self.mpi_pk
-        # result['model'] = "mpi_cluster"
-        # result['actions'] = ["update_status"]
-        # result['status'] = 1
-        # result = json.dumps(result)
-        #
-        # self.send_mpi_message("skylab.results.%s" % self.mpi_pk, result)
 
     def run(self):
         self.connect_or_create()
@@ -258,10 +241,6 @@ class ConsumerThread(threading.Thread):
                               no_ack=True)
 
         channel.start_consuming()
-
-
-
-
 
 class ResultHandler(threading.Thread):
     def __init__(self):
