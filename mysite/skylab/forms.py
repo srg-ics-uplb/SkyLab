@@ -107,26 +107,27 @@ class Use_Gamess_Form(forms.Form):
 	inp_file = forms.FileField(validators=[validate_gamess_input_extension], label="Input file")
 
 	def __init__(self, *args, **kwargs):
-			self.user = kwargs.pop('user')
-			super(Use_Gamess_Form, self).__init__(*args, **kwargs)
-			# self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
-			current_user_as_creator = Q(creator=self.user)
-			cluster_is_public = Q(shared_to_public=True)
-			self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public))
+		self.user = kwargs.pop('user')
+		super(Use_Gamess_Form, self).__init__(*args, **kwargs)
+		# self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
+		current_user_as_creator = Q(creator=self.user)
+		cluster_is_public = Q(shared_to_public=True)
+		q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+		self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public))
 
-			self.helper = FormHelper()
-			self.helper.form_id = 'id-impiForm'
-			self.helper.form_class = 'use-tool-forms'
-			self.helper.form_method = 'post'
-			self.helper.form_action = ''
-			self.helper.layout = Layout(
-				Fieldset(
-					'Use Gamess',
-					'mpi_cluster',
-					'inp_file',
-				),
-				Submit('submit', 'Execute')
-			)
+		self.helper = FormHelper()
+		self.helper.form_id = 'id-impiForm'
+		self.helper.form_class = 'use-tool-forms'
+		self.helper.form_method = 'post'
+		self.helper.form_action = ''
+		self.helper.layout = Layout(
+			Fieldset(
+				'Use Gamess',
+				'mpi_cluster',
+				'inp_file',
+			),
+			Submit('submit', 'Execute')
+		)
 
 # class ImpiForm(forms.Form):
 # 	mpi_cluster_size = forms.IntegerField(max_value=3, min_value=1)

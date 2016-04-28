@@ -6,22 +6,23 @@ class P2CToolGeneric(object):
 	# frontend_password = "excellence"
 
     @abstractmethod
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         pass
 
     @abstractmethod
-    def handle_input_files(self, **kwargs):
+    def handle_input_files(self, *args, **kwargs):
         pass
 		# raise not implemented error
 
     @abstractmethod
-    def run_tool(self, **kwargs):
+    def run_tool(self, *args, **kwargs):
         pass
 		#raise not
 
     @abstractmethod
-    def handle_output_files(self, **kwargs):
+    def handle_output_files(self, *args, **kwargs):
         pass
 
-	def changeStatus(self, status):
-		self.status = status
+    @abstractmethod
+    def changeStatus(self, status, **kwargs):
+        pass

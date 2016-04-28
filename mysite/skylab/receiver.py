@@ -18,7 +18,7 @@ frontend_password = "excellence"
 cluster_username = "mpiuser"
 cluster_password = "mpiuser"
 
-MAX_CONSUMERS_PER_CLUSTER = 1
+# MAX_CONSUMERS_PER_CLUSTER = 1
 
 
 
