@@ -10,15 +10,14 @@ class gamess_tool(P2CToolGeneric):
     def handle_input_files(self, **kwargs):
         self.shell.run["mkdir", "act%d" % self.id,]
         pass
+
     # raise not implemented error
 
     def run_tool(self, **kwargs):
         if kwargs.get('command') is None:
             raise KeyError("No command passed")
 
-
-
-    #   get_input_files()
+    # get_input_files()
     #   run command
     #   send_output_files back to server
     # raise not

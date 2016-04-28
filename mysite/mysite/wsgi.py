@@ -27,15 +27,12 @@ cluster_password = "mpiuser"
 class ConsumerThreadManager(threading.Thread):
 
     def __init__(self):
-        # TODO: check database for current mpi clusters -> create consumer threads for each
         self.threadHash = {}
         self.binding_key = "skylab.mpi.*"
         super(ConsumerThreadManager, self).__init__()
         # self.setDaemon(True)
 
     def callback(self, channel, method, properties, body):
-        # TODO: run create_mpi_cluster()
-        #        on success add consumer thread
         data = json.loads(body)
         print "ConsumerThreadManager: Received %s" % data
         if data['actions'] == "create_cluster":
@@ -187,7 +184,7 @@ class ConsumerThread(threading.Thread):
         self.print_to_console(p2c_updater.wait_for_result().output)
         self.print_to_console(self.cluster_shell.run(["p2c-tools"]).output)
 
-    def connect_or_create(self):    #TODO: chec
+    def connect_or_create(self):
         if self.cluster_ip is None: #exec vcluster-create
             self.connect_to_frontend()
             try:
@@ -241,56 +238,6 @@ class ConsumerThread(threading.Thread):
                               no_ack=True)
 
         channel.start_consuming()
-
-class ResultHandler(threading.Thread):
-    def __init__(self):
-        # TODO: check database for current mpi clusters -> create consumer threads for each
-        self.binding_key = "skylab.results.#"
-        super(ResultHandler, self).__init__()
-
-    def print_to_console(self, msg):
-        print "ResultHandler: %r" % msg
-
-    def callback(self, channel, method, properties, body):
-        data = json.loads(body)
-        self.print_to_console("Received %s" % data)
-        # obj = MPI_Cluster.objects.filter(pk=data['pk'])
-        if data['model'] == "mpi_cluster":
-            for act in data['actions']:
-                if act == "update_status":
-                    MPI_Cluster.objects.filter(pk=data['pk']).update(status=data['status'])
-                elif act == "update_ip":
-                    # MPI_Cluster.objects.filter(pk=data['pk']).update(cluster_ip=data['cluster_ip'])
-                    MPI_Cluster.objects.filter(pk=data['pk']).update(cluster_ip=data['cluster_ip'])
-                elif act == "update_tools":
-                    tools = json.loads(MPI_Cluster.objects.filter(pk=data['pk']).supported_tools)
-                    tools.append(data['tool'])
-                    MPI_Cluster.objects.filter(pk=data['pk']).update(supported_tools=json.dumps(tools))
-
-        pass
-    # TODO: handle body then save updates to database
-
-    def run(self):
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(
-            host='localhost'))
-        self.channel = self.connection.channel()
-
-        result = self.channel.queue_declare(exclusive=True, durable=True)
-
-        self.channel.exchange_declare(exchange='topic_logs',
-                                      type='topic')
-        self.channel.queue_bind(exchange='topic_logs',
-                                queue=result.method.queue,
-                                routing_key=self.binding_key)
-
-        self.channel.basic_consume(self.callback,
-                                   queue=result.method.queue,
-                                   no_ack=True)
-        self.print_to_console("Started Result Handler Thread")
-        # print MPI_Cluster.objects.filter(pk=1)
-        self.channel.start_consuming()
-
-# ResultHandler().start()
 
 def handle_uploaded_file(f):
     with open('pogi.txt', 'wb+') as destination:

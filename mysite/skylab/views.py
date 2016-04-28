@@ -1,9 +1,7 @@
 import json
-import sys
 
 import pika
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.views.generic import FormView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
@@ -81,16 +79,3 @@ class Use_Gamess_View(FormView):
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
-
-def use_impi(request):
-	if request.method == 'POST':
-		form = ImpiForm(request.POST)
-
-		if form.is_valid():
-			print >> sys.stderr, request.POST['mpi_cluster_size']
-
-
-	else:
-		form = ImpiForm()
-
-	return render(request, 'skylab/templates/home.html', {'form': form})
