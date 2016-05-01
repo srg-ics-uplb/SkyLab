@@ -13,7 +13,7 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 
-from skylab.models import MPI_Cluster
+from skylab.models import MPI_Cluster, SkyLabFile
 import spur, pika, threading
 import re, sys, json
 
@@ -126,8 +126,10 @@ class ConsumerThread(threading.Thread):
         # self.print_to_console("Received %s" % data)
         if data['actions'] == "use_tool":
             self.print_to_console("Using %s" % data['tool'])
+            from skylab.modules.gamess.tool import gamess_tool
             #todo: insert code for running gamess
-            #gamess(shell=self.cluster_shell, id=data['activity'])
+            tool = gamess_tool(shell=self.cluster_shell, id=data['activity'])
+            tool.run_tool()
 
         self.status = 0
 
@@ -143,13 +145,14 @@ class ConsumerThread(threading.Thread):
             self.print_to_console("Error: Failed to connect to frontend")
             self.print_to_console(sys.exc_info())
 
-    def connect_to_cluster(self):
+    def connect_to_cluster(self,create=False):
         try:
             self.cluster_shell = spur.SshShell(hostname=self.cluster_ip, username=cluster_username,
                                                password=cluster_password,
                                                missing_host_key=spur.ssh.MissingHostKey.accept)
             self.print_to_console("Connecting to MPI Cluster")
-            self.update_p2c()
+            if create:
+                self.update_p2c()
 
         except:  # spur.ssh.ConnectionError
             self.print_to_console("Error: Failed to connect to MPI cluster.")
@@ -157,10 +160,12 @@ class ConsumerThread(threading.Thread):
 
     def activate_tool(self,tool_name):
         self.print_to_console("Activating %s" % tool_name)
-        tool_activator = self.cluster_shell.spawn(["sudo", "p2c-tools", "activate", tool_name], use_pty=True)
-
-        tool_activator.stdin_write(cluster_password + "\n")
-        tool_activator = tool_activator.wait_for_result()
+        tool_activator = self.cluster_shell.run(["p2c-tools","activate",tool_name])
+        # running sudo p2c-tools activate gamess associates gamess work directories to root
+        # tool_activator = self.cluster_shell.spawn(["sudo", "p2c-tools", "activate", tool_name], use_pty=True)
+        #
+        # tool_activator.stdin_write(cluster_password + "\n")
+        # tool_activator = tool_activator.wait_for_result()
         p = re.compile("export\s(?P<path>PATH.+)")
         m = p.search(tool_activator.output)
         if m is not None:
@@ -176,6 +181,7 @@ class ConsumerThread(threading.Thread):
         self.print_to_console("%s is now activated" % tool_name)
 
     def update_p2c(self):
+        self.cluster_shell.run(["sh","-c","rm p2c-tools*"])
         self.print_to_console("Updating p2c-tools")
         self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
         self.cluster_shell.run(["chmod", "755", "p2c-tools"])
@@ -206,7 +212,7 @@ class ConsumerThread(threading.Thread):
 
                 MPI_Cluster.objects.filter(pk=self.mpi_pk).update(cluster_ip=self.cluster_ip)
 
-                self.connect_to_cluster()
+                self.connect_to_cluster(True)
                 # for tool in self.supported_tools:
                 self.activate_tool(self.supported_tools)
             except:  # spur.ssh.ConnectionError
@@ -216,6 +222,7 @@ class ConsumerThread(threading.Thread):
             self.connect_to_cluster()
 
         # update mpi_cluster status to ready
+        self.print_to_console("Consumer now ready")
         MPI_Cluster.objects.filter(pk=self.mpi_pk).update(status=1)
 
     def run(self):
@@ -254,8 +261,9 @@ ConsumerThreadManager().start()
 
 # x = SkyLabFile.objects.get(pk=1).file #works
 
-# x = SkyLabFile.objects.filter(toolactivity__pk=2) #using reverse m2m
-# x = x[0].file
+x = SkyLabFile.objects.filter(toolactivity__pk=76) #using reverse m2m
+x = x[0]
+print x.file.name
 
 # handle_uploaded_file(x)
 

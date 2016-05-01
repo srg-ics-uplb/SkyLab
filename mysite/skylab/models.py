@@ -55,9 +55,11 @@ def user_directory_path(instance, filename):
 
 class SkyLabFile(models.Model):
     file = models.FileField()
+    filename = models.CharField(max_length=200)
 
 @python_2_unicode_compatible
 class ToolActivity(models.Model):
+    exec_string = models.CharField(max_length=200)
     tool_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)

@@ -13,4 +13,5 @@ urlpatterns = [
 	url(r'^$', HomeView.as_view(), name='skylab-home'),
 	url(r'^create-mpi-cluster$', CreateMPIView.as_view(), name='create_mpi_cluster'),
 	url(r'^accounts/', include('registration.backends.hmac.urls')),
+
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT )

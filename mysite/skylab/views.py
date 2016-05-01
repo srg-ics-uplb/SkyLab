@@ -1,4 +1,5 @@
 import json
+import os
 
 import pika
 from django.http import HttpResponse
@@ -59,10 +60,12 @@ class Use_Gamess_View(FormView):
 	def form_valid(self, form):
 		cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
 		print cluster
+		filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
+		exec_string = "rungms %s 01 2>& %s.log" % (filename,filename)
 		tool_activity = ToolActivity.objects.create(
-			mpi_cluster=cluster, tool_name="gamess", user=self.request.user
+			mpi_cluster=cluster, tool_name="gamess", user=self.request.user, exec_string=exec_string
 		)
-		new_file = SkyLabFile.objects.create(file=self.request.FILES['inp_file'])
+		new_file = SkyLabFile.objects.create(file=self.request.FILES['inp_file'], filename = self.request.FILES['inp_file'].name)
 		tool_activity.input_files.add(new_file)
 		print self.request.FILES['inp_file'].name
 

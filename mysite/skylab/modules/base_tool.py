@@ -24,5 +24,5 @@ class P2CToolGeneric(object):
         pass
 
     @abstractmethod
-    def changeStatus(self, status, **kwargs):
+    def changeStatus(self, status):
         pass
