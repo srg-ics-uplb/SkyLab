@@ -61,7 +61,8 @@ class Use_Gamess_View(FormView):
 		cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
 		print cluster
 		filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
-		exec_string = "rungms %s 01 2>& %s.log" % (filename,filename)
+		exec_string = "rungms %s 01 1 2>&1 | tee %s.log" % (filename,filename)
+		# exec_string = "rungms %s 01" % (filename)
 		tool_activity = ToolActivity.objects.create(
 			mpi_cluster=cluster, tool_name="gamess", user=self.request.user, exec_string=exec_string
 		)

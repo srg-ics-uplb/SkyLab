@@ -1,8 +1,11 @@
+import re
+import shlex
 import shutil
 
 from skylab.models import ToolActivity, SkyLabFile
 from skylab.modules.base_tool import P2CToolGeneric
 
+cluster_password = "mpiuser"
 
 class gamess_tool(P2CToolGeneric):
     def __init__(self, **kwargs):
@@ -25,17 +28,33 @@ class gamess_tool(P2CToolGeneric):
 
 
     # raise not implemented error
+    def print_msg(self, msg):
+        print "Gamess (Tool Activity %d) : %s" % (self.id, msg)
 
     def run_tool(self, **kwargs):
         self.handle_input_files()
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
         print exec_string
-        dir = "/mirror/tool_activity_%d" % self.id
+        dir = "/mirror/tool_activity_%d" % (self.id)
         print dir
         export_path = "/mirror/gamess"
-        print self.shell.run(["sh","-c","export PATH=$PATH:%s; echo $PATH; cd %s; rungms %s 01;" % (export_path,dir,self.input_filename)]).output
-        # 2>&1 | tee nh3.hess.log;
+        fix = "sudo /sbin/sysctl -w kernel.shmmax=500000000"
+        fix_shmmax = self.shell.spawn(shlex.split(fix), use_pty=True)
+        fix_shmmax.stdin_write(cluster_password + "\n")
+        fix_shmmax.wait_for_result()
+        self.print_msg("Running %s" % exec_string)
+        exec_shell =  self.shell.run(["sh","-c","export PATH=$PATH:%s; echo $PATH; %s;" % (export_path,exec_string)], cwd=dir)
+        p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
+        m = p.search(exec_shell.output)
+        print exec_shell.output
+        self.print_msg(m.group("exit_status"))
 
+        p = re.compile("ERROR,\s(?P<error_msg>.+)")
+        m = p.search(exec_shell.output)
+        if m is not None:   #todo: more advanced catching
+            print (m.group("error_msg"))
+        # 2>&1 | tee nh3.hess.log;
+        self.print_msg("Finished command execution")
         #todo: run exec
 
 

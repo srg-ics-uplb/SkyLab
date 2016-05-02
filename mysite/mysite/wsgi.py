@@ -13,9 +13,10 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 
-from skylab.models import MPI_Cluster, SkyLabFile
+from skylab.models import MPI_Cluster
 import spur, pika, threading
 import re, sys, json
+from skylab.modules.gamess.tool import gamess_tool
 
 frontend_ip = "10.0.3.101"
 frontend_username = "user"
@@ -64,7 +65,7 @@ class ConsumerThreadManager(threading.Thread):
                                                      supported_tools=c.supported_tools)
                 self.threadHash[c.id].start()
 
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(
+        self.connection = pika.BlockingConnection(pika.ConnectionParameters(heartbeat_interval=0,
             host='localhost'))
         self.channel = self.connection.channel()
 
@@ -126,7 +127,7 @@ class ConsumerThread(threading.Thread):
         # self.print_to_console("Received %s" % data)
         if data['actions'] == "use_tool":
             self.print_to_console("Using %s" % data['tool'])
-            from skylab.modules.gamess.tool import gamess_tool
+
             #todo: insert code for running gamess
             tool = gamess_tool(shell=self.cluster_shell, id=data['activity'])
             tool.run_tool()
@@ -154,9 +155,11 @@ class ConsumerThread(threading.Thread):
             if create:
                 self.update_p2c()
 
-        except:  # spur.ssh.ConnectionError
+        except spur.ssh.ConnectionError as err:
             self.print_to_console("Error: Failed to connect to MPI cluster.")
-            self.print_to_console(sys.exc_info())
+            # self.print_to_console(sys.exc_info())
+            self.print_to_console(err.args)
+            raise
 
     def activate_tool(self,tool_name):
         self.print_to_console("Activating %s" % tool_name)
@@ -166,12 +169,12 @@ class ConsumerThread(threading.Thread):
         #
         # tool_activator.stdin_write(cluster_password + "\n")
         # tool_activator = tool_activator.wait_for_result()
-        p = re.compile("export\s(?P<path>PATH.+)")
-        m = p.search(tool_activator.output)
-        if m is not None:
-            self.cluster_shell.run(["sh","-c","export",m.group('path')])
+        # p = re.compile("export\s(?P<path>PATH.+)")
+        # m = p.search(tool_activator.output)
+        # if m is not None:
+        #     self.cluster_shell.run(["sh","-c","export",m.group('path')])
         # self.print_to_console(output.output)  #might be text-heavy skipped
-
+        self.print_to_console(tool_activator.output)
         x = MPI_Cluster.objects.get(pk=self.mpi_pk)
         # curr_tool = json.loads(x.supported_tools)
         # curr_tool.append(tool_name)
@@ -215,8 +218,11 @@ class ConsumerThread(threading.Thread):
                 self.connect_to_cluster(True)
                 # for tool in self.supported_tools:
                 self.activate_tool(self.supported_tools)
-            except:  # spur.ssh.ConnectionError
-                print sys.exc_info()
+            except spur.ssh.ConnectionError as err:
+                self.print_to_console (err.args)
+                # print sys.exc_info()
+                raise
+                # raise('Cannot connection to ')
                 # self.changeStatus("Error: Failed to connect to frontend.")
         else:
             self.connect_to_cluster()
@@ -261,9 +267,9 @@ ConsumerThreadManager().start()
 
 # x = SkyLabFile.objects.get(pk=1).file #works
 
-x = SkyLabFile.objects.filter(toolactivity__pk=76) #using reverse m2m
-x = x[0]
-print x.file.name
+# x = SkyLabFile.objects.filter(toolactivity__pk=76) #using reverse m2m
+# x = x[0]
+# print x.file.name
 
 # handle_uploaded_file(x)
 
