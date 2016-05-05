@@ -49,13 +49,22 @@ class MPI_Cluster(models.Model):
     def __str__(self):
         return self.cluster_name
 
-def user_directory_path(instance, filename):
+def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return 'user_{0}/{1}'.format(instance.user.id, filename)
+    return '{0}/{1}'.format(instance.upload_path, filename)
 
+@python_2_unicode_compatible
 class SkyLabFile(models.Model):
-    file = models.FileField()
+    upload_path = models.CharField(max_length=200)
+    file = models.FileField(upload_to=get_upload_path)
     filename = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.filename
+
+# @python_2_unicode_compatible
+# class StatusLog(models.Model):
+#     type = models.CharField
 
 @python_2_unicode_compatible
 class ToolActivity(models.Model):

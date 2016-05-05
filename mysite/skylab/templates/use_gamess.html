@@ -2,8 +2,12 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
-{% crispy form %}
+<div class='row'>
+<div class='col-sm-6 col-sm-offset-3'>
+	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+	{% crispy form %}
+</div>
+</div>
 
 
 

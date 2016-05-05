@@ -34,9 +34,7 @@ class gamess_tool(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-        print exec_string
         dir = "/mirror/tool_activity_%d" % (self.id)
-        print dir
         export_path = "/mirror/gamess"
         fix = "sudo /sbin/sysctl -w kernel.shmmax=500000000"
         fix_shmmax = self.shell.spawn(shlex.split(fix), use_pty=True)
@@ -55,7 +53,9 @@ class gamess_tool(P2CToolGeneric):
             print (m.group("error_msg"))
         # 2>&1 | tee nh3.hess.log;
         self.print_msg("Finished command execution")
-        #todo: run exec
+
+        self.handle_output_files()
+
 
 
     # get_input_files()
@@ -64,7 +64,9 @@ class gamess_tool(P2CToolGeneric):
     # raise not
 
     def handle_output_files(self, **kwargs):
-        pass
+        self.print_msg("Sending output files to server")
+
+        # todo: insert code for sending file
 
     def changeStatus(self, status):
         pass

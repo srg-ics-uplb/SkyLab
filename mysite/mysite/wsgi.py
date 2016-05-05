@@ -233,7 +233,7 @@ class ConsumerThread(threading.Thread):
 
     def run(self):
         self.connect_or_create()
-        connection = pika.BlockingConnection(pika.ConnectionParameters(
+        connection = pika.BlockingConnection(pika.ConnectionParameters(heartbeat_interval=0,
             host='localhost'))
 
         channel = connection.channel()
@@ -264,7 +264,8 @@ ConsumerThreadManager().start()
 # curr_tool.append("gamess")
 # x.supported_tools = json.dumps(curr_tool)
 # x.save()
-
+# f = SkyLabFile.objects.get(toolactivity__pk=139)
+# print f.file.name
 # x = SkyLabFile.objects.get(pk=1).file #works
 
 # x = SkyLabFile.objects.filter(toolactivity__pk=76) #using reverse m2m

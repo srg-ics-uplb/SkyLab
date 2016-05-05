@@ -66,13 +66,13 @@ class Use_Gamess_View(FormView):
 		tool_activity = ToolActivity.objects.create(
 			mpi_cluster=cluster, tool_name="gamess", user=self.request.user, exec_string=exec_string
 		)
-		new_file = SkyLabFile.objects.create(file=self.request.FILES['inp_file'], filename = self.request.FILES['inp_file'].name)
+		new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input" % tool_activity.id,file=self.request.FILES['inp_file'], filename = self.request.FILES['inp_file'].name)
 		tool_activity.input_files.add(new_file)
 		print self.request.FILES['inp_file'].name
 
 		data = {
-			"actions"	:	"use_tool",
-			"activity"			:	tool_activity.id,
+			"actions"		:	"use_tool",
+			"activity"		:	tool_activity.id,
 			"tool"			:	tool_activity.tool_name
 		}
 		message = json.dumps(data)
