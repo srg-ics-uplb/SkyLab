@@ -65,7 +65,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		self.helper.layout = Layout(
 
 			Fieldset(
-				'Create a MPI Cluster',
+				'Create MPI Cluster',
 				'cluster_name',
 				'cluster_size',
 				'supported_tools',

@@ -80,3 +80,13 @@ class ToolActivity(models.Model):
 
     def __str__(self):
         return self.tool_name
+
+
+@python_2_unicode_compatible
+class ToolLogs(models.Model):
+    status = models.CharField(max_length=200)
+    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
+
+    def __str__(self):
+        return "activity{1}_log{2}".format(self.tool_activity.id, self.id)
