@@ -56,7 +56,7 @@ def get_upload_path(instance, filename):
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):
     upload_path = models.CharField(max_length=200)
-    file = models.FileField(upload_to=get_upload_path)
+    file = models.FileField(upload_to=get_upload_path, blank=True)
     filename = models.CharField(max_length=200)
 
     def __str__(self):
@@ -88,5 +88,6 @@ class ToolLogs(models.Model):
     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
     tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
 
+    @property
     def __str__(self):
         return "activity{1}_log{2}".format(self.tool_activity.id, self.id)

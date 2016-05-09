@@ -99,7 +99,7 @@ class ConsumerThread(threading.Thread):
         # self.setDaemon(True)
 
     def print_to_console(self, msg):
-        print "Consumer Thread %d: %s" % (self.mpi_pk, msg)
+        print ("Consumer Thread %d: %s" % (self.mpi_pk, msg))
 
     def send_mpi_message(self,routing_key, body):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -110,12 +110,14 @@ class ConsumerThread(threading.Thread):
         channel.exchange_declare(exchange='topic_logs',
                                  type='topic')
 
+        channel.confirm_delivery()
+
         channel.basic_publish(exchange='topic_logs',
                               routing_key=routing_key,
                               body=body,
                               properties=pika.BasicProperties(
                                   delivery_mode=2,  # make message persistent
-                              ))
+                              ), mandatory=True)
 
         self.print_to_console(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
         connection.close()
@@ -142,6 +144,7 @@ class ConsumerThread(threading.Thread):
                                                 username=frontend_username,
                                                 password=frontend_password,
                                                 missing_host_key=spur.ssh.MissingHostKey.accept)
+
         except:
             self.print_to_console("Error: Failed to connect to frontend")
             self.print_to_console(sys.exc_info())

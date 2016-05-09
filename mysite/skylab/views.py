@@ -20,16 +20,16 @@ def send_mpi_message(routing_key, body):
 	channel.exchange_declare(exchange='topic_logs',
 							 type='topic')
 
-	# routing_key = 'skylab.msg'
+	channel.confirm_delivery()
 
 	channel.basic_publish(exchange='topic_logs',
 						  routing_key=routing_key,
 						  body=body,
 						  properties=pika.BasicProperties(
 							  delivery_mode=2,  # make message persistent
-						  ))
+						  ), mandatory=True)
 
-	print(" [x] Sent %r:%r" % (routing_key, "body:%r" %body))
+	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 	connection.close()
 
 class HomeView(TemplateView):
@@ -68,6 +68,7 @@ class Use_Gamess_View(FormView):
 		)
 		new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input" % tool_activity.id,file=self.request.FILES['inp_file'], filename = self.request.FILES['inp_file'].name)
 		tool_activity.input_files.add(new_file)
+
 		print self.request.FILES['inp_file'].name
 
 		data = {
