@@ -45,6 +45,14 @@ class gamess_tool(P2CToolGeneric):
 
     def run_tool(self, **kwargs):
         self.handle_input_files()
+        # cleanup scratch directory
+        remotePath = "/mirror/scr/"
+        sftp = self.shell._open_sftp_client()
+        filesInRemotePath = sftp.listdir(path=remotePath)
+        for file in filesInRemotePath:
+            remoteFilePath = os.path.join(remotePath, file)
+            sftp.remove(remoteFilePath)  # delete after transfer
+        sftp.close()
 
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
 
@@ -81,6 +89,9 @@ class gamess_tool(P2CToolGeneric):
             tool_activity.save()
         self.handle_output_files()
 
+        tool_activity = ToolActivity.objects.get(pk=self.id)
+        tool_activity.status = "Task Finished"
+        tool_activity.save()
     def handle_output_files(self, **kwargs):
         tool_activity = ToolActivity.objects.get(pk=self.id)
         tool_activity.status = "Handling output files"
@@ -106,7 +117,7 @@ class gamess_tool(P2CToolGeneric):
             new_file.file.name = local_dir
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)
-            tool_activity.input_files.add(new_file)
+            tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
         # retrieve and delete after produced scratch files

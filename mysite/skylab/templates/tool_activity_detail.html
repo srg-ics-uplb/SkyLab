@@ -1,0 +1,27 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+    <div class='row'>
+        <div class='col-sm-6 col-sm-offset-3'>
+            <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+            <h1>Tool Activity {{ object.id }}</h1>
+            <p>Tool: {{ object.tool_name }}</p>
+            <p>MPI Cluster: {{ object.mpi_cluster }}</p>
+            <p>Command: {{ object.exec_string }}</p>
+            <p>Status: {{ object.status }}</p>
+            <p>Input Files: </p>
+            {% for file in object.input_files.all %}
+                <li>{{ file.filename }}</li>
+            {% endfor %}
+            <p>Output Files: </p>
+            {% for file in object.output_files.all %}
+                <li>{{ file.filename }}</li>
+            {% endfor %}
+
+        </div>
+    </div>
+
+
+
+{% endblock %}

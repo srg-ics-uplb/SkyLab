@@ -3,7 +3,7 @@ import os
 
 import pika
 from django.http import HttpResponse
-from django.views.generic import FormView
+from django.views.generic import FormView, DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
 
@@ -49,13 +49,16 @@ class CreateMPIView(CreateView):
 class Use_Gamess_View(FormView):
 	template_name = "use_gamess.html"
 	form_class = Use_Gamess_Form
-	success_url = "use-gamess"
+
 
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form
 		kwargs = super(Use_Gamess_View, self).get_form_kwargs()
 		kwargs['user'] = self.request.user
 		return kwargs
+
+	def get_success_url(self):
+		return "toolactivity_%d" % self.kwargs['id']
 
 	def form_valid(self, form):
 		cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
@@ -66,6 +69,7 @@ class Use_Gamess_View(FormView):
 		tool_activity = ToolActivity.objects.create(
 			mpi_cluster=cluster, tool_name="gamess", user=self.request.user, exec_string=exec_string
 		)
+		self.kwargs['id'] = tool_activity.id
 		new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input" % tool_activity.id,file=self.request.FILES['inp_file'], filename = self.request.FILES['inp_file'].name)
 		tool_activity.input_files.add(new_file)
 
@@ -82,6 +86,11 @@ class Use_Gamess_View(FormView):
 		send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
 		tool_activity.status = "Task Queued"
 		return super(Use_Gamess_View, self).form_valid(form)
+
+
+class ToolActivityDetail(DetailView):
+	model = ToolActivity
+	template_name = 'tool_activity_detail.html'
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
