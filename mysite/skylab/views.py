@@ -80,6 +80,7 @@ class Use_Gamess_View(FormView):
 		print message
 		# find a way to know if thread is already running
 		send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+		tool_activity.status = "Task Queued"
 		return super(Use_Gamess_View, self).form_valid(form)
 
 def index(request):

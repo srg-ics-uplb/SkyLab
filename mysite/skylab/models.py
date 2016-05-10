@@ -73,14 +73,14 @@ class ToolActivity(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
     status = models.CharField(default="Task Created",max_length=200)
-    input_files = models.ManyToManyField(SkyLabFile, blank=True)
-    # output_files = models.ManyToManyField(SkyLabFile)
+    status_code = models.SmallIntegerField(default=0)
+    input_files = models.ManyToManyField(SkyLabFile, related_name="input_files", blank=True)
+    output_files = models.ManyToManyField(SkyLabFile, related_name="output_files", blank=True)
     updated = models.DateTimeField(auto_now=True, auto_now_add=False)
     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
 
     def __str__(self):
         return self.tool_name
-
 
 @python_2_unicode_compatible
 class ToolLogs(models.Model):
