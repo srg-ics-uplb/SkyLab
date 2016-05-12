@@ -11,8 +11,10 @@ from django.utils.encoding import python_2_unicode_compatible
 
 # @python_2_unicode_compatible
 # class
-def get_available_tools():
-    dirs =  [(lst,lst)  for lst in os.listdir('skylab/modules') if not os.path.isfile(os.path.join('skylab/modules',lst)) and not lst.startswith("_")]
+def get_available_tools():  # TODO: get file __path__
+    module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules')
+    dirs = [(lst, lst) for lst in os.listdir(module_path) if
+            not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
     return dirs
 
 
@@ -82,12 +84,12 @@ class ToolActivity(models.Model):
     def __str__(self):
         return self.tool_name
 
-@python_2_unicode_compatible
-class ToolLogs(models.Model):
-    status = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-    tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
-
-    @property
-    def __str__(self):
-        return "activity{1}_log{2}".format(self.tool_activity.id, self.id)
+# @python_2_unicode_compatible
+# class ToolLogs(models.Model):
+#     status = models.CharField(max_length=200)
+#     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+#     tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
+#
+#     @property
+#     def __str__(self):
+#         return "activity{1}_log{2}".format(self.tool_activity.id, self.id)

@@ -1,6 +1,5 @@
 import os
 import re
-import shlex
 import shutil
 
 from django.conf import settings
@@ -57,10 +56,6 @@ class gamess_tool(P2CToolGeneric):
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
 
         export_path = "/mirror/gamess"
-        fix = "sudo /sbin/sysctl -w kernel.shmmax=500000000"
-        fix_shmmax = self.shell.spawn(shlex.split(fix), use_pty=True)
-        fix_shmmax.stdin_write(cluster_password + "\n")
-        fix_shmmax.wait_for_result()
         ToolActivity.objects.get(pk=self.id).status = "Running %s" % exec_string
         self.print_msg("Running %s" % exec_string)
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],

@@ -12,10 +12,12 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
+application = get_wsgi_application()
+
 
 from skylab.models import MPI_Cluster
 import spur, pika, threading
-import re, sys, json
+import re, sys, json, shlex
 from skylab.modules.gamess.tool import gamess_tool
 
 frontend_ip = "10.0.3.101"
@@ -166,6 +168,13 @@ class ConsumerThread(threading.Thread):
 
     def activate_tool(self,tool_name):
         self.print_to_console("Activating %s" % tool_name)
+        if tool_name == "gamess":
+            fix = "sudo /sbin/sysctl -w kernel.shmmax=500000000"
+            fix_shmmax = self.cluster_shell.spawn(shlex.split(fix), use_pty=True)
+            fix_shmmax.stdin_write(cluster_password + "\n")
+            print fix_shmmax.wait_for_result().output
+
+
         tool_activator = self.cluster_shell.run(["p2c-tools","activate",tool_name])
         # running sudo p2c-tools activate gamess associates gamess work directories to root
         # tool_activator = self.cluster_shell.spawn(["sudo", "p2c-tools", "activate", tool_name], use_pty=True)
@@ -277,4 +286,3 @@ ConsumerThreadManager().start()
 
 # handle_uploaded_file(x)
 
-application = get_wsgi_application()

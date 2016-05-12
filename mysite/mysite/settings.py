@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -36,7 +37,6 @@ INSTALLED_APPS = [
     'registration',
     'crispy_forms',
     'skylab',
-    # 'skylab.apps.SkylabConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,6 +54,7 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
 ]
 
 ROOT_URLCONF = 'mysite.urls'
@@ -144,6 +145,7 @@ STATIC_URL = '/static/'
 
 #django-registration-redux settings
 ACCOUNT_ACTIVATION_DAYS = 14
+LOGIN_REDIRECT_URL = "skylab-home"
 
 #crispy form settings
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
@@ -157,3 +159,13 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+PRIVATE_MEDIA_ROOT = MEDIA_ROOT
+PRIVATE_MEDIA_URL = MEDIA_URL
+
+SENDFILE_ROOT = MEDIA_ROOT
+
+SENDFILE_URL = '/media'
+
+# SENDFILE_BACKEND = 'sendfile.backends.mod_wsgi'
+SENDFILE_BACKEND = 'sendfile.backends.xsendfile'

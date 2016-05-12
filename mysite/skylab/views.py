@@ -2,14 +2,32 @@ import json
 import os
 
 import pika
+from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import FormView, DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
+from sendfile import sendfile
 
 from forms import Create_MPI_Cluster_Form, Use_Gamess_Form
 from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
 
+
+def has_read_permission(request, path):
+	# TODO: query if user in toolactivity
+	"Only show to authenticated users - extend this as desired"
+
+	return request.user.is_authenticated()
+
+
+def serve_private_file(request, path, filename):
+	"Simple example of a view to serve private files with xsendfile"
+	# if has_read_permission(request, path):
+	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
+	print fullpath
+
+	print sendfile(request, fullpath, attachment=True)
+	return sendfile(request, fullpath, attachment=True)
 
 def send_mpi_message(routing_key, body):
 	connection = pika.BlockingConnection(pika.ConnectionParameters(
