@@ -170,4 +170,4 @@ SENDFILE_URL = '/media'
 # SENDFILE_BACKEND = 'sendfile.backends.mod_wsgi'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
-SKYLAB_MODULES_DIR = "skylab.modules"  # : skylab/modules
+SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules

@@ -135,7 +135,8 @@ class ConsumerThread(threading.Thread):
             selected_tool = data['tool']
             selected_executable = "%s_executable" % data['executable']
             self.print_to_console("Using %s : %s" % (selected_tool, selected_executable))
-            mod = __import__("%s.%s.executables" % (settings.SKYLAB_MODULES_DIR, selected_tool), globals(), locals(),
+            mod = __import__("%s.%s.executables" % (settings.SKYLAB_MODULES_PACKAGE, selected_tool), globals(),
+                             locals(),
                              [selected_executable], -1)
             cls = getattr(mod, selected_executable)
             executable_obj = cls(shell=self.cluster_shell, id=data['activity'])
