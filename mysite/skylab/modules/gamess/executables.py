@@ -9,7 +9,8 @@ from skylab.modules.base_tool import P2CToolGeneric
 
 cluster_password = "mpiuser"
 
-class gamess_tool(P2CToolGeneric):
+
+class gamess_executable(P2CToolGeneric):
     def __init__(self, **kwargs):
 
         self.shell = kwargs.get('shell')
@@ -19,7 +20,7 @@ class gamess_tool(P2CToolGeneric):
         tool_activity.status = "Task started"
         tool_activity.status_code = 1
         tool_activity.save()
-        super(gamess_tool, self).__init__(self, **kwargs)
+        super(gamess_executable, self).__init__(self, **kwargs)
 
         pass
 
@@ -129,7 +130,7 @@ class gamess_tool(P2CToolGeneric):
             with open(localFilePath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
                                                      filename=file)
-                new_file.file.name = localFilePath
+                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
                 tool_activity = ToolActivity.objects.get(pk=self.id)
                 tool_activity.output_files.add(new_file)

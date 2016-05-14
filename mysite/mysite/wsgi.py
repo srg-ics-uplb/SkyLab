@@ -18,7 +18,7 @@ application = get_wsgi_application()
 from skylab.models import MPI_Cluster
 import spur, pika, threading
 import re, sys, json, shlex
-from skylab.modules.gamess.tool import gamess_tool
+from django.conf import settings
 
 frontend_ip = "10.0.3.101"
 frontend_username = "user"
@@ -58,7 +58,7 @@ class ConsumerThreadManager(threading.Thread):
         del self.threadHash[consumer_id]
 
     def run(self):
-        clusters = MPI_Cluster.objects.filter(status=1)
+        clusters = MPI_Cluster.objects.exclude(status=4)
         for c in clusters:
             if c.id not in self.threadHash:
                 self.threadHash[c.id] = ConsumerThread(pk=c.id, binding_key="skylab.consumer.%r" % c.id,
@@ -95,7 +95,7 @@ class ConsumerThread(threading.Thread):
         self.cluster_ip = kwargs.pop('cluster_ip', None)
         self.print_to_console("Created Consumer Thread ID: %d, Key: %s Cluster {name: %s, size: %d, ip:%r}" % (self.mpi_pk,self.binding_key,
                                                                                                self.cluster_name, self.cluster_size, self.cluster_ip))
-
+        self.connected = False
         self.status = 0
         super(ConsumerThread, self).__init__(*args, **kwargs)
         # self.setDaemon(True)
@@ -125,16 +125,21 @@ class ConsumerThread(threading.Thread):
         connection.close()
 
     def callback(self, channel, method, properties, body):
+        if not self.connected:
+            self.connect_or_create()
         self.status = 1
         self.print_to_console("Received : %r" % body)
         data = json.loads(body)
         # self.print_to_console("Received %s" % data)
         if data['actions'] == "use_tool":
-            self.print_to_console("Using %s" % data['tool'])
-
-            #todo: insert code for running gamess
-            tool = gamess_tool(shell=self.cluster_shell, id=data['activity'])
-            tool.run_tool()
+            selected_tool = data['tool']
+            selected_executable = "%s_executable" % data['executable']
+            self.print_to_console("Using %s : %s" % (selected_tool, selected_executable))
+            mod = __import__("%s.%s.executables" % (settings.SKYLAB_MODULES_DIR, selected_tool), globals(), locals(),
+                             [selected_executable], -1)
+            cls = getattr(mod, selected_executable)
+            executable_obj = cls(shell=self.cluster_shell, id=data['activity'])
+            executable_obj.run_tool()
 
         self.status = 0
 
@@ -238,13 +243,15 @@ class ConsumerThread(threading.Thread):
                 # self.changeStatus("Error: Failed to connect to frontend.")
         else:
             self.connect_to_cluster()
+            self.connected = True
 
         # update mpi_cluster status to ready
         self.print_to_console("Consumer now ready")
         MPI_Cluster.objects.filter(pk=self.mpi_pk).update(status=1)
 
     def run(self):
-        self.connect_or_create()
+        # threading.Thread(target=self.connect_or_create())
+        # self.connect_or_create()
         connection = pika.BlockingConnection(pika.ConnectionParameters(heartbeat_interval=0,
             host='localhost'))
 

@@ -3,14 +3,16 @@ import time
 
 from skylab.modules.base_tool import P2CToolGeneric
 
-class Impi(P2CToolGeneric):
+
+class impi_executable(P2CToolGeneric):
 	# 6, 11, 12 (segmentation fault) inherent error
 	# 3, 4 secondary numeric input needed
 	def __init__(self, **kwargs):
 		mpi_cluster_name = kwargs.get('mpi_cluster_name',"impi-cluster")
 		mpi_cluster_size = kwargs.get('mpi_cluster_size',"1")
 		auto_destroy = kwargs.get('auto_destroy',True)
-		super(Impi, self).__init__(tool_name="impi", mpi_cluster_name=mpi_cluster_name, mpi_cluster_size=mpi_cluster_size, auto_destroy=auto_destroy)
+		super(impi_executable, self).__init__(tool_name="impi", mpi_cluster_name=mpi_cluster_name,
+											  mpi_cluster_size=mpi_cluster_size, auto_destroy=auto_destroy)
 
 	def handle_input_files(self, **kwargs):
 		input_file = kwargs.get('input_file', "Lenna.jpg")

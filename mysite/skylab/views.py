@@ -45,7 +45,7 @@ def send_mpi_message(routing_key, body):
 						  body=body,
 						  properties=pika.BasicProperties(
 							  delivery_mode=2,  # make message persistent
-						  ), mandatory=True)
+						  ))
 
 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 	connection.close()
@@ -68,7 +68,6 @@ class Use_Gamess_View(FormView):
 	template_name = "use_gamess.html"
 	form_class = Use_Gamess_Form
 
-
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form
 		kwargs = super(Use_Gamess_View, self).get_form_kwargs()
@@ -76,7 +75,7 @@ class Use_Gamess_View(FormView):
 		return kwargs
 
 	def get_success_url(self):
-		return "toolactivity_%d" % self.kwargs['id']
+		return "toolactivity/%d" % self.kwargs['id']
 
 	def form_valid(self, form):
 		cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
@@ -96,7 +95,8 @@ class Use_Gamess_View(FormView):
 		data = {
 			"actions"		:	"use_tool",
 			"activity"		:	tool_activity.id,
-			"tool"			:	tool_activity.tool_name
+			"tool": tool_activity.tool_name,
+			"executable": "gamess",
 		}
 		message = json.dumps(data)
 		print message
@@ -109,6 +109,10 @@ class Use_Gamess_View(FormView):
 class ToolActivityDetail(DetailView):
 	model = ToolActivity
 	template_name = 'tool_activity_detail.html'
+
+	def get_queryset(self):
+		qs = super(ToolActivityDetail, self).get_queryset()
+		return qs.filter(user=self.request.user)
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")

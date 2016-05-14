@@ -31,11 +31,17 @@ def getClassByName(module, className):
     else:
         return getattr(module, className)
 
-mods = loadModules()
-print mods
-cls = getClassByName(mods["impi"], "Dummy")
-obj = cls()
-obj.talk()
+# mod = __import__("modules.impi.tool", globals(), locals(), ['Dummy'], -1)
+# cls = getattr(mod,'Dummy')
+# obj = cls()
+# obj.talk()
+
+
+# mods = loadModules()
+# print mods
+# cls = getClassByName(mods["impi"], "Dummy")
+# obj = cls()
+# obj.talk()
 # print mods
 # def cluster_shit(cluster_name, cluster_size):
 #     cls = getClassByName(mods["_base_tool"], "_MPICluster")

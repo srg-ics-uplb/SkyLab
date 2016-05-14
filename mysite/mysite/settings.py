@@ -26,7 +26,7 @@ SECRET_KEY = '34%6w9p0c(kmpgzuaqrl4fbc%=*b_!y63eoihloqjz$uh*v8&y'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1']
 
 
 
@@ -169,3 +169,5 @@ SENDFILE_URL = '/media'
 
 # SENDFILE_BACKEND = 'sendfile.backends.mod_wsgi'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
+
+SKYLAB_MODULES_DIR = "skylab.modules"  # : skylab/modules
