@@ -1,4 +1,66 @@
-# from django import forms
-#
-# class Use_gamess_Tool(forms.Form):
-#     input_file =
+import pika
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Fieldset, Submit
+from django import forms
+from django.core.exceptions import ValidationError
+from django.db.models import Q
+
+from skylab.models import MPI_Cluster
+
+
+def send_mpi_message(routing_key, body):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        host='localhost'))
+
+    channel = connection.channel()
+
+    channel.exchange_declare(exchange='topic_logs',
+                             type='topic')
+
+    channel.confirm_delivery()
+
+    channel.basic_publish(exchange='topic_logs',
+                          routing_key=routing_key,
+                          body=body,
+                          properties=pika.BasicProperties(
+                              delivery_mode=2,  # make message persistent
+                          ))
+
+    print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+    connection.close()
+
+
+def validate_gamess_input_extension(value):
+    if not value.name.endswith('.inp'):
+        raise ValidationError(u'Only (.inp) files are accepted')
+
+
+class use_gamess_form(forms.Form):
+    inp_file = forms.FileField(validators=[validate_gamess_input_extension], label="Input file")
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(use_gamess_form, self).__init__(*args, **kwargs)
+        # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
+        current_user_as_creator = Q(creator=self.user)
+        cluster_is_public = Q(shared_to_public=True)
+        supports_gamess = Q(supported_tools="gamess")
+        # is_ready = Q(status=1)
+        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = q.filter(supports_gamess).exclude(status=4)
+
+        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q)
+
+        self.helper = FormHelper()
+        self.helper.form_id = 'id-impiForm'
+        self.helper.form_class = 'use-tool-forms'
+        self.helper.form_method = 'post'
+        self.helper.form_action = ''
+        self.helper.layout = Layout(
+            Fieldset(
+                'Use Gamess',
+                'mpi_cluster',
+                'inp_file',
+            ),
+            Submit('submit', 'Execute')
+        )

@@ -127,7 +127,7 @@ class ConsumerThread(threading.Thread):
     def callback(self, channel, method, properties, body):
         if not self.connected:
             self.connect_or_create()
-        self.status = 1
+        # self.status = 1
         self.print_to_console("Received : %r" % body)
         data = json.loads(body)
         # self.print_to_console("Received %s" % data)
@@ -142,7 +142,7 @@ class ConsumerThread(threading.Thread):
             executable_obj = cls(shell=self.cluster_shell, id=data['activity'])
             executable_obj.run_tool()
 
-        self.status = 0
+            # self.status = 0
 
     def connect_to_frontend(self):
         try:
