@@ -108,9 +108,9 @@ class Use_Gamess_Form(forms.Form):
 		current_user_as_creator = Q(creator=self.user)
 		cluster_is_public = Q(shared_to_public=True)
 		supports_gamess = Q(supported_tools="gamess")
-		is_ready = Q(status=1)
+		# is_ready = Q(status=1)
 		q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
-		q = q.filter(supports_gamess)
+		q = q.filter(supports_gamess).exclude(status=4)
 
 		self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q)
 
