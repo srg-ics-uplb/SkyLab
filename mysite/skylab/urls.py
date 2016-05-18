@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.conf.urls import include, url
 
-from skylab.modules.gamess.views import use_gamess_view
+from skylab.modules.gamess.views import GamessView
 from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file
 
 urlpatterns = [
@@ -10,7 +10,7 @@ urlpatterns = [
 
                   # url(r'^$', views.use_impi, name='home'),
     url(r'^toolactivity/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='toolactivity_detailview'),
-    url(r'^use-gamess$', use_gamess_view.as_view(), name='use-gamess'),
+    url(r'^use-gamess$', GamessView.as_view(), name='use-gamess'),
     url(r'^$', HomeView.as_view(), name='skylab-home'),
     url(r'^create-mpi-cluster$', CreateMPIView.as_view(), name='create_mpi_cluster'),
     url(r'^auth/', include('registration.backends.hmac.urls')),

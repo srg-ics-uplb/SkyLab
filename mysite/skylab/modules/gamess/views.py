@@ -1,19 +1,42 @@
 import json
 import os
 
+import pika
 from django.views.generic import FormView
 
 from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
-from skylab.modules.gamess.forms import use_gamess_form
+from skylab.modules.gamess.forms import GamessForm
 
 
-class use_gamess_view(FormView):
+def send_mpi_message(routing_key, body):
+    connection = pika.BlockingConnection(pika.ConnectionParameters(
+        host='localhost'))
+
+    channel = connection.channel()
+
+    channel.exchange_declare(exchange='topic_logs',
+                             type='topic')
+
+    channel.confirm_delivery()
+
+    channel.basic_publish(exchange='topic_logs',
+                          routing_key=routing_key,
+                          body=body,
+                          properties=pika.BasicProperties(
+                              delivery_mode=2,  # make message persistent
+                          ))
+
+    print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+    connection.close()
+
+
+class GamessView(FormView):
     template_name = "modules/gamess/use_gamess.html"
-    form_class = use_gamess_form
+    form_class = GamessForm
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(use_gamess_view, self).get_form_kwargs()
+        kwargs = super(GamessView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -48,4 +71,4 @@ class use_gamess_view(FormView):
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
         tool_activity.status = "Task Queued"
-        return super(Use_Gamess_View, self).form_valid(form)
+        return super(GamessView, self).form_valid(form)

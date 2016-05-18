@@ -10,17 +10,17 @@ from skylab.modules.base_tool import P2CToolGeneric
 cluster_password = "mpiuser"
 
 
-class gamess_executable(P2CToolGeneric):
+class GamessExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
 
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d" % (self.id)
+        self.working_dir = "/mirror/tool_activity_%d" % self.id
         tool_activity = ToolActivity.objects.get(pk=self.id)
         tool_activity.status = "Task started"
         tool_activity.status_code = 1
         tool_activity.save()
-        super(gamess_executable, self).__init__(self, **kwargs)
+        super(GamessExecutable, self).__init__(self, **kwargs)
 
         pass
 
@@ -28,13 +28,13 @@ class gamess_executable(P2CToolGeneric):
         tool_activity = ToolActivity.objects.get(pk=self.id)
         tool_activity.status = "Fetching input files"
         tool_activity.save()
-        dir = "tool_activity_%d" % self.id
-        x = self.shell.run(["sh", "-c", "mkdir %s" % dir])
+        remote_dir = "tool_activity_%d" % self.id
+        x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
         print (x.output)
         f = SkyLabFile.objects.get(input_files__pk=self.id)
         self.filename = os.path.splitext(f.filename)[0]
         # for f in files:
-        with self.shell.open("/mirror/%s/" % dir + f.filename, "wb") as remote_file:
+        with self.shell.open("/mirror/%s/" % remote_dir + f.filename, "wb") as remote_file:
             with f.file as local_file:
                 shutil.copyfileobj(local_file, remote_file)
             remote_file.close()
@@ -46,12 +46,12 @@ class gamess_executable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
         # cleanup scratch directory
-        remotePath = "/mirror/scr/"
+        remote_path = "/mirror/scr/"
         sftp = self.shell._open_sftp_client()
-        filesInRemotePath = sftp.listdir(path=remotePath)
-        for file in filesInRemotePath:
-            remoteFilePath = os.path.join(remotePath, file)
-            sftp.remove(remoteFilePath)  # delete after transfer
+        remote_files = sftp.listdir(path=remote_path)
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
@@ -117,19 +117,19 @@ class gamess_executable(P2CToolGeneric):
             tool_activity.save()
             local_file.close()
         # retrieve and delete after produced scratch files
-        local_dir = "%s/output/" % (remote_dir)
+        local_dir = "%s/output/" % remote_dir
         server_path = os.path.join(media_root, local_dir)
         sftp = self.shell._open_sftp_client()
-        remotePath = "/mirror/scr/"
+        remote_path = "/mirror/scr/"
 
-        filesInRemotePath = sftp.listdir(path=remotePath)
-        for file in filesInRemotePath:
-            remoteFilePath = os.path.join(remotePath, file)
-            localFilePath = os.path.join(server_path, file)
-            sftp.get(remoteFilePath, localFilePath)
-            with open(localFilePath, "rb") as local_file:
+        remote_files = sftp.listdir(path=remote_path)
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            local_filepath = os.path.join(server_path, remote_file)
+            sftp.get(remote_filepath, local_filepath)
+            with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                     filename=file)
+                                                     filename=remote_file)
                 new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
                 tool_activity = ToolActivity.objects.get(pk=self.id)
@@ -137,12 +137,13 @@ class gamess_executable(P2CToolGeneric):
                 tool_activity.save()
                 local_file.close()
             # todo: insert code for sending file
-            sftp.remove(remoteFilePath)  # delete after transfer
+            sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
         tool_activity = ToolActivity.objects.get(pk=self.id)
         tool_activity.status = "Finished handling output files"
         tool_activity.save()
         self.print_msg("Output files sent")
+
     def changeStatus(self, status):
         pass

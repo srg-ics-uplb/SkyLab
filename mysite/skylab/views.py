@@ -1,6 +1,7 @@
 import os
 
 import pika
+import threading
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import DetailView
@@ -21,12 +22,12 @@ def has_read_permission(request, path):
 
 def serve_private_file(request, path, filename):
 	"Simple example of a view to serve private files with xsendfile"
-	# if has_read_permission(request, path):
-	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
-	print fullpath
-
-	print sendfile(request, fullpath, attachment=True)
-	return sendfile(request, fullpath, attachment=True)
+	if has_read_permission(request, path):
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
+		# print fullpath
+		#
+		# print sendfile(request, fullpath, attachment=True)
+		return sendfile(request, fullpath, attachment=True)
 
 def send_mpi_message(routing_key, body):
 	connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -56,6 +57,11 @@ class CreateMPIView(CreateView):
 	template_name = 'create_mpi_cluster.html'
 	form_class = Create_MPI_Cluster_Form
 	success_url = 'create-mpi-cluster'
+
+	threading.Thread()
+
+	def test(self):
+		self.render_to_response()
 
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form

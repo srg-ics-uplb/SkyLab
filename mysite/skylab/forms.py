@@ -105,6 +105,3 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 # 		self.helper.form_action = ''
 #
 # 		self.helper.add_input(Submit('submit','Execute'))
-
-
-

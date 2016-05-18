@@ -133,7 +133,7 @@ class ConsumerThread(threading.Thread):
         # self.print_to_console("Received %s" % data)
         if data['actions'] == "use_tool":
             selected_tool = data['tool']
-            selected_executable = "%s_executable" % data['executable']
+            selected_executable = "%sExecutable" % data['executable'].title()
             self.print_to_console("Using %s : %s" % (selected_tool, selected_executable))
             mod = __import__("%s.%s.executables" % (settings.SKYLAB_MODULES_PACKAGE, selected_tool), globals(),
                              locals(),
@@ -182,21 +182,8 @@ class ConsumerThread(threading.Thread):
 
 
         tool_activator = self.cluster_shell.run(["p2c-tools","activate",tool_name])
-        # running sudo p2c-tools activate gamess associates gamess work directories to root
-        # tool_activator = self.cluster_shell.spawn(["sudo", "p2c-tools", "activate", tool_name], use_pty=True)
-        #
-        # tool_activator.stdin_write(cluster_password + "\n")
-        # tool_activator = tool_activator.wait_for_result()
-        # p = re.compile("export\s(?P<path>PATH.+)")
-        # m = p.search(tool_activator.output)
-        # if m is not None:
-        #     self.cluster_shell.run(["sh","-c","export",m.group('path')])
-        # self.print_to_console(output.output)  #might be text-heavy skipped
         self.print_to_console(tool_activator.output)
         x = MPI_Cluster.objects.get(pk=self.mpi_pk)
-        # curr_tool = json.loads(x.supported_tools)
-        # curr_tool.append(tool_name)
-        # x.supported_tools = json.dumps(curr_tool)
         x.supported_tools = tool_name
         x.save()
         self.print_to_console("%s is now activated" % tool_name)

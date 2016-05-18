@@ -1,4 +1,3 @@
-import pika
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Submit
 from django import forms
@@ -8,39 +7,17 @@ from django.db.models import Q
 from skylab.models import MPI_Cluster
 
 
-def send_mpi_message(routing_key, body):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
-
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange='topic_logs',
-                             type='topic')
-
-    channel.confirm_delivery()
-
-    channel.basic_publish(exchange='topic_logs',
-                          routing_key=routing_key,
-                          body=body,
-                          properties=pika.BasicProperties(
-                              delivery_mode=2,  # make message persistent
-                          ))
-
-    print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
-    connection.close()
-
-
 def validate_gamess_input_extension(value):
     if not value.name.endswith('.inp'):
         raise ValidationError(u'Only (.inp) files are accepted')
 
 
-class use_gamess_form(forms.Form):
+class GamessForm(forms.Form):
     inp_file = forms.FileField(validators=[validate_gamess_input_extension], label="Input file")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
-        super(use_gamess_form, self).__init__(*args, **kwargs)
+        super(GamessForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
