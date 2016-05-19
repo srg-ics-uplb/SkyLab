@@ -6,7 +6,6 @@
 <div class='col-sm-8 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
 	<form action="" method="post">
-		{# csrf_token #}
 		{% crispy select_mpi_form %}
 		{{ item_forms.management_form }}
 		<div id="items-form-container">
@@ -27,12 +26,10 @@
 </div>
 </div>
 
-
-
 {% endblock %}
 
 {% block js %}
-<script type="text/html" id="item-template">
+<script type="text/html" id="item-template">	<!--div to be inserted-->
 	<div id="item-__prefix__">
 	    {% crispy item_forms.empty_form %}
 	</div>
@@ -45,7 +42,7 @@
 	        var count = $('#items-form-container').children().length;
 					if(count<{{ item_forms.max_num}}){
 						var tmplMarkup = $('#item-template').html();
-		        var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
+		        var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count); //inject template
 		        $('div#items-form-container').append(compiledTmpl);
 
 		        // update form count

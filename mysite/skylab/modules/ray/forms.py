@@ -16,7 +16,7 @@ class SelectMPIForm(forms.Form):
         supports_gamess = Q(supported_tools="gamess")
         # is_ready = Q(status=1)
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_gamess).exclude(status=4)
+        q = q.filter(supports_gamess).exclude(status=4) #exclude unusable clusters
 
         self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q)
 
@@ -40,6 +40,7 @@ class SelectMPIForm(forms.Form):
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
                         ('-p','-p'),
+                        ('-i','-i'),
                         ('-s','-s'),
     )
     parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)

@@ -9,22 +9,15 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
-# @python_2_unicode_compatible
-# class
+
 def get_available_tools():  # TODO: get file __path__
     module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules')
     dirs = [(lst, lst) for lst in os.listdir(module_path) if
             not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
     return dirs
 
-
-# @python_2_unicode_compatible      for future use
-# class SkylabTool(models.Model):
-#     name = models.CharField(max_length=100)
-
 @python_2_unicode_compatible
 class MPI_Cluster(models.Model):
-
     MAX_MPI_CLUSTER_SIZE = 10
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
@@ -63,10 +56,6 @@ class SkyLabFile(models.Model):
 
     def __str__(self):
         return self.filename
-
-# @python_2_unicode_compatible
-# class StatusLog(models.Model):
-#     type = models.CharField
 
 @python_2_unicode_compatible
 class ToolActivity(models.Model):
