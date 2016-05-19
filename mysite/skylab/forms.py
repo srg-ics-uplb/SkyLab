@@ -2,7 +2,7 @@ import json
 
 import pika
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit
+from crispy_forms.layout import Layout, Fieldset, Submit, ButtonHolder, HTML
 from django import forms
 
 from skylab.models import MPI_Cluster

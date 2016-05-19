@@ -148,7 +148,7 @@ ACCOUNT_ACTIVATION_DAYS = 14
 LOGIN_REDIRECT_URL = "skylab-home"
 
 #crispy form settings
-CRISPY_TEMPLATE_PACK = 'bootstrap3'
+CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 #email server settings
 EMAIL_HOST = 'localhost'

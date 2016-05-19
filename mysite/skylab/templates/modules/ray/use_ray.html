@@ -1,0 +1,64 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class='row'>
+<div class='col-sm-8 col-sm-offset-2'>
+	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+	<form action="" method="post">
+		{# csrf_token #}
+		{% crispy select_mpi_form %}
+		{{ item_forms.management_form }}
+		<div id="items-form-container">
+		    {% for item_form in item_forms %}
+		        <div id="item-{{ forloop.counter0 }}">
+		            {# item_form.id #}
+		            {% crispy item_form %}
+		        </div>
+		    {% endfor %}
+		</div>
+		<div id="last-div" class="col-sm-8">
+			<a href="#" id="add-item-button" class="btn btn-info add-item">Add Item</a>
+			<input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
+		</div>
+	</form>
+
+
+</div>
+</div>
+
+
+
+{% endblock %}
+
+{% block js %}
+<script type="text/html" id="item-template">
+	<div id="item-__prefix__">
+	    {% crispy item_forms.empty_form %}
+	</div>
+</script>
+
+<script>
+	$(document).ready(function() {
+	    $('.add-item').click(function(ev) {
+	        ev.preventDefault();
+	        var count = $('#items-form-container').children().length;
+					if(count<{{ item_forms.max_num}}){
+						var tmplMarkup = $('#item-template').html();
+		        var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count);
+		        $('div#items-form-container').append(compiledTmpl);
+
+		        // update form count
+		        $('#id_item_items-TOTAL_FORMS').attr('value', count+1);
+
+		        // some animate to scroll to view our new form
+		        $('html, body').animate({
+		                scrollTop: $("#last-div").position().top-200
+		            }, 800);
+					}else alert("Cannot add more.\nMax input parameter count reached")
+
+	    });
+	});
+</script>
+
+{% endblock %}

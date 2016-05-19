@@ -24,9 +24,7 @@ def serve_private_file(request, path, filename):
 	"Simple example of a view to serve private files with xsendfile"
 	if has_read_permission(request, path):
 		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
-		# print fullpath
-		#
-		# print sendfile(request, fullpath, attachment=True)
+
 		return sendfile(request, fullpath, attachment=True)
 
 def send_mpi_message(routing_key, body):

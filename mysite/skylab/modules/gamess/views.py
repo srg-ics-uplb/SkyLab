@@ -6,29 +6,7 @@ from django.views.generic import FormView
 
 from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
 from skylab.modules.gamess.forms import GamessForm
-
-
-def send_mpi_message(routing_key, body):
-    connection = pika.BlockingConnection(pika.ConnectionParameters(
-        host='localhost'))
-
-    channel = connection.channel()
-
-    channel.exchange_declare(exchange='topic_logs',
-                             type='topic')
-
-    channel.confirm_delivery()
-
-    channel.basic_publish(exchange='topic_logs',
-                          routing_key=routing_key,
-                          body=body,
-                          properties=pika.BasicProperties(
-                              delivery_mode=2,  # make message persistent
-                          ))
-
-    print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
-    connection.close()
-
+from skylab.modules.base_tool import send_mpi_message
 
 class GamessView(FormView):
     template_name = "modules/gamess/use_gamess.html"
