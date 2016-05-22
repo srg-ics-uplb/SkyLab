@@ -16,18 +16,13 @@ class GamessExecutable(P2CToolGeneric):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
-        tool_activity = ToolActivity.objects.get(pk=self.id)
-        tool_activity.status = "Task started"
-        tool_activity.status_code = 1
-        tool_activity.save()
+        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(GamessExecutable, self).__init__(self, **kwargs)
 
         pass
 
     def handle_input_files(self, **kwargs):
-        tool_activity = ToolActivity.objects.get(pk=self.id)
-        tool_activity.status = "Fetching input files"
-        tool_activity.save()
+        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
         remote_dir = "tool_activity_%d" % self.id
         x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
         print (x.output)
@@ -54,10 +49,11 @@ class GamessExecutable(P2CToolGeneric):
             sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
-        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-
         export_path = "/mirror/gamess"
-        ToolActivity.objects.get(pk=self.id).status = "Running %s" % exec_string
+
+        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
+        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+
         self.print_msg("Running %s" % exec_string)
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
                                     cwd=self.working_dir)
@@ -74,24 +70,18 @@ class GamessExecutable(P2CToolGeneric):
             # 2>&1 | tee nh3.hess.log;
             else:
                 self.print_msg("Finished command execution")
-                tool_activity = ToolActivity.objects.get(pk=self.id)
-                tool_activity.status = "Finished command execution"
-                tool_activity.status_code = 2
-                tool_activity.save()
+                ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+
         else:
-            tool_activity = ToolActivity.objects.get(pk=self.id)
-            tool_activity.status = "Error! See .log file for more information"
-            tool_activity.status_code = 4
-            tool_activity.save()
+            ToolActivity.objects.filter(pk=self.id).update(status="Error! See .log file for more information",
+                                                           status_code=4)
+
         self.handle_output_files()
 
-        tool_activity = ToolActivity.objects.get(pk=self.id)
-        tool_activity.status = "Task Finished"
-        tool_activity.save()
+        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
+
     def handle_output_files(self, **kwargs):
-        tool_activity = ToolActivity.objects.get(pk=self.id)
-        tool_activity.status = "Handling output files"
-        tool_activity.save()
+        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
@@ -140,9 +130,7 @@ class GamessExecutable(P2CToolGeneric):
             sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
-        tool_activity = ToolActivity.objects.get(pk=self.id)
-        tool_activity.status = "Finished handling output files"
-        tool_activity.save()
+        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
     def changeStatus(self, status):

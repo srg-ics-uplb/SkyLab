@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 """
 
 import os
+import time
 
 from django.core.wsgi import get_wsgi_application
 
@@ -17,7 +18,7 @@ application = get_wsgi_application()
 
 from skylab.models import MPI_Cluster
 import spur, pika, threading
-import re, sys, json, shlex
+import re, sys, json
 from django.conf import settings
 
 frontend_ip = "10.0.3.101"
@@ -98,6 +99,8 @@ class ConsumerThread(threading.Thread):
         self.connected = False
         self.status = 0
         super(ConsumerThread, self).__init__(*args, **kwargs)
+        init_thread = threading.Thread(target=self.connect_or_create)
+        init_thread.start()
         # self.setDaemon(True)
 
     def print_to_console(self, msg):
@@ -125,8 +128,9 @@ class ConsumerThread(threading.Thread):
         connection.close()
 
     def callback(self, channel, method, properties, body):
-        if not self.connected:
-            self.connect_or_create()
+        while not self.connected:
+            time.sleep(10)
+            print ("Waiting to connect")
         # self.status = 1
         self.print_to_console("Received : %r" % body)
         data = json.loads(body)
@@ -184,9 +188,8 @@ class ConsumerThread(threading.Thread):
         tool_activator = self.cluster_shell.spawn(["p2c-tools","activate",tool_name], use_pty=True)
         tool_activator.stdin_write(cluster_password + "\n")
         self.print_to_console(tool_activator.wait_for_result().output)
-        x = MPI_Cluster.objects.get(pk=self.mpi_pk)
-        x.supported_tools = tool_name
-        x.save()
+        MPI_Cluster.objects.filter(pk=self.mpi_pk).update(supported_tools=tool_name)
+
         self.print_to_console("%s is now activated" % tool_name)
 
     def update_p2c(self):
