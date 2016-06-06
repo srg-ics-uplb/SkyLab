@@ -1,25 +1,63 @@
 {% extends '_layouts/base.html' %}
 {% load crispy_forms_tags %}
+{% load staticfiles %}
 
 {% block content %}
 <div class='row'>
-<div class='col-sm-8 col-sm-offset-2'>
+    <div class='col-sm-10 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+
     <form action="" method="post" enctype="multipart/form-data">
-		{% crispy select_mpi_form %}
-		{{ item_forms.management_form }}
-		<div id="items-form-container">
-		    {% for item_form in item_forms %}
-		        <div id="item-{{ forloop.counter0 }}">
-		            {# item_form.id #}
-		            {% crispy item_form %}
-		        </div>
-		    {% endfor %}
-		</div>
-		<div id="last-div" class="col-sm-8">
-			<a href="#" id="add-item-button" class="btn btn-info add-item">Add Item</a>
-			<input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
-		</div>
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h3 class="panel-title">Use Ray</h3>
+            </div>
+            <div class="panel-body">
+                {% crispy select_mpi_form %}
+                {{ item_forms.management_form }}
+                {{ item_forms.non_form_errors.as_ul }}
+
+                {#            <table id="formset" class="form">#}
+                {#                {% for form in item_forms.forms %}#}
+                {#                  {% if forloop.first %}#}
+                {#                  <thead><tr>#}
+                {#                    {% for field in form.visible_fields %}#}
+                {#                    <th>{{ field.label|capfirst }}</th>#}
+                {#                    {% endfor %}#}
+                {#                  </tr></thead>#}
+                {#                  {% endif %}#}
+                {#                  <tr>#}
+                {#                  {% for field in form.visible_fields %}#}
+                {#                    <td>#}
+                {# Include the hidden fields in the form #}
+                {#                    {% if forloop.first %}#}
+                {#                      {% for hidden in form.hidden_fields %}#}
+                {#                      {{ hidden }}#}
+                {#                      {% endfor %}#}
+                {#                    {% endif %}#}
+                {#                      {{ field.errors.as_ul }}#}
+                {#                      {{ field }}#}
+                {#                    </td>#}
+                {#                  {% endfor %}#}
+                {#                  </tr>#}
+                {#                {% endfor %}#}
+                {#            </table>#}
+                <div id="items-form-container">
+
+                    {% for item_form in item_forms %}
+                        <div id="item-{{ forloop.counter0 }}">
+
+                            {% crispy item_form %}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div id="last-div" class="col-sm-8">
+                    <a href="#" id="add-item-button" class="btn btn-info add-item">Add Item</a>
+                    <input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
+                </div>
+            </div>
 	</form>
 
 
@@ -40,13 +78,13 @@
 	    $('.add-item').click(function(ev) {
 	        ev.preventDefault();
 	        var count = $('#items-form-container').children().length;
-					if(count<{{ item_forms.max_num}}){
-						var tmplMarkup = $('#item-template').html();
+            if (count <{{ item_forms.max_num}}) {
+                var tmplMarkup = $('#item-template').html();
 		        var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count); //inject template
 		        $('div#items-form-container').append(compiledTmpl);
 
 		        // update form count
-		        $('#id_item_items-TOTAL_FORMS').attr('value', count+1);
+                $('#id_form-TOTAL_FORMS').attr('value', count + 1);
 
 		        // some animate to scroll to view our new form
 		        $('html, body').animate({
@@ -57,5 +95,5 @@
 	    });
 	});
 </script>
-
+    <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
 {% endblock %}

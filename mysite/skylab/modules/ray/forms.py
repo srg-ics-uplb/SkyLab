@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Div, Field
+from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
 
@@ -27,14 +27,12 @@ class SelectMPIForm(forms.Form):
         # self.helper.form_method = 'post'
         self.helper.form_action = ''
         self.helper.layout = Layout(    #crispy_forms layout
-            Fieldset(
-                'Use Ray',
-                Div(
-                    'mpi_cluster',
-                    css_class ="col-sm-5"
-                )
 
+            Div(
+                'mpi_cluster',
+                css_class="col-sm-5"
             )
+
         )
 
 class InputParameterForm(forms.Form):
@@ -52,6 +50,7 @@ class InputParameterForm(forms.Form):
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
+        self.helper.disable_csrf = True
         self.helper.form_tag = False    #remove form headers
         # self.helper.form_id = 'id-rayForm'
         # self.helper.form_class = 'use-tool-forms'
@@ -65,8 +64,8 @@ class InputParameterForm(forms.Form):
                 Div('avg_outer_distance', css_class = 'col-sm-3 col-sm-offset-1'),
                 Field('std_deviation', wrapper_class = 'col-sm-3 col-sm-offset-1'),
 
-                Field('input_file1', wrapper_class = 'col-sm-4'),
-                Field('input_file2', wrapper_class = 'col-sm-4 col-sm-offset-1'),
+                Field('input_file1', wrapper_class='col-sm-1'),
+                Field('input_file2', wrapper_class='col-sm-1'),
                 css_class = 'col-sm-12'
             ),
         )

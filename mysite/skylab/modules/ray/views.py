@@ -26,6 +26,8 @@ class RayView(TemplateView):
         if select_mpi_form.is_valid() and item_forms.is_valid():
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
+            for form in item_forms:
+                print form.cleaned_data.get('parameter')
             pass
 
         return render(request, 'modules/ray/use_ray.html', {
