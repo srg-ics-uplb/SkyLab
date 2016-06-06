@@ -5,7 +5,7 @@
 <div class='row'>
 <div class='col-sm-8 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
-	<form action="" method="post">
+    <form action="" method="post" enctype="multipart/form-data">
 		{% crispy select_mpi_form %}
 		{{ item_forms.management_form }}
 		<div id="items-form-container">

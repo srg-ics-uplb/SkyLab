@@ -1,14 +1,9 @@
-import json
-import os
-
-import pika
+from django.forms import formset_factory
+from django.shortcuts import render
 from django.views.generic import TemplateView
 
-from django.forms import formset_factory
-
-from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIForm
-from skylab.modules.base_tool import send_mpi_message
+
 
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"
@@ -22,6 +17,22 @@ class RayView(TemplateView):
         context['item_forms'] = self.item_forms
         context['user'] = self.request.user
         return context
+
+    # todo: implement post function
+    def post(self, request, *args, **kwargs):
+        select_mpi_form = SelectMPIForm(request.POST)
+        item_forms = self.input_formset(request.POST, request.FILES)
+
+        if select_mpi_form.is_valid() and item_forms.is_valid():
+            # do something with the cleaned_data on the formsets.
+            # print select_mpi_form.cleaned_data.get('mpi_cluster')
+            pass
+
+        return render(request, 'modules/ray/use_ray.html', {
+            'select_mpi_form': select_mpi_form,
+            'item_forms': item_forms,
+        })
+
     # item_forms = input_formset()
 
     # def get_form_kwargs(self):

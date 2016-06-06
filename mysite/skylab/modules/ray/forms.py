@@ -1,8 +1,8 @@
-from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit, MultiField, Div, Field
-from crispy_forms.bootstrap import InlineField
+from crispy_forms.layout import Layout, Fieldset, Div, Field
+from django import forms
 from django.db.models import Q
+
 from skylab.models import MPI_Cluster
 
 
@@ -46,8 +46,9 @@ class InputParameterForm(forms.Form):
     parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
     avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.")
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.")
-    input_file1 = forms.FileField(label="Input file 1")
-    input_file2 = forms.FileField(label="Input file 2")
+    input_file1 = forms.FileField(label="Input file 1", required=False)
+    input_file2 = forms.FileField(label="Input file 2", required=False)
+
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)
         self.helper = FormHelper()
@@ -69,3 +70,24 @@ class InputParameterForm(forms.Form):
                 css_class = 'col-sm-12'
             ),
         )
+
+    def clean(self):
+        if self.cleaned_data:
+            parameter = self.cleaned_data['parameter']
+
+            input_file1 = self.cleaned_data['input_file1']
+            input_file2 = self.cleaned_data['input_file2']
+
+            if parameter == '-p':  # -p needs two input files
+                if not input_file1 or not input_file2:
+                    raise forms.ValidationError(
+                        '-p parameter requires two input files',
+                        code='-p_incomplete_input_files'
+                    )
+
+            elif parameter == '-i' or parameter == '-s':  # -i and -s needs one input file
+                if not input_file1:
+                    raise forms.ValidationError(
+                        '%s parameter requires one input file' % parameter,
+                        code='%s_incomplete_input_files' % parameter
+                    )
