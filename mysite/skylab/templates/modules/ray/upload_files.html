@@ -1,0 +1,9 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
+
+{% block content %}
+    {% crispy form %}
+{% endblock %}
+
+<script src="{% static 'jquery/js/jquery.formset.js' %}"></script>

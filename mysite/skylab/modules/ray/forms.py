@@ -2,6 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
+from multiupload.fields import MultiFileField
 
 from skylab.models import MPI_Cluster
 
@@ -34,6 +35,10 @@ class SelectMPIForm(forms.Form):
             )
 
         )
+
+
+class UploadForm(forms.Form):
+    attachments = MultiFileField(min_num=1)
 
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
