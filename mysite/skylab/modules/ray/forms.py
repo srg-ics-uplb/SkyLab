@@ -1,5 +1,6 @@
+from crispy_forms.bootstrap import FieldWithButtons
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field
+from crispy_forms.layout import Layout, Div, Field, Submit
 from django import forms
 from django.db.models import Q
 from multiupload.fields import MultiFileField
@@ -38,7 +39,19 @@ class SelectMPIForm(forms.Form):
 
 
 class UploadForm(forms.Form):
-    attachments = MultiFileField(min_num=1)
+    attachments = MultiFileField(min_num=1, label="Input Files",
+                                 help_text="Upload all files to be used including .conf file (if any)")
+
+    def __init__(self, *args, **kwargs):
+        super(UploadForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.form_action = ''
+
+        self.helper.layout = Layout(  # layout using crispy_forms
+            FieldWithButtons('attachments', Submit('next', 'Next'), wrapper_class='col-xs-8', ),
+
+        )
+
 
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args

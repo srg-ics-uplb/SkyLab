@@ -39,7 +39,7 @@ class RayView(TemplateView):
 class UploadView(FormView):
     template_name = 'modules/ray/upload_files.html'
     form_class = UploadForm
-    success_url = '/use_ray'
+    success_url = 'use_ray'
 
-    def form_valid(self, form):
-        pass
+    # def form_valid(self, form):
+    #     pass

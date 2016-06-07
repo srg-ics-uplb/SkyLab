@@ -5,6 +5,8 @@
     {% load staticfiles %}
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'skylab/css/forms.css' %}">
+
+
     <style>
         body {
             padding-bottom: 20px;
@@ -39,6 +41,7 @@
         {% block content %}{% endblock content %}
     </div>
     <script src="{% static 'jquery/js/jquery.min.js' %}"></script>
+    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
     {% block js %}{% endblock js %}
 </body>
 </html>
