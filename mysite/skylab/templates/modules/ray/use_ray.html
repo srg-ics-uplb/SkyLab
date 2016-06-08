@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class='row'>
-    <div class='col-sm-10 col-sm-offset-2'>
+    <div class='col-sm-11 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
 
         <form id="ray-form" action="" method="post" enctype="multipart/form-data">
@@ -18,43 +18,37 @@
 
 
                 <div id="item-formset-container">
+                    <table id="formset" class="form">
+                        {% for form in input_formset.forms %}
+                            {% if forloop.first %}
+                                <thead>
+                                <tr>
+                                    {% for field in form.visible_fields %}
+                                        <th>{{ field.label|capfirst }}</th>
+                                    {% endfor %}
+                                </tr>
+                                </thead>
+                            {% endif %}
+                            <tr>
+                                {% for field in form.visible_fields %}
 
-                    {% for form in input_formset %}
-                        <div class="item-formset">
-
-                            {#                            {% crispy item_form %}#}
-                            <table id="formset" class="form">
-                                {% for form in input_formset.forms %}
-                                    {% if forloop.first %}
-                                        <thead>
-                                        <tr>
-                                            {% for field in form.visible_fields %}
-                                                <th>{{ field.label|capfirst }}</th>
+                                    <td>
+                                        {#                                    Include the hidden fields in the form#}
+                                        {% if forloop.first %}
+                                            {% for hidden in form.hidden_fields %}
+                                                {{ hidden }}
                                             {% endfor %}
-                                        </tr>
-                                        </thead>
-                                    {% endif %}
-                                    <tr>
-                                        {% for field in form.visible_fields %}
+                                        {% endif %}
+                                        {{ field.errors.as_ul }}
 
-                                            <td>
-                                                {#                                    Include the hidden fields in the form#}
-                                                {% if forloop.first %}
-                                                    {% for hidden in form.hidden_fields %}
-                                                        {{ hidden }}
-                                                    {% endfor %}
-                                                {% endif %}
-                                                {{ field.errors.as_ul }}
+                                        {{ field }}
 
-                                                {{ field }}
-
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
+                                    </td>
                                 {% endfor %}
-                            </table>
-                        </div>
-                    {% endfor %}
+                            </tr>
+                        {% endfor %}
+
+                    </table>
                     {% if input_formset.non_form_errors %}
                         {% for error in input_formset.non_form_errors %}
                             {{ error|escape }}
@@ -70,24 +64,18 @@
 	</form>
 
 
-</div>
+    </div>
 </div>
 
 {% endblock %}
 
 {% block js %}
-    <script type="text/html" id="item-template">    <!--div to be inserted-->
-    <div id="item-__prefix__">
-        {% crispy input_formset.empty_form %}
-    </div>
-    </script>
-
-
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
     <script type="text/javascript">
         $(function () {
             $('#ray-form tbody tr').formset({
-                prefix: '{{ input_formset.prefix }}'
+                prefix: '{{ input_formset.prefix }}',
+                addText: 'add another input parameter'
             });
         })
     </script>

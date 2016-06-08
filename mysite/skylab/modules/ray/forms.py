@@ -31,7 +31,7 @@ class SelectMPIForm(forms.Form):
         self.helper.layout = Layout(    #crispy_forms layout
 
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-8'),
+                Field('mpi_cluster', wrapper_class='col-xs-4'),
                 css_class="col-sm-12"
             )
 
@@ -60,8 +60,9 @@ class InputParameterForm(forms.Form):
                         ('-s','-s'),
     )
     parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
-    avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.")
-    std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.")
+    avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.",
+                                            min_value=0)
+    std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.", min_value=0)
     input_file1 = forms.ChoiceField(label="Input file 1", required=False,
                                     widget=forms.Select(attrs={'class': 'file-select'}))
     input_file2 = forms.ChoiceField(label="Input file 2", required=False,
