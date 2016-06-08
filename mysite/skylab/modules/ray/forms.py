@@ -31,8 +31,8 @@ class SelectMPIForm(forms.Form):
         self.helper.layout = Layout(    #crispy_forms layout
 
             Div(
-                'mpi_cluster',
-                css_class="col-sm-5"
+                Field('mpi_cluster', wrapper_class='col-xs-8'),
+                css_class="col-sm-12"
             )
 
         )
@@ -62,31 +62,33 @@ class InputParameterForm(forms.Form):
     parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
     avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.")
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.")
-    input_file1 = forms.FileField(label="Input file 1", required=False)
-    input_file2 = forms.FileField(label="Input file 2", required=False)
+    input_file1 = forms.ChoiceField(label="Input file 1", required=False,
+                                    widget=forms.Select(attrs={'class': 'file-select'}))
+    input_file2 = forms.ChoiceField(label="Input file 2", required=False,
+                                    widget=forms.Select(attrs={'class': 'file-select'}))
 
-    def __init__(self, *args, **kwargs):
-        super(InputParameterForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.disable_csrf = True
-        self.helper.form_tag = False    #remove form headers
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
-        self.helper.form_action = ''
-
-        self.helper.layout = Layout(    #layout using crispy_forms
-            Div(
-                Div('parameter', css_class = 'col-sm-1'),
-                Div('avg_outer_distance', css_class = 'col-sm-3 col-sm-offset-1'),
-                Field('std_deviation', wrapper_class = 'col-sm-3 col-sm-offset-1'),
-
-                Field('input_file1', wrapper_class='col-sm-1'),
-                Field('input_file2', wrapper_class='col-sm-1'),
-                css_class = 'col-sm-12'
-            ),
-        )
+    # def __init__(self, *args, **kwargs):
+    #     super(InputParameterForm, self).__init__(*args, **kwargs)
+    #     self.helper = FormHelper()
+    #     self.helper.disable_csrf = True
+    #     self.helper.form_tag = False    #remove form headers
+    #     # self.helper.form_id = 'id-rayForm'
+    #     # self.helper.form_class = 'use-tool-forms'
+    #     # self.helper.form_method = 'post'
+    #
+    #     self.helper.form_action = ''
+    #
+    #     self.helper.layout = Layout(    #layout using crispy_forms
+    #         Div(
+    #             Div('parameter', css_class = 'col-sm-1'),
+    #             Div('avg_outer_distance', css_class = 'col-sm-3 col-sm-offset-1'),
+    #             Field('std_deviation', wrapper_class = 'col-sm-3 col-sm-offset-1'),
+    #
+    #             Field('input_file1', wrapper_class='col-xs-4'),
+    #             Field('input_file2', wrapper_class='col-xs-4'),
+    #             css_class = 'col-sm-12'
+    #         ),
+    #     )
 
     def clean(self):
         if self.cleaned_data:

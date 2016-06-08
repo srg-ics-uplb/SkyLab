@@ -7,54 +7,63 @@
     <div class='col-sm-10 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
 
-    <form action="" method="post" enctype="multipart/form-data">
+        <form id="ray-form" action="" method="post" enctype="multipart/form-data">
         <div class="panel panel-primary">
             <div class="panel-heading">
                 <h3 class="panel-title">Use Ray</h3>
             </div>
             <div class="panel-body">
                 {% crispy select_mpi_form %}
-                {{ item_forms.management_form }}
-                {{ item_forms.non_form_errors.as_ul }}
+                {{ input_formset.management_form }}
 
-                {#            <table id="formset" class="form">#}
-                {#                {% for form in item_forms.forms %}#}
-                {#                  {% if forloop.first %}#}
-                {#                  <thead><tr>#}
-                {#                    {% for field in form.visible_fields %}#}
-                {#                    <th>{{ field.label|capfirst }}</th>#}
-                {#                    {% endfor %}#}
-                {#                  </tr></thead>#}
-                {#                  {% endif %}#}
-                {#                  <tr>#}
-                {#                  {% for field in form.visible_fields %}#}
-                {#                    <td>#}
-                {# Include the hidden fields in the form #}
-                {#                    {% if forloop.first %}#}
-                {#                      {% for hidden in form.hidden_fields %}#}
-                {#                      {{ hidden }}#}
-                {#                      {% endfor %}#}
-                {#                    {% endif %}#}
-                {#                      {{ field.errors.as_ul }}#}
-                {#                      {{ field }}#}
-                {#                    </td>#}
-                {#                  {% endfor %}#}
-                {#                  </tr>#}
-                {#                {% endfor %}#}
-                {#            </table>#}
-                <div id="items-form-container">
 
-                    {% for item_form in item_forms %}
-                        <div id="item-{{ forloop.counter0 }}">
+                <div id="item-formset-container">
 
-                            {% crispy item_form %}
+                    {% for form in input_formset %}
+                        <div class="item-formset">
+
+                            {#                            {% crispy item_form %}#}
+                            <table id="formset" class="form">
+                                {% for form in input_formset.forms %}
+                                    {% if forloop.first %}
+                                        <thead>
+                                        <tr>
+                                            {% for field in form.visible_fields %}
+                                                <th>{{ field.label|capfirst }}</th>
+                                            {% endfor %}
+                                        </tr>
+                                        </thead>
+                                    {% endif %}
+                                    <tr>
+                                        {% for field in form.visible_fields %}
+
+                                            <td>
+                                                {#                                    Include the hidden fields in the form#}
+                                                {% if forloop.first %}
+                                                    {% for hidden in form.hidden_fields %}
+                                                        {{ hidden }}
+                                                    {% endfor %}
+                                                {% endif %}
+                                                {{ field.errors.as_ul }}
+
+                                                {{ field }}
+
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </table>
                         </div>
                     {% endfor %}
-
+                    {% if input_formset.non_form_errors %}
+                        {% for error in input_formset.non_form_errors %}
+                            {{ error|escape }}
+                        {% endfor %}
+                    {% endif %}
                 </div>
 
                 <div id="last-div" class="col-sm-8">
-                    <a href="#" id="add-item-button" class="btn btn-info add-item">Add Item</a>
+
                     <input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
                 </div>
             </div>
@@ -67,33 +76,20 @@
 {% endblock %}
 
 {% block js %}
-<script type="text/html" id="item-template">	<!--div to be inserted-->
-	<div id="item-__prefix__">
-	    {% crispy item_forms.empty_form %}
-	</div>
-</script>
+    <script type="text/html" id="item-template">    <!--div to be inserted-->
+    <div id="item-__prefix__">
+        {% crispy input_formset.empty_form %}
+    </div>
+    </script>
 
-<script>
-	$(document).ready(function() {
-	    $('.add-item').click(function(ev) {
-	        ev.preventDefault();
-	        var count = $('#items-form-container').children().length;
-            if (count <{{ item_forms.max_num}}) {
-                var tmplMarkup = $('#item-template').html();
-		        var compiledTmpl = tmplMarkup.replace(/__prefix__/g, count); //inject template
-		        $('div#items-form-container').append(compiledTmpl);
 
-		        // update form count
-                $('#id_form-TOTAL_FORMS').attr('value', count + 1);
-
-		        // some animate to scroll to view our new form
-		        $('html, body').animate({
-		                scrollTop: $("#last-div").position().top-200
-		            }, 800);
-					}else alert("Cannot add more.\nMax input parameter count reached")
-
-	    });
-	});
-</script>
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
+    <script type="text/javascript">
+        $(function () {
+            $('#ray-form tbody tr').formset({
+                prefix: '{{ input_formset.prefix }}'
+            });
+        })
+    </script>
+
 {% endblock %}
