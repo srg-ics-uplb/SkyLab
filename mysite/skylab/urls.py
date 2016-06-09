@@ -10,6 +10,7 @@ urlpatterns = [
                   # url(r'^accounts/', include('registration.backends.default.urls')),
 
                   # url(r'^$', views.use_impi, name='home'),
+
     url(r'^toolactivity/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='toolactivity_detailview'),
     url(r'^use-gamess$', GamessView.as_view(), name='use-gamess'),
     url(r'^ray/use_ray$', RayView.as_view(), name='use-ray'),

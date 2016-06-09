@@ -7,7 +7,8 @@ from skylab.modules.ray.forms import InputParameterForm, SelectMPIForm
 
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"
-    input_formset = formset_factory(InputParameterForm, max_num=10, validate_max=True, can_delete=True)
+    input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
+                                    validate_min=True, can_delete=True)
     input_forms = input_formset()
 
 
@@ -20,8 +21,8 @@ class RayView(TemplateView):
 
     # todo: implement post function
     def post(self, request, *args, **kwargs):
-        select_mpi_form = SelectMPIForm(request.POST)
-        input_formset = self.input_formset(request.POST, request.FILES)
+        select_mpi_form = SelectMPIForm(request.POST, request.FILES)
+        input_formset = self.input_formset(request.POST)
 
         if select_mpi_form.is_valid() and input_formset.is_valid():
             # do something with the cleaned_data on the formsets.
@@ -34,4 +35,5 @@ class RayView(TemplateView):
             'select_mpi_form': select_mpi_form,
             'input_formset': input_formset,
         })
+
 

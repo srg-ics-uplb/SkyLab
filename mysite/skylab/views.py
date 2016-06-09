@@ -1,7 +1,6 @@
 import os
 
 import pika
-import threading
 from django.conf import settings
 from django.http import HttpResponse
 from django.views.generic import DetailView
@@ -55,8 +54,6 @@ class CreateMPIView(CreateView):
 	template_name = 'create_mpi_cluster.html'
 	form_class = Create_MPI_Cluster_Form
 	success_url = 'create-mpi-cluster'
-
-	threading.Thread()
 
 	def test(self):
 		self.render_to_response()

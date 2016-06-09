@@ -46,7 +46,6 @@ class SelectMPIForm(forms.Form):
 
 
 
-
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
                         ('-p','-p'),
@@ -57,33 +56,37 @@ class InputParameterForm(forms.Form):
     avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.",
                                             min_value=0)
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.", min_value=0)
-    input_file1 = forms.ChoiceField(label="Input file 1", required=False,
-                                    widget=forms.Select(attrs={'class': 'file-select'}))
-    input_file2 = forms.ChoiceField(label="Input file 2", required=False,
-                                    widget=forms.Select(attrs={'class': 'file-select'}))
 
-    # def __init__(self, *args, **kwargs):
-    #     super(InputParameterForm, self).__init__(*args, **kwargs)
-    #     self.helper = FormHelper()
-    #     self.helper.disable_csrf = True
-    #     self.helper.form_tag = False    #remove form headers
-    #     # self.helper.form_id = 'id-rayForm'
-    #     # self.helper.form_class = 'use-tool-forms'
-    #     # self.helper.form_method = 'post'
-    #
-    #     self.helper.form_action = ''
-    #
-    #     self.helper.layout = Layout(    #layout using crispy_forms
-    #         Div(
-    #             Div('parameter', css_class = 'col-sm-1'),
-    #             Div('avg_outer_distance', css_class = 'col-sm-3 col-sm-offset-1'),
-    #             Field('std_deviation', wrapper_class = 'col-sm-3 col-sm-offset-1'),
-    #
-    #             Field('input_file1', wrapper_class='col-xs-4'),
-    #             Field('input_file2', wrapper_class='col-xs-4'),
-    #             css_class = 'col-sm-12'
-    #         ),
-    #     )
+    INITIAL_CHOICES = (('', '---------'),)
+    input_file1 = forms.ChoiceField(label="Input file 1", required=False, choices=INITIAL_CHOICES)
+    # widget=forms.Select(attrs={'class': 'file-select'}))
+    input_file2 = forms.ChoiceField(label="Input file 2", required=False, choices=INITIAL_CHOICES)
+
+    # widget=forms.Select(attrs={'class': 'file-select'}))
+
+    def __init__(self, *args, **kwargs):
+        super(InputParameterForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.disable_csrf = True
+        self.helper.form_tag = False  # remove form headers
+        # self.helper.form_id = 'id-rayForm'
+        # self.helper.form_class = 'use-tool-forms'
+        # self.helper.form_method = 'post'
+
+        self.helper.form_action = ''
+
+        self.helper.layout = Layout(  # layout using crispy_forms
+            Div(
+                Div('parameter', css_class='col-xs-1'),
+                Div('avg_outer_distance', css_class='col-xs-2'),
+                Div('std_deviation', css_class='col-xs-2'),
+
+                Div('input_file1', css_class='col-xs-3'),
+                Div('input_file2', css_class='col-xs-3'),
+
+                css_class='row-fluid col-sm-12 form-container'
+            ),
+        )
 
     def clean(self):
         if self.cleaned_data:
@@ -92,7 +95,25 @@ class InputParameterForm(forms.Form):
             input_file1 = self.cleaned_data['input_file1']
             input_file2 = self.cleaned_data['input_file2']
 
+            print parameter, input_file1
+
             if parameter == '-p':  # -p needs two input files
+                print "Goes inside parameter -p"
+
+                if not input_file1:
+                    print "None1"
+                    raise forms.ValidationError(
+                        '-p parameter requires two input files',
+                        code='-p_incomplete_input_files'
+                    )
+                else:
+                    print "M1"
+
+                if not input_file2:
+                    print "None2"
+                else:
+                    print "M2"
+
                 if not input_file1 or not input_file2:
                     raise forms.ValidationError(
                         '-p parameter requires two input files',
