@@ -21,13 +21,14 @@
 
                 <div id="item-formset-container">
                     {% for form in input_formset.forms %}
+                        {#                        <div class="alert alert-danger">dsadsadsa</div>#}
+                        {#                        <div class="alert alert-info">ahahahah</div>#}
                         {% crispy form %}
+
                     {% endfor %}
 
+
                 </div>
-
-
-
                     <input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
 
             </div>
@@ -42,16 +43,16 @@
 {% block js %}
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
     <script type="text/javascript">
+        {#  edit how form_errors are displayed   #}
+        $('.alert-block').addClass("col-sm-12");
 
-
+        {# for dynamic formset add/remove        #}
         $(function () {
             $('.form-container').formset({
                 prefix: '{{ input_formset.prefix }}',
                 addText: 'Add input parameter'
             });
         })
-
-
     </script>
 
 {% endblock %}

@@ -69,6 +69,7 @@ class InputParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
+        # self.helper.form_error_title = "Form Errors"
         # self.helper.form_id = 'id-rayForm'
         # self.helper.form_class = 'use-tool-forms'
         # self.helper.form_method = 'post'
