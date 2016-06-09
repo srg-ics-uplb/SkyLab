@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class='row'>
-    <div class='col-sm-11 col-sm-offset-2'>
+    <div class='col-sm-10 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
 
         <form id="ray-form" action="" method="post" enctype="multipart/form-data">
@@ -17,14 +17,16 @@
                 {{ input_formset.management_form }}
 
 
-                <div id="item-formset-container">
+                <div id="item-formset-container" class="col-sm-12">
                     <table id="formset" class="form">
                         {% for form in input_formset.forms %}
                             {% if forloop.first %}
                                 <thead>
                                 <tr>
                                     {% for field in form.visible_fields %}
-                                        <th>{{ field.label|capfirst }}</th>
+                                        {% if field.name != "DELETE" %}
+                                            <th>{{ field.label|capfirst }}</th>
+                                        {% endif %}
                                     {% endfor %}
                                 </tr>
                                 </thead>

@@ -1,8 +1,8 @@
 from django.forms import formset_factory
 from django.shortcuts import render
-from django.views.generic import TemplateView, FormView
+from django.views.generic import TemplateView
 
-from skylab.modules.ray.forms import InputParameterForm, SelectMPIForm, UploadForm
+from skylab.modules.ray.forms import InputParameterForm, SelectMPIForm
 
 
 class RayView(TemplateView):
@@ -35,11 +35,3 @@ class RayView(TemplateView):
             'input_formset': input_formset,
         })
 
-
-class UploadView(FormView):
-    template_name = 'modules/ray/upload_files.html'
-    form_class = UploadForm
-    success_url = 'use_ray'
-
-    # def form_valid(self, form):
-    #     pass

@@ -1,6 +1,5 @@
-from crispy_forms.bootstrap import FieldWithButtons
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Submit
+from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
 from multiupload.fields import MultiFileField
@@ -9,6 +8,9 @@ from skylab.models import MPI_Cluster
 
 
 class SelectMPIForm(forms.Form):
+    attachments = MultiFileField(min_num=1, label="Input Files",
+                                 help_text="Upload all files to be used including .conf file (if any)")
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
         super(SelectMPIForm, self).__init__(*args, **kwargs)
@@ -33,24 +35,16 @@ class SelectMPIForm(forms.Form):
             Div(
                 Field('mpi_cluster', wrapper_class='col-xs-4'),
                 css_class="col-sm-12"
-            )
+            ),
+            Div(
+                Field('attachments', wrapper_class='col-xs-6'),
+                css_class="col-sm-12"
+            ),
 
         )
 
 
-class UploadForm(forms.Form):
-    attachments = MultiFileField(min_num=1, label="Input Files",
-                                 help_text="Upload all files to be used including .conf file (if any)")
 
-    def __init__(self, *args, **kwargs):
-        super(UploadForm, self).__init__(*args, **kwargs)
-        self.helper = FormHelper()
-        self.helper.form_action = ''
-
-        self.helper.layout = Layout(  # layout using crispy_forms
-            FieldWithButtons('attachments', Submit('next', 'Next'), wrapper_class='col-xs-8', ),
-
-        )
 
 
 class InputParameterForm(forms.Form):
