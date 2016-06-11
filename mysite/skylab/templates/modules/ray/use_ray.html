@@ -18,8 +18,7 @@
                 {% crispy select_mpi_form %}
                 {{ input_formset.management_form }}
 
-
-                <div id="item-formset-container">
+                <div id="input-formset-container">
                     {% for form in input_formset.forms %}
                         {#                        <div class="alert alert-danger">dsadsadsa</div>#}
                         {#                        <div class="alert alert-info">ahahahah</div>#}
@@ -53,6 +52,25 @@
                 addText: 'Add input parameter'
             });
         })
+
+        {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
+        $('.panel-body').on('change', "select", function () {
+            if (match = $(this).attr('name').match(/form-(\d+)-parameter/)) {
+                inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2'
+                parameter = $(this).val()
+                if (parameter === "-p") {
+                    $(inp_file2_div_id).show()
+                } else {
+                    $(inp_file2_div_id).hide()
+                }
+
+
+            }
+        });
+
+
+
+
     </script>
 
 {% endblock %}

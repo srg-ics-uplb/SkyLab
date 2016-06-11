@@ -2,7 +2,7 @@ from django.forms import formset_factory
 from django.shortcuts import render
 from django.views.generic import TemplateView
 
-from skylab.modules.ray.forms import InputParameterForm, SelectMPIForm
+from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm
 
 
 class RayView(TemplateView):
@@ -14,14 +14,14 @@ class RayView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(RayView, self).get_context_data(**kwargs)
-        context['select_mpi_form'] = SelectMPIForm()
+        context['select_mpi_form'] = SelectMPIFilesForm()
         context['input_formset'] = self.input_forms
         context['user'] = self.request.user
         return context
 
     # todo: implement post function
     def post(self, request, *args, **kwargs):
-        select_mpi_form = SelectMPIForm(request.POST, request.FILES)
+        select_mpi_form = SelectMPIFilesForm(request.POST, request.FILES)
         input_formset = self.input_formset(request.POST)
 
         if select_mpi_form.is_valid() and input_formset.is_valid():
