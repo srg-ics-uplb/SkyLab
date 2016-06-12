@@ -38,6 +38,22 @@ class SelectMPIFilesForm(forms.Form):
 
         )
 
+
+def validate_ray_file_extension(value):
+    # export.txt, qseq.txt are not supported because of lack of documentation on their use case
+    valid_file_extensions = ['.fasta', '.fa', '.fasta.gz', '.fa.gz', '.fasta.bz2', '.fa.bz2', '.fastq', '.fq',
+                             '.fastq.gz', '.fq.gz', '.fastq.bz2',
+                             '.fq.bz2', '.sff', '.csfasta', '.csfa', '.conf'
+                             ]
+    valid = False
+    for ext in valid_file_extensions:
+        if value.name.lower().endswith(ext):
+            valid = True
+            break
+    if not valid:
+        raise forms.ValidationError(u'Filetype not supported', code='invalid_filetype')
+
+
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
                         ('-p','-p'),
@@ -49,9 +65,8 @@ class InputParameterForm(forms.Form):
                                             min_value=0)
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.", min_value=0)
 
-    INITIAL_CHOICES = (('', '---------'),)
-    input_file1 = forms.FileField(label="Input file 1", required=False)
-    input_file2 = forms.FileField(label="Input file 2", required=False)
+    input_file1 = forms.FileField(label="Input file 1", validators=[validate_ray_file_extension], required=False)
+    input_file2 = forms.FileField(label="Input file 2", validators=[validate_ray_file_extension], required=False)
 
 
     def __init__(self, *args, **kwargs):
@@ -82,11 +97,10 @@ class InputParameterForm(forms.Form):
     def clean(self):
         if self.cleaned_data:
             parameter = self.cleaned_data['parameter']
+            input_file1 = self.cleaned_data.get('input_file1')
+            input_file2 = self.cleaned_data.get('input_file2')
 
-            input_file1 = self.cleaned_data['input_file1']
-            input_file2 = self.cleaned_data['input_file2']
-
-            print parameter, input_file1
+            # print parameter, input_file1
 
             if parameter == '-p':  # -p needs two input files
 
@@ -102,3 +116,5 @@ class InputParameterForm(forms.Form):
                         '%s parameter requires one input file' % parameter,
                         code='%s_incomplete_input_files' % parameter
                     )
+
+                    # TODO: create tab layout then add other parameters

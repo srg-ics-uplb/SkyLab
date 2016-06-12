@@ -19,17 +19,17 @@ class RayView(TemplateView):
         context['user'] = self.request.user
         return context
 
-    # todo: implement post function
     def post(self, request, *args, **kwargs):
-        select_mpi_form = SelectMPIFilesForm(request.POST, request.FILES)
-        input_formset = self.input_formset(request.POST)
+        select_mpi_form = SelectMPIFilesForm(request.POST)
+        input_formset = self.input_formset(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and input_formset.is_valid():
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
             for form in input_formset:
-                print form.cleaned_data.get('parameter')
-            pass
+                # print form.cleaned_data.get('parameter')
+                # TODO: generate exec_string here
+                pass
 
         return render(request, 'modules/ray/use_ray.html', {
             'select_mpi_form': select_mpi_form,
