@@ -15,22 +15,38 @@
                 <h3 class="panel-title">Use Ray</h3>
             </div>
             <div class="panel-body">
-                {% crispy select_mpi_form %}
-                {{ input_formset.management_form }}
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
+                    <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
 
-                <div id="input-formset-container">
-                    {% for form in input_formset.forms %}
-                        {#                        <div class="alert alert-danger">dsadsadsa</div>#}
-                        {#                        <div class="alert alert-info">ahahahah</div>#}
-                        {% crispy form %}
+                </ul>
 
-                    {% endfor %}
+                <div class="tab-content">
+                    <div id="tab1" class="tab-pane fade in active">
+                        {% crispy select_mpi_form %}
+                        {{ input_formset.management_form }}
 
+                        <div id="input-formset-container">
+                            {% for form in input_formset.forms %}
+                                {% crispy form %}
+                            {% endfor %}
+                        </div>
+                        <div class="col-sm-12">
+                            <br>
+                            <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
+
+                        </div>
+
+                    </div>
+                    <div id="tab2" class="tab-pane fade">
+                        {#       crispy other_parameters_form             #}
+                    </div>
 
                 </div>
-                    <input name="submit" value="Execute" type="submit" class="btn btn-primary"></input>
+
 
             </div>
+        </div>
 	</form>
 
 

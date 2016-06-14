@@ -2,6 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
+from multiupload.fields import MultiFileField
 
 from skylab.models import MPI_Cluster
 
@@ -117,4 +118,37 @@ class InputParameterForm(forms.Form):
                         code='%s_incomplete_input_files' % parameter
                     )
 
-                    # TODO: create tab layout then add other parameters
+
+def odd_number_validator(value):
+    if (value % 2 == 0):
+        raise forms.ValidationError(u'Value must be odd', code='kmer_even_input')
+
+
+def tsv_file_validator(file):
+    pass
+
+
+class OtherParameterForm(forms.Form):
+    param_kmer = forms.BooleanField(initial=False, required=False)
+    # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
+    # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
+    subparam_kmer_length = forms.IntegerField(initial=21, validators=[odd_number_validator], max_value=32, min_value=1,
+                                              required=False)
+
+    # Ray surveyor options
+    param_run_surveyor = forms.BooleanField(initial=False, required=False)
+    param_read_sample_graph = forms.BooleanField(initial=False, required=False)  # dependent on -write-kmers parameter
+    # sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
+
+    # Assembly options are skipped because documentation says (defaults work well)
+    # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
+
+    # Biological abundances
+    param_search = forms.BooleanField(initial=False, required=False)
+    subparam_searchFiles = MultiFileField(min_num=1, required=False,
+                                          help_text="Provide fasta files to be searched in the de Bruijn graph.")  # save to tool_activity_x/input/search
+    param_one_color_per_file = forms.BooleanField(initial=False, required=False)
+
+    # Taxonomic profiling with colored de Bruijn graphs
+    param_with_taxonomy = forms.BooleanField(required=False, initial=False)
+    subparam_genome_to_taxon_file = forms.FileField(required=False, initial=False)
