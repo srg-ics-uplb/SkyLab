@@ -3,7 +3,7 @@ from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
 from multiupload.fields import MultiFileField
-
+import os
 from skylab.models import MPI_Cluster
 
 
@@ -121,11 +121,19 @@ class InputParameterForm(forms.Form):
 
 def odd_number_validator(value):
     if (value % 2 == 0):
-        raise forms.ValidationError(u'Value must be odd', code='kmer_even_input')
+        raise forms.ValidationError(u'Value must be odd', code='ray_kmer_even_input')
 
 
 def tsv_file_validator(file):
-    pass
+    ext = os.path.splitext(file.name)[1]
+    if ext.lower() != '.tsv':
+        raise forms.ValidationError(u'Only .tsv file accepted', code="ray_taxo_not_tsv")
+
+
+def txt_file_validator(file):
+    ext = os.path.splitext(file.name)[1]
+    if ext.lower() != '.txt':
+        raise forms.ValidationError(u'Only .txt file accepted', code="ray_gene_ontology_not_txt")
 
 
 class OtherParameterForm(forms.Form):
@@ -135,20 +143,51 @@ class OtherParameterForm(forms.Form):
     subparam_kmer_length = forms.IntegerField(initial=21, validators=[odd_number_validator], max_value=32, min_value=1,
                                               required=False)
 
-    # Ray surveyor options
+    # Ray surveyor options See Documentation/Ray-Surveyor.md
     param_run_surveyor = forms.BooleanField(initial=False, required=False)
     param_read_sample_graph = forms.BooleanField(initial=False, required=False)  # dependent on -write-kmers parameter
-    # sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
+    # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
     # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
 
-    # Biological abundances
+    # Biological abundances See Documentation/BiologicalAbundances.txt
     param_search = forms.BooleanField(initial=False, required=False)
     subparam_searchFiles = MultiFileField(min_num=1, required=False,
                                           help_text="Provide fasta files to be searched in the de Bruijn graph.")  # save to tool_activity_x/input/search
     param_one_color_per_file = forms.BooleanField(initial=False, required=False)
 
     # Taxonomic profiling with colored de Bruijn graphs
+    # Computes and writes detailed taxonomic profiles. See Documentation/Taxonomy.txt for details.
     param_with_taxonomy = forms.BooleanField(required=False, initial=False)
-    subparam_genome_to_taxon_file = forms.FileField(required=False, initial=False)
+    subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator])
+    subparam_tree_of_life_edges_file = forms.FileField(required=False, validators=[tsv_file_validator])
+    subparam_taxon_names_file = forms.FileField(required=False, validators=[tsv_file_validator])
+
+    # Provides an ontology and annotations. See Documentation/GeneOntology.txt
+    param_gene_ontology = forms.BooleanField(required=False, initial=False)
+    subparam_ontology_terms_file = forms.FileField(required=False, validators=[txt_file_validator])
+    subparam_annotations_file = forms.FileField(required=False, validators=[txt_file_validator])
+
+    # Other outputs
+    param_enable_neighbourhoods = forms.BooleanField(required=False, initial=False)
+    param_amos = forms.BooleanField(required=False, initial=False)
+    param_write_kmers = forms.BooleanField(required=False, initial=False)
+    param_graph_only = forms.BooleanField(required=False, initial=False)
+    param_write_read_markers = forms.BooleanField(required=False, initial=False)
+    param_write_seeds = forms.BooleanField(required=False, initial=False)
+    param_write_extensions = forms.BooleanField(required=False, initial=False)
+    param_write_contig_paths = forms.BooleanField(required=False, initial=False)
+    param_write_marker_summary = forms.BooleanField(required=False, initial=False)
+
+    # Memory usage options is skipped
+    # Algorithm verbosity
+    param_show_extension_choice = forms.BooleanField(required=False, initial=False)
+    param_show_ending_context = forms.BooleanField(required=False, initial=False)
+    param_distance_summary = forms.BooleanField(required=False, initial=False)
+    param_show_consensus = forms.BooleanField(required=False, initial=False)
+
+# Checkpointing is skipped
+# Message routing is skipped
+# Hardware testing is skipped
+# Debugging is skipped
