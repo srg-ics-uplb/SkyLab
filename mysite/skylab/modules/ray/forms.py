@@ -147,8 +147,8 @@ class OtherParameterForm(forms.Form):
     param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
                                             help_text="Runs Ray Surveyor to compare samples.")
     param_read_sample_graph = forms.BooleanField(initial=False, required=False, label='-read-sample-graph',
-                                                 help_text="Reads a sample graph (generated with -write-kmers)")  # dependent on -write-kmers parameter
-    subparam_graph_name = forms.CharField(required=False, )
+                                                 help_text="Reads sample graphs (generated with -write-kmers)")  # dependent on -write-kmers parameter
+    subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)")
     # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
@@ -218,6 +218,7 @@ class OtherParameterForm(forms.Form):
             ),
             Div(
                 Div('param_read_sample_graph', css_class='col-xs-6'),
+                Div('subparam_graph_files', css_class='col-xs-3'),
                 css_class='col-sm-12'
             ),
 
