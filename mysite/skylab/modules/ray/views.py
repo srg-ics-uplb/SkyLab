@@ -8,7 +8,7 @@ from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, Oth
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
-                                    validate_min=True, can_delete=True)
+                                    validate_min=False, can_delete=True)
     input_forms = input_formset()
 
 

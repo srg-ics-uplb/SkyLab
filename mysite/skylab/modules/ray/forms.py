@@ -28,7 +28,7 @@ class SelectMPIFilesForm(forms.Form):
         # self.helper.form_id = 'id-rayForm'
         # self.helper.form_class = 'use-tool-forms'
         # self.helper.form_method = 'post'
-        self.helper.form_action = ''
+        # self.helper.form_action = ''
         self.helper.layout = Layout(    #crispy_forms layout
 
             Div(
@@ -80,7 +80,7 @@ class InputParameterForm(forms.Form):
         # self.helper.form_class = 'use-tool-forms'
         # self.helper.form_method = 'post'
 
-        self.helper.form_action = ''
+        # self.helper.form_action = ''
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
@@ -137,15 +137,18 @@ def txt_file_validator(file):
 
 
 class OtherParameterForm(forms.Form):
-    param_kmer = forms.BooleanField(initial=False, required=False)
+    param_kmer = forms.BooleanField(initial=False, required=False, label="-k")
     # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
     subparam_kmer_length = forms.IntegerField(initial=21, validators=[odd_number_validator], max_value=32, min_value=1,
-                                              required=False)
+                                              required=False, label="K-mer length")
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
-    param_run_surveyor = forms.BooleanField(initial=False, required=False)
-    param_read_sample_graph = forms.BooleanField(initial=False, required=False)  # dependent on -write-kmers parameter
+    param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
+                                            help_text="Runs Ray Surveyor to compare samples.")
+    param_read_sample_graph = forms.BooleanField(initial=False, required=False, label='-read-sample-graph',
+                                                 help_text="Reads a sample graph (generated with -write-kmers)")  # dependent on -write-kmers parameter
+    subparam_graph_name = forms.CharField(required=False, )
     # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
@@ -191,3 +194,43 @@ class OtherParameterForm(forms.Form):
 # Message routing is skipped
 # Hardware testing is skipped
 # Debugging is skipped
+
+    def __init__(self, *args, **kwargs):  # for crispy forms layout
+        super(OtherParameterForm, self).__init__(*args, **kwargs)
+        self.helper = FormHelper()
+        self.helper.disable_csrf = True
+        self.helper.form_tag = False  # remove form headers
+        # self.helper.form_error_title = "Form Errors"
+        # self.helper.form_id = 'id-rayForm'
+        # self.helper.form_class = 'use-tool-forms'
+        # self.helper.form_method = 'post'
+
+        self.helper.layout = Layout(
+
+            Div(
+                Div('param_kmer', css_class='col-xs-1'),
+                Div('subparam_kmer_length', css_class='col-xs-3'),
+                css_class='row-fluid col-sm-12'
+            ),
+            Div(
+                Div('param_run_surveyor', css_class='col-xs-6'),
+                css_class='col-sm-12'
+            ),
+            Div(
+                Div('param_read_sample_graph', css_class='col-xs-6'),
+                css_class='col-sm-12'
+            ),
+
+        )
+        # self.helper.layout = Layout(  # layout using crispy_forms
+        #     Div(
+        #         Div(Field('parameter', css_class='parameter'), css_class='col-xs-1'),
+        #         Div('avg_outer_distance', css_class='col-xs-2'),
+        #         Div('std_deviation', css_class='col-xs-2'),
+        #
+        #         Div('input_file1', css_class='col-xs-3'),
+        #         Div('input_file2', css_class='col-xs-3'),
+        #
+        #         css_class='row-fluid col-sm-12 form-container'
+        #     ),
+        # )
