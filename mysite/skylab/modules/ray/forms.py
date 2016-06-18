@@ -86,8 +86,8 @@ class InputParameterForm(forms.Form):
                                             min_value=0)
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional", min_value=0)
 
-    input_file1 = forms.FileField(label="Input file 1", validators=[validate_ray_file_extension], required=False)
-    input_file2 = forms.FileField(label="Input file 2", validators=[validate_ray_file_extension], required=False)
+    input_file1 = forms.FileField(label="Sequence file 1", validators=[validate_ray_file_extension], required=False)
+    input_file2 = forms.FileField(label="Sequence file 2", validators=[validate_ray_file_extension], required=False)
 
 
     def __init__(self, *args, **kwargs):
@@ -185,7 +185,7 @@ class OtherParameterForm(forms.Form):
     param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
                                             help_text="Runs Ray Surveyor to compare samples.")
     param_read_sample_graph = forms.BooleanField(initial=False, required=False, label='-read-sample-graph',
-                                                 help_text="Reads sample graphs (generated with -write-kmers)")  # dependent on -write-kmers parameter
+                                                 help_text="Reads sample graphs (generated with -write-kmers).")  # dependent on -write-kmers parameter
     subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)")
     # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
 

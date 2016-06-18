@@ -68,20 +68,28 @@
                 prefix: '{{ input_formset.prefix }}',
                 addText: 'Add input parameter'
             });
-        })
+        });
 
         {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
         $('.panel-body').on('change', "select", function () {
             if (match = $(this).attr('name').match(/form-(\d+)-parameter/)) {
-                inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2'
-                parameter = $(this).val()
+                inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';
+                parameter = $(this).val();
+                input_file1_label = 'id_form-' + match[1] + '-input_file1';
+                input_file2_label = 'id_form-' + match[1] + '-input_file2';
                 if (parameter === "-p") {
-                    $(inp_file2_div_id).show()
-                    input_file2_label = 'id_form-' + match[1] + '-input_file2'
-                    alert(input_file2_label)
-                    alert($("label[for=input_file2_label]").text())
+                    $(inp_file2_div_id).show();
+
+                    $("label[for=" + input_file1_label + "]").text("Left sequence file");
+                    $("label[for=" + input_file2_label + "]").text("Right sequence file");
+
                 } else {
                     $(inp_file2_div_id).hide()
+                    if (parameter === "-i") {
+                        $("label[for=" + input_file1_label + "]").text("Interleaved sequence file");
+                    } else if (parameter === "-s") {
+                        $("label[for=" + input_file1_label + "]").text("Sequence file");
+                    }
                 }
 
 
