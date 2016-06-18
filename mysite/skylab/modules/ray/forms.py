@@ -8,7 +8,11 @@ from skylab.models import MPI_Cluster
 
 
 class SelectMPIFilesForm(forms.Form):
-
+    param_bynode = forms.BooleanField(required=False, label="-bynode",
+                                      help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
+    param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
+                                          help_text="Mini ranks can be thought as ranks within ranks.")
+    subparam_ranks_per_rank = forms.IntegerField(required=False, initial=1, min_value=1, label="")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -31,9 +35,24 @@ class SelectMPIFilesForm(forms.Form):
         # self.helper.form_action = ''
         self.helper.layout = Layout(    #crispy_forms layout
 
+
             Div(
                 Field('mpi_cluster', wrapper_class='col-xs-4'),
                 css_class="col-sm-12"
+            ),
+
+            Fieldset(
+                'MiniRanks',
+                Div(
+                    Div('param_bynode', css_class='col-xs-12'),
+                    Div('param_mini_ranks', css_class='col-xs-4'),
+                    Div('subparam_ranks_per_rank', css_class='col-xs-1'),
+                    Div(HTML(
+                        """<a href="https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt">See documentation</a>"""),
+                        css_class="col-xs-3"),
+
+                    css_class='row-fluid col-sm-12'
+                )
             ),
 
 
@@ -246,6 +265,7 @@ class OtherParameterForm(forms.Form):
         # self.helper.form_method = 'post'
 
         self.helper.layout = Layout(
+
             Fieldset(
                 'K-mer length',
                 Div(

@@ -18,6 +18,7 @@
                 <ul class="nav nav-tabs">
                     <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
                     <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
+                    <li><a data-toggle="tab" href="#tab3">Execute</a></li>
 
                 </ul>
 
@@ -26,20 +27,20 @@
                         {% crispy select_mpi_form %}
                         {{ input_formset.management_form }}
 
+                        <legend>Input Parameters</legend>
                         <div id="input-formset-container">
                             {% for form in input_formset.forms %}
                                 {% crispy form %}
                             {% endfor %}
                         </div>
-                        <div class="col-sm-12">
-                            <br>
-                            <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
 
-                        </div>
 
                     </div>
                     <div id="tab2" class="tab-pane fade col-sm-12">
                         {% crispy other_parameter_form %}
+                    </div>
+                    <div id="tab3" class="tab-pane fade col-sm-12">
+                        <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
                     </div>
 
                 </div>
