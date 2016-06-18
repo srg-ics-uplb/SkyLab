@@ -40,9 +40,13 @@ class RayView(TemplateView):
                 exec_string += "-bynode "
             exec_string += "Ray "
 
+            # k-mer length
+            if other_parameter_form.cleaned_data['param_kmer']:
+                exec_string += "-k %s " % other_parameter_form.cleaned_data['subparam_kmer_length']
+
             # -mini-ranks-per-rank
             if select_mpi_form.cleaned_data['param_mini_ranks']:
-                exec_string += " -mini-ranks-per-rank %s" % select_mpi_form.cleaned_data['subparam_ranks_per_rank']
+                exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data['subparam_ranks_per_rank']
 
             for form in input_formset:
                 parameter = form.cleaned_data.get('parameter')
@@ -56,7 +60,28 @@ class RayView(TemplateView):
                     elif parameter == "-s" or parameter == "-i":
                         exec_string += "%s %s " % (parameter, input_file1.name)
 
-                print exec_string
+            if other_parameter_form.cleaned_data['param_run_surveyor']:
+                exec_string += "-run-surveyor "
+
+            # if other_parameter_form.cleaned_data['param_read_sample_graph']:
+            #     for file in other_parameter_form.cleaned_data['subparam_graph_files']:
+            #         exec_string += "-read-sample-graph %s %s" %
+
+            if other_parameter_form.cleaned_data['param_search']:
+                exec_string += "-search searchDirectory "
+                # todo: handle files
+
+            if other_parameter_form.cleaned_data['param_one_color_per_file']:
+                exec_string += "-one-color-per-file "
+
+            if other_parameter_form.cleaned_data['param_with_taxonomy']:
+                genome_to_taxon_file = other_parameter_form.cleaned_data['subparam_genome_to_taxon_file']
+                tree_of_life_edges_file = other_parameter_form.cleaned_data['subparam_tree_of_life_edges_file']
+                taxon_names_file = other_parameter_form.cleaned_data['subparam_taxon_names_file']
+                exec_string += "-with-taxonomy %s %s %s"
+                # todo: handle files
+
+            print exec_string
 
                 #todo: parse other_parameter_form
 
