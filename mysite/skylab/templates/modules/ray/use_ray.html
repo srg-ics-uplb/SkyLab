@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class='row'>
-    <div class='col-sm-11 col-sm-offset-2'>
+    <div class='col-sm-10 col-sm-offset-2'>
 	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
 
         <form id="ray-form" action="" method="post" enctype="multipart/form-data">
@@ -76,6 +76,9 @@
                 parameter = $(this).val()
                 if (parameter === "-p") {
                     $(inp_file2_div_id).show()
+                    input_file2_label = 'id_form-' + match[1] + '-input_file2'
+                    alert(input_file2_label)
+                    alert($("label[for=input_file2_label]").text())
                 } else {
                     $(inp_file2_div_id).hide()
                 }

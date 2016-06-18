@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field
+from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
 from django import forms
 from django.db.models import Q
 from multiupload.fields import MultiFileField
@@ -57,14 +57,15 @@ def validate_ray_file_extension(value):
 
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
-                        ('-p','-p'),
-                        ('-i','-i'),
-                        ('-s','-s'),
+        ('', '---------'),
+        ('-p','-p'),
+        ('-i','-i'),
+        ('-s','-s'),
     )
-    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
-    avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional.",
+    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES, required=False)
+    avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional",
                                             min_value=0)
-    std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional.", min_value=0)
+    std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional", min_value=0)
 
     input_file1 = forms.FileField(label="Input file 1", validators=[validate_ray_file_extension], required=False)
     input_file2 = forms.FileField(label="Input file 2", validators=[validate_ray_file_extension], required=False)
@@ -124,7 +125,24 @@ def odd_number_validator(value):
         raise forms.ValidationError(u'Value must be odd', code='ray_kmer_even_input')
 
 
-def tsv_file_validator(file):
+def strict_genome_to_taxon_validator(file):
+    if file.name != "Genome-to-Taxon.tsv":
+        raise forms.ValidationError(u'Filename must be Genome-to-Taxon.tsv',
+                                    code="ray_taxo_genome_to_taxon_invalid_name")
+
+
+def strict_tree_of_life_edges_validator(file):
+    if file.name != "TreeOfLife-Edges.tsv":
+        raise forms.ValidationError(u'Filename must be TreeOfLife-Edges.tsv',
+                                    code="ray_taxo_tree_of_life_edges_invalid_name")
+
+
+def strict_taxon_names_validator(file):
+    if file.name != "Taxon-Names.tsv":
+        raise forms.ValidationError(u'Filename must be Taxon-Names.tsv', code='ray_taxo_taxon_names_invalid_name')
+
+
+def tsv_file_validator(file):  # to replace strict validators in the case it must be not strict
     ext = os.path.splitext(file.name)[1]
     if ext.lower() != '.tsv':
         raise forms.ValidationError(u'Only .tsv file accepted', code="ray_taxo_not_tsv")
@@ -141,7 +159,8 @@ class OtherParameterForm(forms.Form):
     # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
     subparam_kmer_length = forms.IntegerField(initial=21, validators=[odd_number_validator], max_value=32, min_value=1,
-                                              required=False, label="K-mer length")
+                                              required=False, label="",
+                                              help_text="default value: 21. Value must be odd.")
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
     param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
@@ -155,40 +174,61 @@ class OtherParameterForm(forms.Form):
     # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
 
     # Biological abundances See Documentation/BiologicalAbundances.txt
-    param_search = forms.BooleanField(initial=False, required=False)
-    subparam_searchFiles = MultiFileField(min_num=1, required=False,
-                                          help_text="Provide fasta files to be searched in the de Bruijn graph.")  # save to tool_activity_x/input/search
-    param_one_color_per_file = forms.BooleanField(initial=False, required=False)
+    param_search = forms.BooleanField(initial=False, required=False, label='-search',
+                                      help_text="Provide fasta files to be searched in the de Bruijn graph.")
+    subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files'
+                                           )  # save to tool_activity_x/input/search
+    param_one_color_per_file = forms.BooleanField(initial=False, required=False, label="-one-color-per-file",
+                                                  help_text="Sets one color per file instead of one per sequence. For files with large numbers of sequences, using one single color per file may be more efficient.")
 
     # Taxonomic profiling with colored de Bruijn graphs
     # Computes and writes detailed taxonomic profiles. See Documentation/Taxonomy.txt for details.
-    param_with_taxonomy = forms.BooleanField(required=False, initial=False)
-    subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator])
-    subparam_tree_of_life_edges_file = forms.FileField(required=False, validators=[tsv_file_validator])
-    subparam_taxon_names_file = forms.FileField(required=False, validators=[tsv_file_validator])
+    param_with_taxonomy = forms.BooleanField(required=False, initial=False, label='-with-taxonomy',
+                                             help_text="Computes and writes detailed taxonomic profiles.")
+    subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator],
+                                                    label="Genome-to-Taxon")
+    subparam_tree_of_life_edges_file = forms.FileField(required=False, validators=[tsv_file_validator],
+                                                       label="TreeOfLife-Edges")
+    subparam_taxon_names_file = forms.FileField(required=False, validators=[tsv_file_validator], label="Taxon-Names")
 
     # Provides an ontology and annotations. See Documentation/GeneOntology.txt
-    param_gene_ontology = forms.BooleanField(required=False, initial=False)
-    subparam_ontology_terms_file = forms.FileField(required=False, validators=[txt_file_validator])
-    subparam_annotations_file = forms.FileField(required=False, validators=[txt_file_validator])
+    param_gene_ontology = forms.BooleanField(required=False, initial=False, label="-gene-ontology",
+                                             help_text="Provides an ontology and annotations. OntologyTerms.txt is automatically fetched from geneontology.org .")
+    # todo: The OntologyTerms.txt file is http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo
+
+    subparam_annotations_file = forms.FileField(required=False, validators=[txt_file_validator], label="Annotations",
+                                                help_text="The annotation file must be derived from Uniprot-GOA (http://www.ebi.ac.uk/GOA/).")
 
     # Other outputs
-    param_enable_neighbourhoods = forms.BooleanField(required=False, initial=False)
-    param_amos = forms.BooleanField(required=False, initial=False)
-    param_write_kmers = forms.BooleanField(required=False, initial=False)
-    param_graph_only = forms.BooleanField(required=False, initial=False)
-    param_write_read_markers = forms.BooleanField(required=False, initial=False)
-    param_write_seeds = forms.BooleanField(required=False, initial=False)
-    param_write_extensions = forms.BooleanField(required=False, initial=False)
-    param_write_contig_paths = forms.BooleanField(required=False, initial=False)
-    param_write_marker_summary = forms.BooleanField(required=False, initial=False)
+    param_enable_neighbourhoods = forms.BooleanField(required=False, initial=False, label="-enable-neighbourhoods",
+                                                     help_text="Computes contig neighborhoods in the de Bruijn graph")
+    param_amos = forms.BooleanField(required=False, initial=False, label="-amos",
+                                    help_text="Writes the AMOS file that contains read positions on contigs.")
+    param_write_kmers = forms.BooleanField(required=False, initial=False, label="-write-kmers",
+                                           help_text="Writes k-mer graph")
+    param_graph_only = forms.BooleanField(required=False, initial=False, label="-graph-only",
+                                          help_text="Exits after building graph.")
+    param_write_read_markers = forms.BooleanField(required=False, initial=False, label="-write-read-markers",
+                                                  help_text="Writes read markers to disk.")
+    param_write_seeds = forms.BooleanField(required=False, initial=False, label="-write-seeds",
+                                           help_text="Writes seed DNA sequences")
+    param_write_extensions = forms.BooleanField(required=False, initial=False, label="-write-extensions",
+                                                help_text="Writes extension DNA sequences")
+    param_write_contig_paths = forms.BooleanField(required=False, initial=False, label="-write-contig-paths",
+                                                  help_text="Writes contig paths with coverage values")
+    param_write_marker_summary = forms.BooleanField(required=False, initial=False, label="-write-marker-summary",
+                                                    help_text="Writes marker statistics.")
 
     # Memory usage options is skipped
     # Algorithm verbosity
-    param_show_extension_choice = forms.BooleanField(required=False, initial=False)
-    param_show_ending_context = forms.BooleanField(required=False, initial=False)
-    param_distance_summary = forms.BooleanField(required=False, initial=False)
-    param_show_consensus = forms.BooleanField(required=False, initial=False)
+    param_show_extension_choice = forms.BooleanField(required=False, initial=False, label="-show-extension-choice",
+                                                     help_text="Shows the choice made (with other choices) during the extension.")
+    param_show_ending_context = forms.BooleanField(required=False, initial=False, label="-show-ending-context",
+                                                   help_text="Shows the ending context of each extension. Shows the children of the vertex where extension was too difficult.")
+    param_distance_summary = forms.BooleanField(required=False, initial=False, label="-show-distance-summary",
+                                                help_text="Shows summary of outer distances used for an extension path.")
+    param_show_consensus = forms.BooleanField(required=False, initial=False, label="-show-consensus",
+                                              help_text="Shows the consensus when a choice is done.")
 
 # Checkpointing is skipped
 # Message routing is skipped
@@ -206,32 +246,97 @@ class OtherParameterForm(forms.Form):
         # self.helper.form_method = 'post'
 
         self.helper.layout = Layout(
+            Fieldset(
+                'K-mer length',
+                Div(
+                    Div('param_kmer', css_class='col-xs-1'),
+                    Div('subparam_kmer_length', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                )
+            ),
+            Fieldset(
+                'Ray Surveyor options',
+                Div(
+                    Div('param_run_surveyor', css_class='col-xs-6'),
+                    css_class='col-sm-12'
+                ),
+                Div(
+                    Div('param_read_sample_graph', css_class='col-xs-6'),
+                    Div('subparam_graph_files', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                ),
+            ),
+            Fieldset(
+                'Biological abundances',
+                Div(
+                    Div('param_search', css_class='col-xs-6'),
+                    Div('subparam_search_files', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                ),
+                Div(
+                    Div('param_one_color_per_file', css_class='col-xs-12'),
+                    css_class='col-sm-12'
+                ),
+            ),
+            Fieldset(
+                'Taxonomic profiling with colored de Bruijn graphs',
+                Div(
+                    Div(
+                        'param_with_taxonomy',
+                        HTML(
+                            """<a href="https://github.com/sebhtml/ray/blob/master/Documentation/Taxonomy.txt">See documentation</a>"""),
+                        css_class='col-xs-3'
+                    ),
+                    Div('subparam_genome_to_taxon_file', css_class='col-xs-3'),
+                    Div('subparam_tree_of_life_edges_file', css_class='col-xs-3'),
+                    Div('subparam_taxon_names_file', css_class='col-xs-3'),
 
-            Div(
-                Div('param_kmer', css_class='col-xs-1'),
-                Div('subparam_kmer_length', css_class='col-xs-3'),
-                css_class='row-fluid col-sm-12'
+                    css_class='row-fluid col-sm-12'
+                ),
+                Div(
+                    Div(
+                        'param_gene_ontology',
+                        HTML(
+                            """<a href="https://github.com/sebhtml/ray/blob/master/Documentation/GeneOntology.txt">See documentation</a>"""),
+                        css_class='col-xs-5',
+
+                    ),
+                    Div('subparam_annotations_file', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                )
             ),
-            Div(
-                Div('param_run_surveyor', css_class='col-xs-6'),
-                css_class='col-sm-12'
+            Fieldset(
+                'Other outputs',
+                Div(
+                    Div('param_enable_neighbourhoods', css_class='col-xs-3'),
+                    Div('param_amos', css_class='col-xs-3'),
+                    Div('param_write_kmers', css_class='col-xs-3'),
+                    Div('param_graph_only', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                ),
+                Div(
+                    Div('param_write_read_markers', css_class='col-xs-3'),
+                    Div('param_write_seeds', css_class='col-xs-3'),
+                    Div('param_write_extensions', css_class='col-xs-3'),
+                    Div('param_write_contig_paths', css_class='col-xs-3'),
+                    css_class='row-fluid col-sm-12'
+                ),
+                Div(
+                    Div('param_write_marker_summary', css_class='col-xs-3'),
+                    css_class='col-sm-12'
+                )
             ),
-            Div(
-                Div('param_read_sample_graph', css_class='col-xs-6'),
-                Div('subparam_graph_files', css_class='col-xs-3'),
-                css_class='col-sm-12'
-            ),
+            Fieldset(
+                'Algorithm verbosity',
+                Div(
+                    Div('param_show_extension_choice', css_class='col-xs-6'),
+                    Div('param_show_ending_context', css_class='col-xs-6'),
+                    Div('param_distance_summary', css_class='col-xs-6'),
+                    Div('param_show_consensus', css_class='col-xs-6'),
+                    css_class='row-fluid col-sm-12'
+                )
+            )
+
+
 
         )
-        # self.helper.layout = Layout(  # layout using crispy_forms
-        #     Div(
-        #         Div(Field('parameter', css_class='parameter'), css_class='col-xs-1'),
-        #         Div('avg_outer_distance', css_class='col-xs-2'),
-        #         Div('std_deviation', css_class='col-xs-2'),
-        #
-        #         Div('input_file1', css_class='col-xs-3'),
-        #         Div('input_file2', css_class='col-xs-3'),
-        #
-        #         css_class='row-fluid col-sm-12 form-container'
-        #     ),
-        # )

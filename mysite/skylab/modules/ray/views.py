@@ -30,6 +30,9 @@ class RayView(TemplateView):
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
             for form in input_formset:
                 # print form.cleaned_data.get('parameter')
+                # todo: -n = size of chosen cluster
+                # todo: ignore paramter == ''
+                # todo fetch: ontologyterms.txt from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo for -gene-ontology
                 # TODO: generate exec_string here
                 pass
 
