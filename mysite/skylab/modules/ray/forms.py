@@ -12,7 +12,8 @@ class SelectMPIFilesForm(forms.Form):
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
                                           help_text="Mini ranks can be thought as ranks within ranks.")
-    subparam_ranks_per_rank = forms.IntegerField(required=False, initial=1, min_value=1, label="")
+    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, label="",
+                                                 widget=forms.NumberInput(attrs={'placeholder': 1}))
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -59,19 +60,22 @@ class SelectMPIFilesForm(forms.Form):
         )
 
 
-def validate_ray_file_extension(value):
+def ray_file_extension_validator(file):
+    # using .conf is also not supported because it does not fit with the use-case abstraction
     # export.txt, qseq.txt are not supported because of lack of documentation on their use case
     valid_file_extensions = ['.fasta', '.fa', '.fasta.gz', '.fa.gz', '.fasta.bz2', '.fa.bz2', '.fastq', '.fq',
                              '.fastq.gz', '.fq.gz', '.fastq.bz2',
-                             '.fq.bz2', '.sff', '.csfasta', '.csfa', '.conf'
+                             '.fq.bz2', '.sff', '.csfasta', '.csfa'
                              ]
+
     valid = False
     for ext in valid_file_extensions:
-        if value.name.lower().endswith(ext):
+        if file.name.lower().endswith(ext):
             valid = True
             break
     if not valid:
-        raise forms.ValidationError(u'Filetype not supported', code='invalid_filetype')
+        invalid_ext = os.path.splitext(file.name)[1]
+        raise forms.ValidationError(u'%s not supported' % invalid_ext, code='invalid_filetype')
 
 
 class InputParameterForm(forms.Form):
@@ -86,8 +90,8 @@ class InputParameterForm(forms.Form):
                                             min_value=0)
     std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional", min_value=0)
 
-    input_file1 = forms.FileField(label="Sequence file 1", validators=[validate_ray_file_extension], required=False)
-    input_file2 = forms.FileField(label="Sequence file 2", validators=[validate_ray_file_extension], required=False)
+    input_file1 = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
+    input_file2 = forms.FileField(label="Sequence file 2", validators=[ray_file_extension_validator], required=False)
 
 
     def __init__(self, *args, **kwargs):
@@ -173,20 +177,31 @@ def txt_file_validator(file):
         raise forms.ValidationError(u'Only .txt file accepted', code="ray_gene_ontology_not_txt")
 
 
+def multi_graph_files_validator(files):
+    for file in files:
+        txt_file_validator(file)
+
+
+def multi_ray_files_validator(files):
+    for file in files:
+        ray_file_extension_validator(file)
+
 class OtherParameterForm(forms.Form):
     param_kmer = forms.BooleanField(initial=False, required=False, label="-k")
     # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
-    subparam_kmer_length = forms.IntegerField(initial=21, validators=[odd_number_validator], max_value=32, min_value=1,
+    subparam_kmer_length = forms.IntegerField(validators=[odd_number_validator], max_value=32, min_value=1,
                                               required=False, label="",
-                                              help_text="default value: 21. Value must be odd.")
+                                              help_text="Value must be odd.",
+                                              widget=forms.NumberInput(attrs={'placeholder': 21}))
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
     param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
                                             help_text="Runs Ray Surveyor to compare samples.")
     param_read_sample_graph = forms.BooleanField(initial=False, required=False, label='-read-sample-graph',
                                                  help_text="Reads sample graphs (generated with -write-kmers).")  # dependent on -write-kmers parameter
-    subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)")
+    subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)",
+                                          validators=[multi_graph_files_validator])
     # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
@@ -195,8 +210,8 @@ class OtherParameterForm(forms.Form):
     # Biological abundances See Documentation/BiologicalAbundances.txt
     param_search = forms.BooleanField(initial=False, required=False, label='-search',
                                       help_text="Provide fasta files to be searched in the de Bruijn graph.")
-    subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files'
-                                           )  # save to tool_activity_x/input/search
+    subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files', validators=[
+        multi_ray_files_validator])  # save to tool_activity_x/input/search
     param_one_color_per_file = forms.BooleanField(initial=False, required=False, label="-one-color-per-file",
                                                   help_text="Sets one color per file instead of one per sequence. For files with large numbers of sequences, using one single color per file may be more efficient.")
 
