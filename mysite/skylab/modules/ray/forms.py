@@ -13,7 +13,8 @@ class SelectMPIFilesForm(forms.Form):
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
                                           help_text="Mini ranks can be thought as ranks within ranks.")
-    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, label="",
+    # mini-ranks max set to 10
+    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, max_value=10, label="",
                                                  widget=forms.NumberInput(attrs={'placeholder': 1}))
 
     def __init__(self, *args, **kwargs):
@@ -72,10 +73,6 @@ class InputParameterForm(forms.Form):
         ('-s','-s'),
     )
     parameter = forms.ChoiceField(choices=PARAMETER_CHOICES, required=False)
-    avg_outer_distance = forms.DecimalField(label="Average outer distance", required=False, help_text="Optional",
-                                            min_value=0)
-    std_deviation = forms.DecimalField(label="Standard deviation", required=False, help_text="Optional", min_value=0)
-
     input_file1 = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
     input_file2 = forms.FileField(label="Sequence file 2", validators=[ray_file_extension_validator], required=False)
 
@@ -92,12 +89,9 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('parameter', css_class='parameter'), css_class='col-xs-1'),
-                Div('avg_outer_distance', css_class='col-xs-2'),
-                Div('std_deviation', css_class='col-xs-2'),
-
-                Div('input_file1', css_class='col-xs-3'),
-                Div('input_file2', css_class='col-xs-3'),
+                Div(Field('parameter', css_class='parameter'), css_class='col-xs-2'),
+                Div(Field('input_file1', wrapper_class="hidden"), css_class='col-xs-3 col-xs-offset-1'),
+                Div(Field('input_file2', wrapper_class="hidden"), css_class='col-xs-3'),
 
                 css_class='row-fluid col-sm-12 form-container'
             ),
