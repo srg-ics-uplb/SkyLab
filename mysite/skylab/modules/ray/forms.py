@@ -190,14 +190,19 @@ class OtherParameterForm(forms.Form):
     param_write_marker_summary = forms.BooleanField(required=False, initial=False, label="-write-marker-summary",
                                                     help_text="Writes marker statistics.")
 
-    # Memory usage options is skipped
+    # Memory usage
+    param_show_memory_usage = forms.BooleanField(required=False, initial=False, label="-show-memory-usage",
+                                                 help_text="Shows memory usage")
+    param_show_memory_allocations = forms.BooleanField(required=False, initial=False, label="-show-memory-allocations",
+                                                       help_text="Shows memory allocation events")
+
     # Algorithm verbosity
     param_show_extension_choice = forms.BooleanField(required=False, initial=False, label="-show-extension-choice",
                                                      help_text="Shows the choice made (with other choices) during the extension.")
     param_show_ending_context = forms.BooleanField(required=False, initial=False, label="-show-ending-context",
                                                    help_text="Shows the ending context of each extension. Shows the children of the vertex where extension was too difficult.")
-    param_distance_summary = forms.BooleanField(required=False, initial=False, label="-show-distance-summary",
-                                                help_text="Shows summary of outer distances used for an extension path.")
+    param_show_distance_summary = forms.BooleanField(required=False, initial=False, label="-show-distance-summary",
+                                                     help_text="Shows summary of outer distances used for an extension path.")
     param_show_consensus = forms.BooleanField(required=False, initial=False, label="-show-consensus",
                                               help_text="Shows the consensus when a choice is done.")
 
@@ -299,11 +304,21 @@ class OtherParameterForm(forms.Form):
                 )
             ),
             Fieldset(
+                'Memory usage',
+                Div(
+                    Div(
+                        Div('param_show_memory_usage', css_class='col-xs-6'),
+                        Div('param_show_memory_allocations', css_class='col-xs-6'),
+                    ),
+                    css_class="row-fluid col-sm-12"
+                )
+            ),
+            Fieldset(
                 'Algorithm verbosity',
                 Div(
                     Div('param_show_extension_choice', css_class='col-xs-6'),
                     Div('param_show_ending_context', css_class='col-xs-6'),
-                    Div('param_distance_summary', css_class='col-xs-6'),
+                    Div('param_show_distance_summary', css_class='col-xs-6'),
                     Div('param_show_consensus', css_class='col-xs-6'),
                     css_class='row-fluid col-sm-12'
                 )

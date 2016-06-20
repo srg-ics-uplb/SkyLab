@@ -1,10 +1,16 @@
 from django.forms import formset_factory
 from django.shortcuts import render
 from django.views.generic import TemplateView
-from skylab.models import MPI_Cluster
+from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
+
+def create_skylab_file(tool_activity, directory, file):
+    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input/%s" % (tool_activity.id, directory),
+                                         file=file,
+                                         filename=file.name)
+    tool_activity.input_files.add(new_file)
 
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"
@@ -48,28 +54,39 @@ class RayView(TemplateView):
             if select_mpi_form.cleaned_data['param_mini_ranks']:
                 exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data['subparam_ranks_per_rank']
 
+            tool_activity = ToolActivity.objects.create(
+                mpi_cluster=cluster_name, tool_name="ray", user=self.request.user, exec_string=exec_string
+            )
+
             for form in input_formset:
                 parameter = form.cleaned_data.get('parameter')
                 if parameter:  # ignore blank parameter value
 
                     input_file1 = form.cleaned_data['input_file1']
-                    if parameter == "-p":
-                        input_file2 = form.cleaned_data['input_file2']
-                        exec_string += "%s %s %s " % (parameter, input_file1.name, input_file2.name)
+                    create_skylab_file(tool_activity, '', input_file1)
 
-                    elif parameter == "-s" or parameter == "-i":
-                        exec_string += "%s %s " % (parameter, input_file1.name)
+                if parameter == "-p":
+                    input_file2 = form.cleaned_data['input_file2']
+                    create_skylab_file(tool_activity, '', input_file2)
+
+                    exec_string += "%s %s %s " % (parameter, input_file1.name, input_file2.name)
+
+                elif parameter == "-s" or parameter == "-i":
+                    exec_string += "%s %s " % (parameter, input_file1.name)
 
             if other_parameter_form.cleaned_data['param_run_surveyor']:
                 exec_string += "-run-surveyor "
 
-            # if other_parameter_form.cleaned_data['param_read_sample_graph']:
-            #     for file in other_parameter_form.cleaned_data['subparam_graph_files']:
-            #         exec_string += "-read-sample-graph %s %s" %
+            if other_parameter_form.cleaned_data['param_read_sample_graph']:
+                for index, file in other_parameter_form.cleaned_data['subparam_graph_files']:
+                    create_skylab_file(tool_activity, 'graph', file)
+                    exec_string += "-read-sample-graph graph%s %s " % (index, file.name)
 
             if other_parameter_form.cleaned_data['param_search']:
-                exec_string += "-search searchDirectory "
-                # todo: handle files
+                exec_string += "-search search "
+                for file in form.cleaned_data['subparam_search_files']:
+                    create_skylab_file(tool_activity, 'search', file)
+
 
             if other_parameter_form.cleaned_data['param_one_color_per_file']:
                 exec_string += "-one-color-per-file "
@@ -78,15 +95,68 @@ class RayView(TemplateView):
                 genome_to_taxon_file = other_parameter_form.cleaned_data['subparam_genome_to_taxon_file']
                 tree_of_life_edges_file = other_parameter_form.cleaned_data['subparam_tree_of_life_edges_file']
                 taxon_names_file = other_parameter_form.cleaned_data['subparam_taxon_names_file']
-                exec_string += "-with-taxonomy %s %s %s"
-                # todo: handle files
+                exec_string += "-with-taxonomy %s %s %s "
+
+                create_skylab_file(tool_activity, 'taxonomy', genome_to_taxon_file)
+                create_skylab_file(tool_activity, 'taxonomy', tree_of_life_edges_file)
+                create_skylab_file(tool_activity, 'taxonomy', taxon_names_file)
+
+            if other_parameter_form.cleaned_data['param_gene_ontology']:
+                annotations_file = other_parameter_form.cleaned_data['subparam_annotations_file']
+                create_skylab_file(tool_activity, 'gene_ontology', annotations_file)
+                exec_string += "-gene-ontology OntologyTerms.txt %s " % annotations_file.name
+
+            # Other Output options
+            if other_parameter_form.cleaned_data['param_enable_neighbourhoods']:
+                exec_string += "-enable-neighbourhoods "
+
+            if other_parameter_form.cleaned_data['param_amos']:
+                exec_string += "-amos "
+
+            if other_parameter_form.cleaned_data['param_write_kmers']:
+                exec_string += "-write-kmers "
+
+            if other_parameter_form.cleaned_data['param_graph_only']:
+                exec_string += "-graph-only "
+
+            if other_parameter_form.cleaned_data['param_write_read_markers']:
+                exec_string += "-write-read-markers "
+
+            if other_parameter_form.cleaned_data['param_write_seeds']:
+                exec_string += "-write-seeds "
+
+            if other_parameter_form.cleaned_data['param_write_extensions']:
+                exec_string += "-write-extensions "
+
+            if other_parameter_form.cleaned_data['param_write_contig_paths']:
+                exec_string += "-write-contig-paths "
+
+            if other_parameter_form.cleaned_data['param_write_marker_summary']:
+                exec_string += "-write-marker-summary "
+
+            # Memory usage
+            if other_parameter_form.cleaned_data['param_show_memory_usage']:
+                exec_string += "-show-memory-usage "
+            if other_parameter_form.cleaned_data['param_show_memory_allocations']:
+                exec_string += "-show-memory-allocations "
+
+            # Algorithm verbosity
+            if other_parameter_form.cleaned_data['param_show_extension_choice']:
+                exec_string += "-show-extension-choice "
+
+            if other_parameter_form.cleaned_data['param_show_ending_context']:
+                exec_string += "-show-ending-context "
+            if other_parameter_form.cleaned_data["param_show_distance_summary"]:
+                exec_string += "-show-distance-summary "
+            if other_parameter_form.cleaned_data['param_show_consensus']:
+                exec_string += "-show-consensus "
 
             print exec_string
 
-                #todo: parse other_parameter_form
+
 
                 # todo fetch: ontologyterms.txt from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo for -gene-ontology
-                # TODO: generate exec_string here
+
 
 
         return render(request, 'modules/ray/use_ray.html', {
