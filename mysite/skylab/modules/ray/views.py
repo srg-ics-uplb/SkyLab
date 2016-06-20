@@ -1,5 +1,5 @@
 from django.forms import formset_factory
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 
@@ -153,16 +153,11 @@ class RayView(TemplateView):
 
             print exec_string
 
-
-
+            return redirect("../toolactivity/%d" % tool_activity.id)
+        else:
+            return render(request, 'modules/ray/use_ray.html', {
+                'select_mpi_form': select_mpi_form,
+                'other_parameter_form': other_parameter_form,
+                'input_formset': input_formset,
+            })
                 # todo fetch: ontologyterms.txt from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo for -gene-ontology
-
-
-
-        return render(request, 'modules/ray/use_ray.html', {
-            'select_mpi_form': select_mpi_form,
-            'other_parameter_form': other_parameter_form,
-            'input_formset': input_formset,
-        })
-
-
