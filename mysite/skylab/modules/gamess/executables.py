@@ -7,7 +7,7 @@ from django.conf import settings
 from skylab.models import ToolActivity, SkyLabFile
 from skylab.modules.base_tool import P2CToolGeneric
 
-cluster_password = "mpiuser"
+cluster_password = settings.CLUSTER_PASSWORD
 
 
 class GamessExecutable(P2CToolGeneric):

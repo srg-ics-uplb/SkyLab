@@ -169,3 +169,5 @@ SENDFILE_URL = '/media'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
+
+CLUSTER_PASSWORD = "mpiuser"
