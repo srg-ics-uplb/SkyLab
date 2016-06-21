@@ -1,4 +1,4 @@
-import os
+import os.path
 import re
 import shutil
 
@@ -10,29 +10,43 @@ from skylab.modules.base_tool import P2CToolGeneric
 cluster_password = settings.CLUSTER_PASSWORD
 
 
+# source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
+def mkdir_p(sftp, remote_directory):
+    """Change to this directory, recursively making new folders if needed.
+    Returns True if any folders were created."""
+    if remote_directory == '/':
+        # absolute path so change directory to root
+        sftp.chdir('/')
+        return
+    if remote_directory == '':
+        # top-level relative directory must exist
+        return
+    try:
+        sftp.chdir(remote_directory)  # sub-directory exists
+    except IOError:
+        dirname, basename = os.path.split(remote_directory.rstrip('/'))
+        mkdir_p(sftp, dirname)  # make parent directories
+        sftp.mkdir(basename)  # sub-directory missing, so created it
+        sftp.chdir(basename)
+        return True
+
+
 class RayExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
-
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
         ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(RayExecutable, self).__init__(self, **kwargs)
 
-        pass
-
     def handle_input_files(self, **kwargs):
         ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
-        remote_dir = "tool_activity_%d" % self.id
-        x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
-        print (x.output)
-        f = SkyLabFile.objects.get(input_files__pk=self.id)
-        self.filename = os.path.splitext(f.filename)[0]
-        # for f in files:
-        with self.shell.open("/mirror/%s/" % remote_dir + f.filename, "wb") as remote_file:
-            with f.file as local_file:
-                shutil.copyfileobj(local_file, remote_file)
-            remote_file.close()
+        files = SkyLabFile.objects.filter(input_files__pk=self.id)
+        for f in files:
+            sftp = self.shell._open_sftp_client()
+            mkdir_p(sftp, f.upload_path)
+            sftp.putfo(f.file, '.')  # At this point, you are in remote_path
+            sftp.close()
 
     # raise not implemented error
     def print_msg(self, msg):
@@ -40,16 +54,8 @@ class RayExecutable(P2CToolGeneric):
 
     def run_tool(self, **kwargs):
         self.handle_input_files()
-        # cleanup scratch directory
-        remote_path = "/mirror/scr/"
-        sftp = self.shell._open_sftp_client()
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            sftp.remove(remote_filepath)  # delete after transfer
-        sftp.close()
 
-        export_path = "/mirror/gamess"
+        export_path = "/mirror/Ray-2.3.1/build"
 
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
         ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")

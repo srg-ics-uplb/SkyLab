@@ -151,6 +151,9 @@ class RayView(TemplateView):
             if other_parameter_form.cleaned_data['param_show_consensus']:
                 exec_string += "-show-consensus "
 
+            tool_activity.exec_string = exec_string
+            tool_activity.save()
+
             print exec_string
 
             return redirect("../toolactivity/%d" % tool_activity.id)

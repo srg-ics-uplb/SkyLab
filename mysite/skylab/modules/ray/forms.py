@@ -61,7 +61,12 @@ class SelectMPIFilesForm(forms.Form):
 
         )
 
-
+    def clean(self):
+        if self.cleaned_data:
+            if self.cleaned_data['param_mini_ranks']:
+                if not self.cleaned_data['subparam_ranks_per_rank']:
+                    raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
+                                                code="mini_ranks_no_value_set")
 
 
 
@@ -323,7 +328,37 @@ class OtherParameterForm(forms.Form):
                     css_class='row-fluid col-sm-12'
                 )
             )
-
-
-
         )
+
+    def clean(self):
+        if self.cleaned_data:
+            if self.cleaned_data['param_kmer']:
+                if not self.cleaned_data.get('subparam_kmer_length'):
+                    raise forms.ValidationError(u'-k: No value provided', code='kmer_no_value_set')
+
+            if self.cleaned_data['param_read_sample_graph']:
+                if not self.cleaned_data.get('subparam_graph_files'):
+                    raise forms.ValidationError(u'-read-sample-graph: No graph files are provided',
+                                                code='no_graphs_to_read_provided')
+
+            if self.cleaned_data['param_search']:
+                print "search is triggered"
+                if not self.cleaned_data.get('subparam_search_files'):
+                    raise forms.ValidationError(u'-search: No search files are provided',
+                                                code="no_search_files_provided")
+
+            if self.cleaned_data['param_with_taxonomy']:
+                if not self.cleaned_data.get('subparam_genome_to_taxon_file'):
+                    raise forms.ValidationError(u'-with-taxonomy: Missing Genome-to-Taxon file',
+                                                code="with_taxo_no_genome_to_taxon")
+                if not self.cleaned_data.get('subparam_tree_of_life_edges_file'):
+                    raise forms.ValidationError(u'-with-taxonomy: Missing TreeOfLife-Edges file',
+                                                code="with_taxo_no_tree_of_life")
+                if not self.cleaned_data.get('subparam_taxon_names_file'):
+                    raise forms.ValidationError(u'-with-taxonomy: Missing Taxon-Names file',
+                                                code="with_taxo_no_taxon_names")
+
+            if self.cleaned_data['param_gene_ontology']:
+                if not self.cleaned_data.get('subparam_annotations_file'):
+                    raise forms.ValidationError(u'-gene-ontology: Missing Annotations file',
+                                                code="gene_ontology_no_anno_file")
