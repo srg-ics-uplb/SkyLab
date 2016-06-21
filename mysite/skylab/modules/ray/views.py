@@ -11,6 +11,7 @@ def create_skylab_file(tool_activity, directory, file):
                                          file=file,
                                          filename=file.name)
     tool_activity.input_files.add(new_file)
+    return "%s%s" % (new_file.upload_path, new_file.filename)
 
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"
@@ -44,7 +45,7 @@ class RayView(TemplateView):
             # -bynode
             if select_mpi_form.cleaned_data['param_bynode']:
                 exec_string += "-bynode "
-            exec_string += "Ray "
+            exec_string += "Ray -o output "
 
             # k-mer length
             if other_parameter_form.cleaned_data['param_kmer']:
@@ -63,24 +64,25 @@ class RayView(TemplateView):
                 if parameter:  # ignore blank parameter value
 
                     input_file1 = form.cleaned_data['input_file1']
-                    create_skylab_file(tool_activity, '', input_file1)
+                    filepath1 = create_skylab_file(tool_activity, '', input_file1)
+
 
                 if parameter == "-p":
                     input_file2 = form.cleaned_data['input_file2']
-                    create_skylab_file(tool_activity, '', input_file2)
+                    filepath2 = create_skylab_file(tool_activity, '', input_file2)
 
-                    exec_string += "%s %s %s " % (parameter, input_file1.name, input_file2.name)
+                    exec_string += "%s %s %s " % (parameter, filepath1, filepath2)
 
                 elif parameter == "-s" or parameter == "-i":
-                    exec_string += "%s %s " % (parameter, input_file1.name)
+                    exec_string += "%s %s " % (parameter, filepath1)
 
             if other_parameter_form.cleaned_data['param_run_surveyor']:
                 exec_string += "-run-surveyor "
 
             if other_parameter_form.cleaned_data['param_read_sample_graph']:
                 for index, file in other_parameter_form.cleaned_data['subparam_graph_files']:
-                    create_skylab_file(tool_activity, 'graph', file)
-                    exec_string += "-read-sample-graph graph%s %s " % (index, file.name)
+                    filepath = create_skylab_file(tool_activity, 'graph', file)
+                    exec_string += "-read-sample-graph graph%s %s " % (index, filepath)
 
             if other_parameter_form.cleaned_data['param_search']:
                 exec_string += "-search search "
@@ -95,16 +97,18 @@ class RayView(TemplateView):
                 genome_to_taxon_file = other_parameter_form.cleaned_data['subparam_genome_to_taxon_file']
                 tree_of_life_edges_file = other_parameter_form.cleaned_data['subparam_tree_of_life_edges_file']
                 taxon_names_file = other_parameter_form.cleaned_data['subparam_taxon_names_file']
-                exec_string += "-with-taxonomy %s %s %s "
 
-                create_skylab_file(tool_activity, 'taxonomy', genome_to_taxon_file)
-                create_skylab_file(tool_activity, 'taxonomy', tree_of_life_edges_file)
-                create_skylab_file(tool_activity, 'taxonomy', taxon_names_file)
+                genome_filepath = create_skylab_file(tool_activity, 'taxonomy', genome_to_taxon_file)
+                tree_filepath = create_skylab_file(tool_activity, 'taxonomy', tree_of_life_edges_file)
+                taxon_filepath = create_skylab_file(tool_activity, 'taxonomy', taxon_names_file)
+
+                exec_string += "-with-taxonomy %s %s %s " % (genome_filepath, tree_filepath, taxon_filepath)
 
             if other_parameter_form.cleaned_data['param_gene_ontology']:
                 annotations_file = other_parameter_form.cleaned_data['subparam_annotations_file']
                 create_skylab_file(tool_activity, 'gene_ontology', annotations_file)
-                exec_string += "-gene-ontology OntologyTerms.txt %s " % annotations_file.name
+                exec_string += "-gene-ontology tool_activity_%d/input/OntologyTerms.txt %s " % (
+                tool_activity.id, annotations_file.name)
 
             # Other Output options
             if other_parameter_form.cleaned_data['param_enable_neighbourhoods']:

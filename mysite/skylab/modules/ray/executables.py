@@ -60,27 +60,28 @@ class RayExecutable(P2CToolGeneric):
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
         ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
 
+        # todo: download ontologyterms.txt
+        # if -gene-ontology is found
+
+        p = re.compile("-gene-ontology")
+        m = p.search(exec_string)
+        if m is not None:
+            self.print_msg(
+                "Downloading OntologyTerms from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo")
+            self.shell.run(["wget", "-O", "OntologyTerms.txt",
+                            "http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo"],
+                           cwd=self.working_dir + "/input")
+
         self.print_msg("Running %s" % exec_string)
-        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
-                                    cwd=self.working_dir)
+
+        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
+        # cwd=self.working_dir)
         p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
         m = p.search(exec_shell.output)
         print (exec_shell.output)
-        if m is not None:
-            self.print_msg(m.group("exit_status"))
 
-            p = re.compile("ERROR,\s(?P<error_msg>.+)")
-            m = p.search(exec_shell.output)
-            if m is not None:  # todo: more advanced catching
-                print ("Error: %s" % m.group("error_msg"))
-            # 2>&1 | tee nh3.hess.log;
-            else:
-                self.print_msg("Finished command execution")
-                ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
-
-        else:
-            ToolActivity.objects.filter(pk=self.id).update(status="Error! See .log file for more information",
-                                                           status_code=4)
+        self.print_msg("Finished command execution")
+        ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
 
         self.handle_output_files()
 
@@ -90,6 +91,8 @@ class RayExecutable(P2CToolGeneric):
         ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
+
+        # TODO: handle output files
 
         remote_dir = "tool_activity_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
