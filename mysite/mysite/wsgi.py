@@ -218,6 +218,8 @@ class ConsumerThread(threading.Thread):
                 self.print_to_console("Creating MPI Cluster")
                 # self.changeStatus("Creating MPI Cluster")
                 self.print_to_console("Execute vcluster-start %s %s" % (self.cluster_name, self.cluster_size))
+                self.frontend_shell.run(["./vcluster-stop", self.cluster_name, str(self.cluster_size)],
+                                        cwd="vcluster")  # to remove duplicates in case server restart while creating
                 result_cluster_ip = self.frontend_shell.run(
                     ["./vcluster-start", self.cluster_name, str(self.cluster_size)],
                     cwd="vcluster")
