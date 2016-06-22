@@ -217,9 +217,11 @@ class ConsumerThread(threading.Thread):
             try:
                 self.print_to_console("Creating MPI Cluster")
                 # self.changeStatus("Creating MPI Cluster")
-                self.print_to_console("Execute vcluster-start %s %s" % (self.cluster_name, self.cluster_size))
+
+                self.print_to_console("Execute vcluster-stop %s %s" % (self.cluster_name, self.cluster_size))
                 self.frontend_shell.run(["./vcluster-stop", self.cluster_name, str(self.cluster_size)],
                                         cwd="vcluster")  # to remove duplicates in case server restart while creating
+                self.print_to_console("Execute vcluster-start %s %s" % (self.cluster_name, self.cluster_size))
                 result_cluster_ip = self.frontend_shell.run(
                     ["./vcluster-start", self.cluster_name, str(self.cluster_size)],
                     cwd="vcluster")
@@ -238,6 +240,8 @@ class ConsumerThread(threading.Thread):
                 self.connect_to_cluster(True)
                 # for tool in self.supported_tools:
                 self.activate_tool(self.supported_tools)
+                self.connected = True
+
             except spur.ssh.ConnectionError as err:
                 self.print_to_console (err.args)
                 # print sys.exc_info()

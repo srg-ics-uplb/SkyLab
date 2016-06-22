@@ -47,7 +47,12 @@ class RayView(TemplateView):
             # -bynode
             if select_mpi_form.cleaned_data['param_bynode']:
                 exec_string += "-bynode "
-            exec_string += "Ray -o output "
+
+            tool_activity = ToolActivity.objects.create(
+                mpi_cluster=cluster_name, tool_name="ray", user=self.request.user, exec_string=exec_string
+            )
+
+            exec_string += "Ray -o tool_activity_%d/output " % tool_activity.id
 
             # k-mer length
             if other_parameter_form.cleaned_data['param_kmer']:
@@ -56,10 +61,6 @@ class RayView(TemplateView):
             # -mini-ranks-per-rank
             if select_mpi_form.cleaned_data['param_mini_ranks']:
                 exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data['subparam_ranks_per_rank']
-
-            tool_activity = ToolActivity.objects.create(
-                mpi_cluster=cluster_name, tool_name="ray", user=self.request.user, exec_string=exec_string
-            )
 
             for form in input_formset:
                 parameter = form.cleaned_data.get('parameter')

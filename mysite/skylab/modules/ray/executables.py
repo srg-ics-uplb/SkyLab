@@ -40,6 +40,7 @@ class RayExecutable(P2CToolGeneric):
         super(RayExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
+        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
         ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
