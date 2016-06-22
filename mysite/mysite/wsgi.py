@@ -169,10 +169,15 @@ class ConsumerThread(threading.Thread):
             self.print_to_console("Connecting to MPI Cluster")
             if create:
                 self.update_p2c()
-                # sudo apt-get install zip
-                zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "install", "zip"], use_pty=True)
+                # sudo apt-get update and sudo apt-get install zip
+                self.print_to_console("Installing zip")
+                zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "update"], use_pty=True)
                 zip_shell.stdin_write(cluster_password + "\n")
                 zip_shell.wait_for_result()
+                zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "install", "zip"], use_pty=True)
+                zip_shell.stdin_write(cluster_password + "\n")
+                zip_shell.stdin_write("Y\n")
+                self.print_to_console(zip_shell.wait_for_result().output)
 
         except spur.ssh.ConnectionError as err:
             self.print_to_console("Error: Failed to connect to MPI cluster.")

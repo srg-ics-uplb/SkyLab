@@ -2,6 +2,8 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
+import json
+from skylab.modules.base_tool import send_mpi_message
 
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
@@ -85,7 +87,7 @@ class RayView(TemplateView):
                     exec_string += "-read-sample-graph graph%s %s " % (index, filepath)
 
             if other_parameter_form.cleaned_data['param_search']:
-                exec_string += "-search search "
+                exec_string += "-search tool_activity_%d/input/search " % tool_activity.id
                 for file in form.cleaned_data['subparam_search_files']:
                     create_skylab_file(tool_activity, 'search', file)
 
@@ -159,6 +161,18 @@ class RayView(TemplateView):
             tool_activity.save()
 
             print exec_string
+
+            data = {
+                "actions": "use_tool",
+                "activity": tool_activity.id,
+                "tool": tool_activity.tool_name,
+                "executable": "ray",
+            }
+            message = json.dumps(data)
+            print message
+            # find a way to know if thread is already running
+            send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+            tool_activity.status = "Task Queued"
 
             return redirect("../toolactivity/%d" % tool_activity.id)
         else:

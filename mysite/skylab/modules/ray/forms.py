@@ -12,7 +12,7 @@ class SelectMPIFilesForm(forms.Form):
     param_bynode = forms.BooleanField(required=False, label="-bynode",
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
-                                          help_text="Mini ranks can be thought as ranks within ranks.")
+                                          help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
     # mini-ranks max set to 10
     subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, max_value=10, label="",
                                                  widget=forms.NumberInput(attrs={'placeholder': 1}))
@@ -23,12 +23,14 @@ class SelectMPIFilesForm(forms.Form):
         # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_gamess = Q(supported_tools="gamess")
+        supports_ray = Q(supported_tools="ray")
         # is_ready = Q(status=1)
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_gamess).exclude(status=4) #exclude unusable clusters
+        q = q.filter(supports_ray).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q)
+        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
+                                                            help_text="Getting a blank list? Try <a href='../create-mpi-cluster'>creating an MPI Cluster</a> first.")
+
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -40,7 +42,7 @@ class SelectMPIFilesForm(forms.Form):
 
 
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-4'),
+                Field('mpi_cluster', wrapper_class='col-xs-5'),
                 css_class="col-sm-12"
             ),
 
@@ -50,10 +52,6 @@ class SelectMPIFilesForm(forms.Form):
                     Div('param_bynode', css_class='col-xs-12'),
                     Div('param_mini_ranks', css_class='col-xs-4'),
                     Div('subparam_ranks_per_rank', css_class='col-xs-1'),
-                    Div(HTML(
-                        """<a href="https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt">See documentation</a>"""),
-                        css_class="col-xs-3"),
-
                     css_class='row-fluid col-sm-12'
                 )
             ),
