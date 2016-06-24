@@ -14,7 +14,6 @@ def get_available_tools():  # TODO: get file __path__
     module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules')
     dirs = [(lst, lst) for lst in os.listdir(module_path) if
             not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
-    print dirs
     return dirs
 
 @python_2_unicode_compatible
