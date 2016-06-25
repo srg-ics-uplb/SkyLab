@@ -69,7 +69,6 @@ class RayView(TemplateView):
                     input_file1 = form.cleaned_data['input_file1']
                     filepath1 = create_skylab_file(tool_activity, '', input_file1)
 
-
                 if parameter == "-p":
                     input_file2 = form.cleaned_data['input_file2']
                     filepath2 = create_skylab_file(tool_activity, '', input_file2)
