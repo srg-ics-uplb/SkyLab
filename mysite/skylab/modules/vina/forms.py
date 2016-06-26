@@ -15,11 +15,11 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 class VinaForm(forms.Form):
 
     # Input (receptor and ligand(s) are required)
-    param_receptor = forms.FileField(required=False, validators=[pdbqt_file_extension_validator], label="Receptor file",
+    param_receptor = forms.FileField(validators=[pdbqt_file_extension_validator], label="Receptor file",
                                      help_text="Rigid part of the receptor (.pdbqt)")
     param_flex = forms.FileField(required=False, validators=[pdbqt_file_extension_validator], label="Flex file",
                                  help_text="Flexible side chains, if any (.pdbqt)")
-    param_ligands = MultiFileField(required=False, min_num=1, validators=[multi_pdbqt_file_validator],
+    param_ligands = MultiFileField(min_num=1, validators=[multi_pdbqt_file_validator],
                                    label="Ligand file(s)",
                                    help_text="(.pdbqt)")
 
