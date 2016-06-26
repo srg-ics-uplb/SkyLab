@@ -2,6 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
 from django import forms
 from django.db.models import Q
+from django.core.validators import MinValueValidator, MaxValueValidator
 from multiupload.fields import MultiFileField
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
@@ -13,8 +14,9 @@ class SelectMPIFilesForm(forms.Form):
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
                                           help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
-    # mini-ranks max set to 10
-    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, max_value=10, label="",
+    # mini-ranks max set to 4
+    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, max_value=4, label="",
+                                                 validators=[MinValueValidator(1), MaxValueValidator(4)],
                                                  widget=forms.NumberInput(attrs={'placeholder': 1}))
 
     def __init__(self, *args, **kwargs):
@@ -127,7 +129,7 @@ class InputParameterForm(forms.Form):
 
 
 class OtherParameterForm(forms.Form):
-    param_kmer = forms.BooleanField(initial=False, required=False, label="-k")
+    param_kmer = forms.BooleanField(required=False, label="-k")
     # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
     subparam_kmer_length = forms.IntegerField(validators=[odd_number_validator], max_value=32, min_value=1,
@@ -136,9 +138,9 @@ class OtherParameterForm(forms.Form):
                                               widget=forms.NumberInput(attrs={'placeholder': 21}))
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
-    param_run_surveyor = forms.BooleanField(initial=False, required=False, label="-run-surveyor",
+    param_run_surveyor = forms.BooleanField(required=False, label="-run-surveyor",
                                             help_text="Runs Ray Surveyor to compare samples.")
-    param_read_sample_graph = forms.BooleanField(initial=False, required=False, label='-read-sample-graph',
+    param_read_sample_graph = forms.BooleanField(required=False, label='-read-sample-graph',
                                                  help_text="Reads sample graphs (generated with -write-kmers).")  # dependent on -write-kmers parameter
     subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)",
                                           validators=[multi_graph_files_validator])
@@ -148,16 +150,16 @@ class OtherParameterForm(forms.Form):
     # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
 
     # Biological abundances See Documentation/BiologicalAbundances.txt
-    param_search = forms.BooleanField(initial=False, required=False, label='-search',
+    param_search = forms.BooleanField(required=False, label='-search',
                                       help_text="Provide fasta files to be searched in the de Bruijn graph.")
     subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files', validators=[
         multi_ray_files_validator])  # save to tool_activity_x/input/search
-    param_one_color_per_file = forms.BooleanField(initial=False, required=False, label="-one-color-per-file",
+    param_one_color_per_file = forms.BooleanField(required=False, label="-one-color-per-file",
                                                   help_text="Sets one color per file instead of one per sequence. For files with large numbers of sequences, using one single color per file may be more efficient.")
 
     # Taxonomic profiling with colored de Bruijn graphs
     # Computes and writes detailed taxonomic profiles. See Documentation/Taxonomy.txt for details.
-    param_with_taxonomy = forms.BooleanField(required=False, initial=False, label='-with-taxonomy',
+    param_with_taxonomy = forms.BooleanField(required=False, label='-with-taxonomy',
                                              help_text="Computes and writes detailed taxonomic profiles.")
     subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator],
                                                     label="Genome-to-Taxon")
@@ -166,7 +168,7 @@ class OtherParameterForm(forms.Form):
     subparam_taxon_names_file = forms.FileField(required=False, validators=[tsv_file_validator], label="Taxon-Names")
 
     # Provides an ontology and annotations. See Documentation/GeneOntology.txt
-    param_gene_ontology = forms.BooleanField(required=False, initial=False, label="-gene-ontology",
+    param_gene_ontology = forms.BooleanField(required=False, label="-gene-ontology",
                                              help_text="Provides an ontology and annotations. OntologyTerms.txt is automatically fetched from geneontology.org .")
     # todo: The OntologyTerms.txt file is http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo
 
@@ -174,39 +176,39 @@ class OtherParameterForm(forms.Form):
                                                 help_text="The annotation file must be derived from Uniprot-GOA (http://www.ebi.ac.uk/GOA/).")
 
     # Other outputs
-    param_enable_neighbourhoods = forms.BooleanField(required=False, initial=False, label="-enable-neighbourhoods",
+    param_enable_neighbourhoods = forms.BooleanField(required=False, label="-enable-neighbourhoods",
                                                      help_text="Computes contig neighborhoods in the de Bruijn graph")
-    param_amos = forms.BooleanField(required=False, initial=False, label="-amos",
+    param_amos = forms.BooleanField(required=False, label="-amos",
                                     help_text="Writes the AMOS file that contains read positions on contigs.")
-    param_write_kmers = forms.BooleanField(required=False, initial=False, label="-write-kmers",
+    param_write_kmers = forms.BooleanField(required=False, label="-write-kmers",
                                            help_text="Writes k-mer graph")
-    param_graph_only = forms.BooleanField(required=False, initial=False, label="-graph-only",
+    param_graph_only = forms.BooleanField(required=False, label="-graph-only",
                                           help_text="Exits after building graph.")
-    param_write_read_markers = forms.BooleanField(required=False, initial=False, label="-write-read-markers",
+    param_write_read_markers = forms.BooleanField(required=False, label="-write-read-markers",
                                                   help_text="Writes read markers to disk.")
-    param_write_seeds = forms.BooleanField(required=False, initial=False, label="-write-seeds",
+    param_write_seeds = forms.BooleanField(required=False, label="-write-seeds",
                                            help_text="Writes seed DNA sequences")
-    param_write_extensions = forms.BooleanField(required=False, initial=False, label="-write-extensions",
+    param_write_extensions = forms.BooleanField(required=False, label="-write-extensions",
                                                 help_text="Writes extension DNA sequences")
-    param_write_contig_paths = forms.BooleanField(required=False, initial=False, label="-write-contig-paths",
+    param_write_contig_paths = forms.BooleanField(required=False, label="-write-contig-paths",
                                                   help_text="Writes contig paths with coverage values")
-    param_write_marker_summary = forms.BooleanField(required=False, initial=False, label="-write-marker-summary",
+    param_write_marker_summary = forms.BooleanField(required=False, label="-write-marker-summary",
                                                     help_text="Writes marker statistics.")
 
     # Memory usage
-    param_show_memory_usage = forms.BooleanField(required=False, initial=False, label="-show-memory-usage",
+    param_show_memory_usage = forms.BooleanField(required=False, label="-show-memory-usage",
                                                  help_text="Shows memory usage")
-    param_show_memory_allocations = forms.BooleanField(required=False, initial=False, label="-show-memory-allocations",
+    param_show_memory_allocations = forms.BooleanField(required=False, label="-show-memory-allocations",
                                                        help_text="Shows memory allocation events")
 
     # Algorithm verbosity
-    param_show_extension_choice = forms.BooleanField(required=False, initial=False, label="-show-extension-choice",
+    param_show_extension_choice = forms.BooleanField(required=False, label="-show-extension-choice",
                                                      help_text="Shows the choice made (with other choices) during the extension.")
-    param_show_ending_context = forms.BooleanField(required=False, initial=False, label="-show-ending-context",
+    param_show_ending_context = forms.BooleanField(required=False, label="-show-ending-context",
                                                    help_text="Shows the ending context of each extension. Shows the children of the vertex where extension was too difficult.")
-    param_show_distance_summary = forms.BooleanField(required=False, initial=False, label="-show-distance-summary",
+    param_show_distance_summary = forms.BooleanField(required=False, label="-show-distance-summary",
                                                      help_text="Shows summary of outer distances used for an extension path.")
-    param_show_consensus = forms.BooleanField(required=False, initial=False, label="-show-consensus",
+    param_show_consensus = forms.BooleanField(required=False, label="-show-consensus",
                                               help_text="Shows the consensus when a choice is done.")
 
 # Checkpointing is skipped
