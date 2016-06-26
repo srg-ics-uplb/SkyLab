@@ -5,30 +5,12 @@ import shutil
 from django.conf import settings
 
 from skylab.models import ToolActivity, SkyLabFile
-from skylab.modules.base_tool import P2CToolGeneric
+from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
 
 
 # source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
-def mkdir_p(sftp, remote_directory):
-    """Change to this directory, recursively making new folders if needed.
-    Returns True if any folders were created."""
-    if remote_directory == '/':
-        # absolute path so change directory to root
-        sftp.chdir('/')
-        return
-    if remote_directory == '':
-        # top-level relative directory must exist
-        return
-    try:
-        sftp.chdir(remote_directory)  # sub-directory exists
-    except IOError:
-        dirname, basename = os.path.split(remote_directory.rstrip('/'))
-        mkdir_p(sftp, dirname)  # make parent directories
-        sftp.mkdir(basename)  # sub-directory missing, so created it
-        sftp.chdir(basename)
-        return True
 
 
 class RayExecutable(P2CToolGeneric):
@@ -51,7 +33,7 @@ class RayExecutable(P2CToolGeneric):
 
     # raise not implemented error
     def print_msg(self, msg):
-        print ("Gamess (Tool Activity %d) : %s" % (self.id, msg))
+        print ("Ray (Tool Activity %d) : %s" % (self.id, msg))
 
     def run_tool(self, **kwargs):
         self.handle_input_files()

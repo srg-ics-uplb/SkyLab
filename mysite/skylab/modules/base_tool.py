@@ -1,6 +1,41 @@
 from abc import abstractmethod
-
+from django import forms
+from skylab.models import SkyLabFile
 import pika
+
+
+class MPIModelChoiceField(forms.ModelChoiceField):
+    def label_from_instance(self, obj):
+        return "%s (size : %d)" % (obj.cluster_name, obj.cluster_size)
+
+
+def create_skylab_file(tool_activity, directory, file):
+    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input/%s" % (tool_activity.id, directory),
+                                         file=file,
+                                         filename=file.name)
+    tool_activity.input_files.add(new_file)
+    return "%s%s" % (new_file.upload_path, new_file.filename)
+
+
+def mkdir_p(sftp, remote_directory):
+    """Change to this directory, recursively making new folders if needed.
+    Returns True if any folders were created."""
+    if remote_directory == '/':
+        # absolute path so change directory to root
+        sftp.chdir('/')
+        return
+    if remote_directory == '':
+        # top-level relative directory must exist
+        return
+    try:
+        sftp.chdir(remote_directory)  # sub-directory exists
+    except IOError:
+        dirname, basename = os.path.split(remote_directory.rstrip('/'))
+        mkdir_p(sftp, dirname)  # make parent directories
+        sftp.mkdir(basename)  # sub-directory missing, so created it
+        sftp.chdir(basename)
+        return True
+
 
 def send_mpi_message(routing_key, body):
     connection = pika.BlockingConnection(pika.ConnectionParameters(

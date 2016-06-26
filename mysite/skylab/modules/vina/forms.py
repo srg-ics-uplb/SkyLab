@@ -1,19 +1,18 @@
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
-from crispy_forms.bootstrap import AppendedText
+from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML, Submit
+from crispy_forms.bootstrap import AppendedText, Tab, TabHolder
 from multiupload.fields import MultiFileField
 from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
 from skylab.models import MPI_Cluster
 from django.db.models import Q
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+from skylab.modules.base_tool import MPIModelChoiceField
 
 # for value type reference:  https://github.com/ryancoleman/autodock-vina/blob/master/src/main/main.cpp
 # see line 459 onwards
 
 class VinaForm(forms.Form):
-
     # Input (receptor and ligand(s) are required)
     param_receptor = forms.FileField(validators=[pdbqt_file_extension_validator], label="Receptor file",
                                      help_text="Rigid part of the receptor (.pdbqt)")
@@ -22,7 +21,6 @@ class VinaForm(forms.Form):
     param_ligands = MultiFileField(min_num=1, validators=[multi_pdbqt_file_validator],
                                    label="Ligand file(s)",
                                    help_text="(.pdbqt)")
-
 
     # Search space (required)
     param_center_x = forms.DecimalField(required=False, label="Center X coordinate")
@@ -33,11 +31,11 @@ class VinaForm(forms.Form):
     param_size_y = forms.DecimalField(required=False, label="Size Y (Angstroms)")
     param_size_z = forms.DecimalField(required=False, label="Size Z (Angstroms)")
 
-    # Output (optional)
-    param_out = forms.CharField(required=False, label="Output model filename",
-                                help_text="The default is chosen based on the ligand file name")
-    param_log = forms.CharField(required=False, label="Write a log file",
-                                help_text="This will output a log file with this filename")
+    # Output (optional) removed because of the use-case aims to support multiple ligands
+    # param_out = forms.CharField(required=False, label="Output model filename",
+    #                             help_text="The default is chosen based on the ligand file name")
+    # param_log = forms.CharField(required=False, label="Write a log file",
+    #                             help_text="This will output a log file with this filename")
     # Misc (optional)
     # param_cpu = forms.IntegerField(required=False) removed since default setting detects current number of CPUs
     param_seed = forms.IntegerField(required=False, label="Explicit random seed")
@@ -89,116 +87,128 @@ class VinaForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
-                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
         self.helper.form_tag = False
 
         self.helper.layout = Layout(  # crispy_forms layout
-            Div(
-                Div(
-                    Field('mpi_cluster', wrapper_class='col-xs-5'),
-                    css_class="col-sm-12"
-                ),
-                Fieldset(
-                    'Input',
+            TabHolder(
+                Tab('Basic Parameters',
                     Div(
-                        Div('param_receptor', css_class='col-xs-4'),
-                        Div('param_flex', css_class='col-xs-4'),
-                        Div('param_ligands', css_class='col-xs-4'),
-                        css_class='row-fluid col-sm-12'
-                    )
-                ),
-                Fieldset(
-                    'Search space',
-                    Div(
-                        Div('param_center_x', css_class='col-xs-4'),
-                        Div('param_center_y', css_class='col-xs-4'),
-                        Div('param_center_z', css_class='col-xs-4'),
-                        Div('param_size_x', css_class='col-xs-4'),
-                        Div('param_size_y', css_class='col-xs-4'),
-                        Div('param_size_z', css_class='col-xs-4'),
-                        css_class='row-fluid col-sm-12'
-                    )
-                ),
-                Fieldset(
-                    'Output',
-                    Div(
+                        Field('mpi_cluster', wrapper_class='col-xs-5'),
+                        css_class="col-sm-12"
+                    ),
+                    Fieldset(
+                        'Input',
+                        Div(
+                            Div('param_receptor', css_class='col-xs-4'),
+                            Div('param_flex', css_class='col-xs-4'),
+                            Div('param_ligands', css_class='col-xs-4'),
+                            css_class='row-fluid col-sm-12'
+                        )
+                    ),
+                    Fieldset(
+                        'Search space',
+                        Div(
+                            Div('param_center_x', css_class='col-xs-4'),
+                            Div('param_center_y', css_class='col-xs-4'),
+                            Div('param_center_z', css_class='col-xs-4'),
+                            Div('param_size_x', css_class='col-xs-4'),
+                            Div('param_size_y', css_class='col-xs-4'),
+                            Div('param_size_z', css_class='col-xs-4'),
+                            css_class='row-fluid col-sm-12'
+                        )
+                    ),
+                    # Fieldset(
+                    #     'Output',
+                    #     Div(
+                    #         Div(
+                    #             Div(
+                    #                 AppendedText('param_out', '.pdbqt', active=True, placeholder="filename"),
+                    #                 css_class='col-xs-8'
+                    #             ),
+                    #             css_class='col-xs-6'
+                    #         ),
+                    #         Div(
+                    #             Div(
+                    #                 AppendedText('param_log', '.log', active=True, placeholder="filename"),
+                    #                 css_class='col-xs-8'
+                    #             ),
+                    #             css_class='col-xs-6'
+                    #         ),
+                    #         css_class='row-fluid col-sm-12'
+                    #     )
+                    # ),
+                    Fieldset(
+                        'Miscellaneous',
                         Div(
                             Div(
-                                AppendedText('param_out', '.pdbqt', active=True, placeholder="filename"),
-                                css_class='col-xs-8'
+                                Field('param_seed', wrapper_class="col-xs-8"),
+                                css_class='col-xs-6'
                             ),
-                            css_class='col-xs-6'
-                        ),
-                        Div(
                             Div(
-                                AppendedText('param_log', '.log', active=True, placeholder="filename"),
-                                css_class='col-xs-8'
+                                Field('param_exhaustiveness', wrapper_class="col-xs-8"),
+                                css_class='col-xs-6'
                             ),
-                            css_class='col-xs-6'
-                        ),
-                        css_class='row-fluid col-sm-12'
-                    )
-                ),
-                Fieldset(
-                    'Miscellaneous',
-                    Div(
-                        Div(
-                            Field('param_seed', wrapper_class="col-xs-8"),
-                            css_class='col-xs-6'
-                        ),
-                        Div(
-                            Field('param_exhaustiveness', wrapper_class="col-xs-8"),
-                            css_class='col-xs-6'
-                        ),
-                        Div(
-                            Field('param_num_modes', wrapper_class="col-xs-8"),
-                            css_class='col-xs-6'
-                        ),
-                        Div(
-                            Field('param_energy_range', wrapper_class="col-xs-8"),
-                            css_class='col-xs-6'
-                        ),
-                        css_class='row-fluid col-sm-12'
-                    )
-                ),
-                css_id='tab1', css_class='tab-pane fade in active'
-            ),
-            Div(
-                Div('param_score_only', css_class='col-xs-4'),
-                Div('param_local_only', css_class='col-xs-4'),
-                Div('param_randomize_only', css_class='col-xs-4'),
+                            Div(
+                                Field('param_num_modes', wrapper_class="col-xs-8"),
+                                css_class='col-xs-6'
+                            ),
+                            Div(
+                                Field('param_energy_range', wrapper_class="col-xs-8"),
+                                css_class='col-xs-6'
+                            ),
+                            css_class='row-fluid col-sm-12'
+                        )
+                    ),
 
-                Div(
-                    Field('param_weight_gauss1', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
                 ),
-                Div(
-                    Field('param_weight_gauss2', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
-                ),
-                Div(
-                    Field('param_weight_repulsion', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
-                ),
-                Div(
-                    Field('param_weight_hydrophobic', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
-                ),
-                Div(
-                    Field('param_weight_hydrogen', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
-                ),
-                Div(
-                    Field('param_weight_rot', wrapper_class='col-xs-10'),
-                    css_class='col-xs-6'
-                ),
-                css_id='tab2',
-                css_class='tab-pane fade row-fluid col-sm-12'
-            ),
+                Tab('Advanced Parameters',
+                    Div('param_score_only', css_class='col-xs-4'),
+                    Div('param_local_only', css_class='col-xs-4'),
+                    Div('param_randomize_only', css_class='col-xs-4'),
+
+                    Div(
+                        Field('param_weight_gauss1', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_weight_gauss2', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_weight_repulsion', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_weight_hydrophobic', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_weight_hydrogen', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_weight_rot', wrapper_class='col-xs-10'),
+                        css_class='col-xs-6'
+                    ),
+                    css_class='row-fluid col-sm-12'
+                    ),
+                css_id="form-tab-holder",
+            )
+
         )
+
+    def clean(self):
+        if self.cleaned_data:
+            if not self.cleaned_data['param_score_only']:
+                if not self.cleaned_data.get('param_center_x') or not self.cleaned_data.get(
+                        'param_center_y') or not self.cleaned_data.get('param_center_z') or not self.cleaned_data.get(
+                        'param_size_x') or not self.cleaned_data.get('param_size_y') or not self.cleaned_data.get(
+                        'param_size_z'):
+                    raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
 
 class VinaSplitForm(forms.Form):
     param_input = forms.FileField(validators=[pdbqt_file_extension_validator])

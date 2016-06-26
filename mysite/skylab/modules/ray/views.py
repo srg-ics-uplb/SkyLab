@@ -3,17 +3,9 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 import json
-from skylab.modules.base_tool import send_mpi_message
+from skylab.modules.base_tool import send_mpi_message, create_skylab_file
 
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
-
-
-def create_skylab_file(tool_activity, directory, file):
-    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input/%s" % (tool_activity.id, directory),
-                                         file=file,
-                                         filename=file.name)
-    tool_activity.input_files.add(new_file)
-    return "%s%s" % (new_file.upload_path, new_file.filename)
 
 class RayView(TemplateView):
     template_name = "modules/ray/use_ray.html"

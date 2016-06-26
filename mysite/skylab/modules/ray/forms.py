@@ -7,6 +7,7 @@ from multiupload.fields import MultiFileField
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
 from skylab.models import MPI_Cluster
+from skylab.modules.base_tool import MPIModelChoiceField
 
 
 class SelectMPIFilesForm(forms.Form):
@@ -31,8 +32,8 @@ class SelectMPIFilesForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_ray).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
-                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
 
         self.helper = FormHelper()

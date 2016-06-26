@@ -3,6 +3,7 @@ from crispy_forms.layout import Layout, Fieldset, Submit
 from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Q
+from skylab.modules.base_tool import MPIModelChoiceField
 
 from skylab.models import MPI_Cluster
 
@@ -26,8 +27,8 @@ class GamessForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_gamess).exclude(status=4)
 
-        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
-                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
         self.helper.form_id = 'id-impiForm'
