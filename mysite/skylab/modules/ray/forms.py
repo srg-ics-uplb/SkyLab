@@ -12,12 +12,13 @@ from skylab.models import MPI_Cluster
 class SelectMPIFilesForm(forms.Form):
     param_bynode = forms.BooleanField(required=False, label="-bynode",
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
-    param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
-                                          help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
+    # param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
+    #                                       help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
     # mini-ranks max set to 4
-    subparam_ranks_per_rank = forms.IntegerField(required=False, min_value=1, max_value=4, label="",
-                                                 validators=[MinValueValidator(1), MaxValueValidator(4)],
-                                                 widget=forms.NumberInput(attrs={'placeholder': 1}))
+    param_mini_ranks = forms.IntegerField(required=False, min_value=1, max_value=4, label="Mini-ranks per rank",
+                                          help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>",
+                                          validators=[MinValueValidator(1), MaxValueValidator(4)],
+                                          widget=forms.NumberInput(attrs={'placeholder': 'default: 1'}))
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -31,7 +32,7 @@ class SelectMPIFilesForm(forms.Form):
         q = q.filter(supports_ray).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
-                                                            help_text="Getting a blank list? Try <a href='../create-mpi-cluster'>creating an MPI Cluster</a> first.")
+                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
 
         self.helper = FormHelper()
@@ -53,7 +54,7 @@ class SelectMPIFilesForm(forms.Form):
                 Div(
                     Div('param_bynode', css_class='col-xs-12'),
                     Div('param_mini_ranks', css_class='col-xs-4'),
-                    Div('subparam_ranks_per_rank', css_class='col-xs-1'),
+
                     css_class='row-fluid col-sm-12'
                 )
             ),
@@ -61,12 +62,12 @@ class SelectMPIFilesForm(forms.Form):
 
         )
 
-    def clean(self):
-        if self.cleaned_data:
-            if self.cleaned_data['param_mini_ranks']:
-                if not self.cleaned_data['subparam_ranks_per_rank']:
-                    raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
-                                                code="mini_ranks_no_value_set")
+        # def clean(self):
+        #     if self.cleaned_data:
+        #         if self.cleaned_data['param_mini_ranks']:
+        #             if not self.cleaned_data["param_mini_ranks"]:
+        #                 raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
+        #                                             code="mini_ranks_no_value_set")
 
 
 
@@ -129,13 +130,13 @@ class InputParameterForm(forms.Form):
 
 
 class OtherParameterForm(forms.Form):
-    param_kmer = forms.BooleanField(required=False, label="-k")
+    # param_kmer = forms.BooleanField(required=False, label="-k")
     # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
-    subparam_kmer_length = forms.IntegerField(validators=[odd_number_validator], max_value=32, min_value=1,
-                                              required=False, label="",
-                                              help_text="Value must be odd.",
-                                              widget=forms.NumberInput(attrs={'placeholder': 21}))
+    param_kmer_length = forms.IntegerField(validators=[odd_number_validator], max_value=32, min_value=1,
+                                           required=False, label="",
+                                           help_text="Value must be odd.",
+                                           widget=forms.NumberInput(attrs={'placeholder': 'default: 21'}))
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
     param_run_surveyor = forms.BooleanField(required=False, label="-run-surveyor",
@@ -231,8 +232,7 @@ class OtherParameterForm(forms.Form):
             Fieldset(
                 'K-mer length',
                 Div(
-                    Div('param_kmer', css_class='col-xs-1'),
-                    Div('subparam_kmer_length', css_class='col-xs-3'),
+                    Div('param_kmer_length', css_class='col-xs-3'),
                     css_class='row-fluid col-sm-12'
                 )
             ),
@@ -249,6 +249,7 @@ class OtherParameterForm(forms.Form):
                 ),
             ),
             Fieldset(
+
                 'Biological abundances',
                 Div(
                     Div('param_search', css_class='col-xs-6'),
@@ -332,9 +333,9 @@ class OtherParameterForm(forms.Form):
 
     def clean(self):
         if self.cleaned_data:
-            if self.cleaned_data['param_kmer']:
-                if not self.cleaned_data.get('subparam_kmer_length'):
-                    raise forms.ValidationError(u'-k: No value provided', code='kmer_no_value_set')
+            # if self.cleaned_data['param_kmer']:
+            #     if not self.cleaned_data.get('subparam_kmer_length'):
+            #         raise forms.ValidationError(u'-k: No value provided', code='kmer_no_value_set')
 
             if self.cleaned_data['param_read_sample_graph']:
                 if not self.cleaned_data.get('subparam_graph_files'):

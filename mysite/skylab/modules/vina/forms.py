@@ -42,16 +42,19 @@ class VinaBasicForm(forms.Form):
     param_exhaustiveness = forms.IntegerField(required=False, label="Exhaustiveness of the global search",
                                               help_text=" (Roughly proportional to time): 1+", min_value=1, max_value=8,
                                               validators=[MinValueValidator(1), MaxValueValidator(8)],
-                                              widget=forms.NumberInput(attrs={'placeholder': 8}))  # 1-8 default 8
+                                              widget=forms.NumberInput(
+                                                  attrs={'placeholder': 'default: 8, range:1-8'}))  # 1-8 default 8
     param_num_modes = forms.IntegerField(required=False, label="Max number of binding modes to generate", min_value=1,
                                          max_value=10, validators=[MinValueValidator(1), MaxValueValidator(10)],
-                                         widget=forms.NumberInput(attrs={'placeholder': 9}))  # 1-10 default 9
+                                         widget=forms.NumberInput(
+                                             attrs={'placeholder': 'default: 9, range: 1-10'}))  # 1-10 default 9
     param_energy_range = forms.DecimalField(required=False, label="Energy range",
                                             help_text="Maximum energy difference between the best binding mode and the worst one displayed (kcal/mol)",
                                             min_value=1, max_value=3,
                                             validators=[MinValueValidator(1), MaxValueValidator(3)],
                                             widget=forms.NumberInput(
-                                                attrs={'placeholder': 3.0}))  # 1-3 default 3.0 float-value in cpp
+                                                attrs={
+                                                    'placeholder': 'default: 3.0, range: 1.0-3.0'}))  # 1-3 default 3.0 float-value in cpp
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -65,7 +68,7 @@ class VinaBasicForm(forms.Form):
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
-                                                            help_text="Getting a blank list? Try <a href='../create-mpi-cluster'>creating an MPI Cluster</a> first.")
+                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -119,10 +122,22 @@ class VinaBasicForm(forms.Form):
             Fieldset(
                 'Miscellaneous',
                 Div(
-                    Div(Field('param_seed', wrapper_class="col-xs-8"), css_class='col-xs-6'),
-                    Div(Field('param_exhaustiveness', wrapper_class="col-xs-8"), css_class='col-xs-6'),
-                    Div(Field('param_num_modes', wrapper_class="col-xs-8"), css_class='col-xs-6'),
-                    Div(Field('param_energy_range', wrapper_class="col-xs-8"), css_class='col-xs-6'),
+                    Div(
+                        Field('param_seed', wrapper_class="col-xs-8"),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_exhaustiveness', wrapper_class="col-xs-8"),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_num_modes', wrapper_class="col-xs-8"),
+                        css_class='col-xs-6'
+                    ),
+                    Div(
+                        Field('param_energy_range', wrapper_class="col-xs-8"),
+                        css_class='col-xs-6'
+                    ),
                     css_class='row-fluid col-sm-12'
                 )
             ),
@@ -133,16 +148,24 @@ class VinaBasicForm(forms.Form):
 # add cripsy form helper
 
 class VinaAdvancedForm(forms.Form):
-    param_score_only = forms.BooleanField(required=False)
-    param_local_only = forms.BooleanField(required=False)
-    param_randomize_only = forms.BooleanField(required=False)
+    param_score_only = forms.BooleanField(required=False, label="--score_only", help_text="Search space can be omitted")
+    param_local_only = forms.BooleanField(required=False, label="--local_only ", help_text="Do local search only    ")
+    param_randomize_only = forms.BooleanField(required=False, label="--randomize_only",
+                                              help_text="Randomize input, attempting to avoid clashes")
 
-    param_weight_gauss1 = forms.DecimalField(required=False)
-    param_weight_gauss2 = forms.DecimalField(required=False)
-    param_weight_repulsion = forms.DecimalField(required=False)
-    param_weight_hydrophobic = forms.DecimalField(required=False)
-    param_weight_hydrogen = forms.DecimalField(required=False)
-    param_weight_rot = forms.DecimalField(required=False)
+    # changed placeholder values to string to prevent rounding
+    param_weight_gauss1 = forms.DecimalField(required=False, label="Gauss 1 weight",
+                                             widget=forms.NumberInput(attrs={'placeholder': 'default: -0.035579'}))
+    param_weight_gauss2 = forms.DecimalField(required=False, label="Gauss 2 weight",
+                                             widget=forms.NumberInput(attrs={'placeholder': 'default: -0.005156'}))
+    param_weight_repulsion = forms.DecimalField(required=False, label="Repulsion weight", widget=forms.NumberInput(
+        attrs={'placeholder': 'default: 0.84024500000000002'}))
+    param_weight_hydrophobic = forms.DecimalField(required=False, label="Hydrophobic weight", widget=forms.NumberInput(
+        attrs={'placeholder': 'default: -0.035069000000000003'}))
+    param_weight_hydrogen = forms.DecimalField(required=False, label="Hydrogen bond weight", widget=forms.NumberInput(
+        attrs={'placeholder': 'default: -0.58743900000000004'}))
+    param_weight_rot = forms.DecimalField(required=False, label="N_rot weight", widget=forms.NumberInput(
+        attrs={'placeholder': 'default: 0.058459999999999998'}))
 
     def __init__(self, *args, **kwargs):
         super(VinaAdvancedForm, self).__init__(*args, **kwargs)
@@ -152,6 +175,37 @@ class VinaAdvancedForm(forms.Form):
         self.helper.disable_csrf = True
 
         self.helper.layout = Layout(  # crispy_forms layout
+            Div(
+                Div('param_score_only', css_class='col-xs-4'),
+                Div('param_local_only', css_class='col-xs-4'),
+                Div('param_randomize_only', css_class='col-xs-4'),
+
+                Div(
+                    Field('param_weight_gauss1', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                Div(
+                    Field('param_weight_gauss2', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                Div(
+                    Field('param_weight_repulsion', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                Div(
+                    Field('param_weight_hydrophobic', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                Div(
+                    Field('param_weight_hydrogen', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                Div(
+                    Field('param_weight_rot', wrapper_class='col-xs-10'),
+                    css_class='col-xs-6'
+                ),
+                css_class='row-fluid col-sm-12'
+            ),
 
         )
 

@@ -26,7 +26,8 @@ class GamessForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_gamess).exclude(status=4)
 
-        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q)
+        self.fields['mpi_cluster'] = forms.ModelChoiceField(queryset=q,
+                                                            help_text="Getting a blank list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
         self.helper.form_id = 'id-impiForm'

@@ -55,12 +55,12 @@ class RayView(TemplateView):
             exec_string += "Ray -o tool_activity_%d/output " % tool_activity.id
 
             # k-mer length
-            if other_parameter_form.cleaned_data['param_kmer']:
-                exec_string += "-k %s " % other_parameter_form.cleaned_data['subparam_kmer_length']
+            if other_parameter_form.cleaned_data.get('param_kmer_length'):
+                exec_string += "-k %s " % other_parameter_form.cleaned_data["param_kmer_length"]
 
             # -mini-ranks-per-rank
-            if select_mpi_form.cleaned_data['param_mini_ranks']:
-                exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data['subparam_ranks_per_rank']
+            if select_mpi_form.cleaned_data.get('param_mini_ranks'):
+                exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data["param_mini_ranks"]
 
             for form in input_formset:
                 parameter = form.cleaned_data.get('parameter')
