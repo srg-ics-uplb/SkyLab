@@ -23,11 +23,12 @@
                         </ul>
 
                         <div class="tab-content">
-                            <div id="tab1" class="tab-pane fade in active">
-                                {% crispy vina_basic_form %}
-                            </div>
-                            <div id="tab2" class="tab-pane fade col-sm-12">
-                                {% crispy vina_advanced_form %}
+                            {% crispy vina_form %}
+                            {#                            <div id="tab1" class="tab-pane fade in active">#}
+                            {#                                {% crispy vina_basic_form %}#}
+                            {#                            </div>#}
+                            {#                            <div id="tab2" class="tab-pane fade col-sm-12">#}
+                            {#                                {% crispy vina_advanced_form %}#}
                             </div>
                             <div id="tab3" class="tab-pane fade col-sm-12">
                                 <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
