@@ -17,6 +17,7 @@ def create_skylab_file(tool_activity, directory, file):
     return "%s/%s" % (new_file.upload_path, new_file.filename)
 
 
+# source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
 def mkdir_p(sftp, remote_directory):
     """Change to this directory, recursively making new folders if needed.
     Returns True if any folders were created."""

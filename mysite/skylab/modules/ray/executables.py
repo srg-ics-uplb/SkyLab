@@ -9,10 +9,6 @@ from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
 
-
-# source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
-
-
 class RayExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
@@ -59,8 +55,6 @@ class RayExecutable(P2CToolGeneric):
 
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
         # cwd=self.working_dir)
-        p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
-        m = p.search(exec_shell.output)
         print (exec_shell.output)
 
         self.print_msg("Finished command execution")
@@ -91,7 +85,7 @@ class RayExecutable(P2CToolGeneric):
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename="RayOutput_%d.zip" % self.id)
+                                                 filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)
