@@ -10,7 +10,7 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 
 
 def create_skylab_file(tool_activity, directory, file):
-    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input/%s" % (tool_activity.id, directory),
+    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/%s" % (tool_activity.id, directory),
                                          file=file,
                                          filename=file.name)
     tool_activity.input_files.add(new_file)

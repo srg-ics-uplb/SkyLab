@@ -60,11 +60,11 @@ class RayView(TemplateView):
                 if parameter:  # ignore blank parameter value
 
                     input_file1 = form.cleaned_data['input_file1']
-                    filepath1 = create_skylab_file(tool_activity, '', input_file1)
+                    filepath1 = create_skylab_file(tool_activity, 'input', input_file1)
 
                 if parameter == "-p":
                     input_file2 = form.cleaned_data['input_file2']
-                    filepath2 = create_skylab_file(tool_activity, '', input_file2)
+                    filepath2 = create_skylab_file(tool_activity, 'input', input_file2)
 
                     exec_string += "%s %s %s " % (parameter, filepath1, filepath2)
 
@@ -76,13 +76,13 @@ class RayView(TemplateView):
 
             if other_parameter_form.cleaned_data['param_read_sample_graph']:
                 for index, file in other_parameter_form.cleaned_data['subparam_graph_files']:
-                    filepath = create_skylab_file(tool_activity, 'graph', file)
+                    filepath = create_skylab_file(tool_activity, 'input/graph', file)
                     exec_string += "-read-sample-graph graph%s %s " % (index, filepath)
 
             if other_parameter_form.cleaned_data['param_search']:
                 exec_string += "-search tool_activity_%d/input/search " % tool_activity.id
                 for file in form.cleaned_data['subparam_search_files']:
-                    create_skylab_file(tool_activity, 'search', file)
+                    create_skylab_file(tool_activity, 'input/search', file)
 
 
             if other_parameter_form.cleaned_data['param_one_color_per_file']:
@@ -93,15 +93,15 @@ class RayView(TemplateView):
                 tree_of_life_edges_file = other_parameter_form.cleaned_data['subparam_tree_of_life_edges_file']
                 taxon_names_file = other_parameter_form.cleaned_data['subparam_taxon_names_file']
 
-                genome_filepath = create_skylab_file(tool_activity, 'taxonomy', genome_to_taxon_file)
-                tree_filepath = create_skylab_file(tool_activity, 'taxonomy', tree_of_life_edges_file)
-                taxon_filepath = create_skylab_file(tool_activity, 'taxonomy', taxon_names_file)
+                genome_filepath = create_skylab_file(tool_activity, 'input/taxonomy', genome_to_taxon_file)
+                tree_filepath = create_skylab_file(tool_activity, 'input/taxonomy', tree_of_life_edges_file)
+                taxon_filepath = create_skylab_file(tool_activity, 'input/taxonomy', taxon_names_file)
 
                 exec_string += "-with-taxonomy %s %s %s " % (genome_filepath, tree_filepath, taxon_filepath)
 
             if other_parameter_form.cleaned_data['param_gene_ontology']:
                 annotations_file = other_parameter_form.cleaned_data['subparam_annotations_file']
-                create_skylab_file(tool_activity, 'gene_ontology', annotations_file)
+                create_skylab_file(tool_activity, 'input/gene_ontology', annotations_file)
                 exec_string += "-gene-ontology tool_activity_%d/input/OntologyTerms.txt %s " % (
                 tool_activity.id, annotations_file.name)
 
