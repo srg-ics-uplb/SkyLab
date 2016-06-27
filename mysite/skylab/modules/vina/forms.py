@@ -38,6 +38,7 @@ class VinaForm(forms.Form):
     #                             help_text="This will output a log file with this filename")
     # Misc (optional)
     # param_cpu = forms.IntegerField(required=False) removed since default setting detects current number of CPUs
+
     param_seed = forms.IntegerField(required=False, label="Explicit random seed")
     param_exhaustiveness = forms.IntegerField(required=False, label="Exhaustiveness of the global search",
                                               help_text=" (Roughly proportional to time): 1+", min_value=1, max_value=8,

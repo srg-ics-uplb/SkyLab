@@ -14,7 +14,7 @@ def create_skylab_file(tool_activity, directory, file):
                                          file=file,
                                          filename=file.name)
     tool_activity.input_files.add(new_file)
-    return "%s%s" % (new_file.upload_path, new_file.filename)
+    return "%s/%s" % (new_file.upload_path, new_file.filename)
 
 
 def mkdir_p(sftp, remote_directory):
