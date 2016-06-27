@@ -19,7 +19,7 @@ class GamessView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return "toolactivity/%d" % self.kwargs['id']
+        return "../toolactivity/%d" % self.kwargs['id']
 
     def form_valid(self, form):
         cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
@@ -28,7 +28,8 @@ class GamessView(FormView):
         exec_string = "rungms %s 01 1 2>&1 | tee %s.log" % (filename, filename)
         # exec_string = "rungms %s 01" % (filename)
         tool_activity = ToolActivity.objects.create(
-            mpi_cluster=cluster, tool_name="gamess", user=self.request.user, exec_string=exec_string
+            mpi_cluster=cluster, tool_name="gamess", executable_name="gamess", user=self.request.user,
+            exec_string=exec_string
         )
         self.kwargs['id'] = tool_activity.id
         new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input" % tool_activity.id,

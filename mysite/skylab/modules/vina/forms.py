@@ -212,11 +212,37 @@ class VinaForm(forms.Form):
                     raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
 
 class VinaSplitForm(forms.Form):
-    param_input = forms.FileField(validators=[pdbqt_file_extension_validator])
-    param_ligand_prefix = forms.CharField()
-    param_flex_prefix = forms.CharField()
+    param_input = forms.FileField(label="File to split (.pdbqt)", help_text="Vina docking result",
+                                  validators=[pdbqt_file_extension_validator])
+    param_ligand_prefix = forms.CharField(label="Prefix for ligands", help_text="Optional", required=False)
+    param_flex_prefix = forms.CharField(label="Prefix for side chains", help_text="Optional", required=False)
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
         super(VinaSplitForm, self).__init__(*args, **kwargs)
 
-        #       add crispy form helper
+        current_user_as_creator = Q(creator=self.user)
+        cluster_is_public = Q(shared_to_public=True)
+        supports_vina = Q(supported_tools="vina")
+        # is_ready = Q(status=1)
+        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
+
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+
+        self.helper = FormHelper()
+        self.helper.form_tag = False
+
+        self.helper.layout = Layout(
+            Div(
+                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                css_class="col-sm-12"
+            ),
+            Field('param_input', wrapper_class="col-sm-12"),
+            Div(
+                Field('param_ligand_prefix', wrapper_class='col-xs-4'),
+                Field('param_flex_prefix', wrapper_class='col-xs-4 col-xs-offset-1'),
+                css_class='col-sm-12'
+            )
+        )

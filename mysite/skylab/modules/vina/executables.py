@@ -86,3 +86,7 @@ class VinaExecutable(P2CToolGeneric):
 
     def changeStatus(self, status):
         pass
+
+
+class VinaSplitExecutable(P2CToolGeneric):
+    pass

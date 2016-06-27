@@ -41,7 +41,8 @@ class RayView(TemplateView):
                 exec_string += "-bynode "
 
             tool_activity = ToolActivity.objects.create(
-                mpi_cluster=cluster_name, tool_name="ray", user=self.request.user, exec_string=exec_string
+                mpi_cluster=cluster_name, tool_name="ray", executable_name="ray", user=self.request.user,
+                exec_string=exec_string
             )
 
             exec_string += "Ray -o tool_activity_%d/output " % tool_activity.id

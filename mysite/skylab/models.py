@@ -61,6 +61,7 @@ class SkyLabFile(models.Model):
 class ToolActivity(models.Model):
     exec_string = models.CharField(max_length=200)
     tool_name = models.CharField(max_length=50)
+    executable_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
     status = models.CharField(default="Task Created",max_length=200)

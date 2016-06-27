@@ -1,11 +1,13 @@
 from django.views.generic import TemplateView, FormView
-from skylab.modules.vina.forms import VinaForm
+from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 from django import forms
 from django.shortcuts import render, redirect
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 from skylab.modules.base_tool import send_mpi_message, create_skylab_file
 import os.path
 import json
+from django.utils.text import get_valid_filename
+from skylab.modules.base_tool import create_skylab_file
 
 
 class VinaView(TemplateView):
@@ -23,9 +25,10 @@ class VinaView(TemplateView):
         if vina_form.is_valid():
             cluster_name = vina_form.cleaned_data['mpi_cluster']
 
-            exec_string_template = "vina "
+            exec_string_template = "mkdir -p %s; vina "
             tool_activity = ToolActivity.objects.create(
-                mpi_cluster=cluster_name, tool_name="vina", user=self.request.user, exec_string=exec_string_template
+                mpi_cluster=cluster_name, tool_name="vina", executable_name="vina", user=self.request.user,
+                exec_string=exec_string_template
             )
 
             receptor_filepath = create_skylab_file(tool_activity, '', vina_form.cleaned_data['param_receptor'])
@@ -95,7 +98,7 @@ class VinaView(TemplateView):
                 basename = os.path.splitext(file.name)[0]
                 outpath = "tool_activity_%d/output/%s" % (tool_activity.id, basename)
 
-                exec_string += exec_string_template % (filepath, outpath, outpath)
+                exec_string += exec_string_template % (outpath, filepath, outpath, outpath)
 
             tool_activity.exec_string = exec_string
             tool_activity.save()
@@ -105,7 +108,7 @@ class VinaView(TemplateView):
                 "actions": "use_tool",
                 "activity": tool_activity.id,
                 "tool": tool_activity.tool_name,
-                "executable": "ray",
+                "executable": "vina",
             }
             message = json.dumps(data)
             print message
@@ -122,4 +125,48 @@ class VinaView(TemplateView):
 
 
 class VinaSplitView(FormView):
-    pass
+    template_name = "modules/vina/use_vina_split.html"
+    form_class = VinaSplitForm
+
+    def get_form_kwargs(self):
+        # pass "user" keyword argument with the current user to your form
+        kwargs = super(VinaSplitView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
+    def get_success_url(self):
+        return "../toolactivity/%d" % self.kwargs['id']
+
+    def form_valid(self, form):
+        cluster = form.cleaned_data['mpi_cluster']
+
+        input_file = form.cleaned_data['param_input']
+        exec_string = "vina_split --input %s " % input_file.name
+
+        if form.cleaned_data.get('param_ligand_prefix'):
+            exec_string += "--ligand %s " % get_valid_filename(form.cleaned_data['param_ligand_prefix'])
+
+        if form.cleaned_data.get('param_flex_prefix'):
+            exec_string += "--flex %s " % get_valid_filename(form.cleaned_data['param_flex_prefix'])
+
+        print exec_string
+
+        tool_activity = ToolActivity.objects.create(
+            mpi_cluster=cluster, tool_name="vina", executable_name="vina_split", user=self.request.user,
+            exec_string=exec_string
+        )
+        self.kwargs['id'] = tool_activity.id
+        create_skylab_file(tool_activity, '', input_file)
+
+        data = {
+            "actions": "use_tool",
+            "activity": tool_activity.id,
+            "tool": tool_activity.tool_name,
+            "executable": "vina_split",
+        }
+        message = json.dumps(data)
+        print message
+        # find a way to know if thread is already running
+        send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+        tool_activity.status = "Task Queued"
+        return super(VinaSplitView, self).form_valid(form)
