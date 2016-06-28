@@ -104,8 +104,8 @@ class VinaSplitExecutable(P2CToolGeneric):
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, f.upload_path)
-            sftp.putfo(f.file, 'f.filename')  # At this point, you are in remote_path
+            mkdir_p(sftp, 'tool_activity_%d/output' % self.id)
+            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
     # raise not implemented error
@@ -120,7 +120,7 @@ class VinaSplitExecutable(P2CToolGeneric):
 
         self.print_msg("Running %s" % exec_string)
 
-        exec_shell = self.shell.run(["sh", "-c", "%s" % (exec_string)])
+        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd="tool_activity_%d/output" % self.id)
         # cwd=self.working_dir)
 
         self.print_msg(exec_shell.output)
@@ -139,32 +139,34 @@ class VinaSplitExecutable(P2CToolGeneric):
 
         remote_dir = "tool_activity_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
+        output_filename = "VinaSplitOutput_%d.zip" % self.id
+        server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
 
-        local_dir = "%s/output/" % remote_dir
-        server_path = os.path.join(media_root, local_dir)
+        # remove input file in output directory
         sftp = self.shell._open_sftp_client()
-        remote_path = "/mirror/%d/output" % remote_dir
-
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            local_filepath = os.path.join(server_path, remote_file)
-            sftp.get(remote_filepath, local_filepath)
-            with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                     filename=remote_file)
-                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
-                new_file.save()
-                tool_activity = ToolActivity.objects.get(pk=self.id)
-                tool_activity.output_files.add(new_file)
-                tool_activity.save()
-                local_file.close()
-            # todo: insert code for sending file
-            sftp.remove(remote_filepath)  # delete after transfer
+        remote_file = SkyLabFile.objects.filter(input_files__pk=self.id)[0].filename
+        remote_filepath = os.path.join("/mirror/%s/output" % remote_dir, remote_file)
+        sftp.remove(remote_filepath)
         sftp.close()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
-        self.print_msg("Output files sent")
+        self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
+
+        with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+                shutil.copyfileobj(remote_file, local_file)
+                local_file.close()
+
+            remote_file.close()
+
+        with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
+            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+                                                 filename=output_filename)
+            new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+            new_file.save()
+            tool_activity = ToolActivity.objects.get(pk=self.id)
+            tool_activity.output_files.add(new_file)
+            tool_activity.save()
+            local_file.close()
 
     def changeStatus(self, status):
         pass
