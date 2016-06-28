@@ -53,7 +53,7 @@ class HomeView(TemplateView):
 class CreateMPIView(CreateView):
 	template_name = 'create_mpi_cluster.html'
 	form_class = Create_MPI_Cluster_Form
-	success_url = 'create-mpi-cluster'
+	success_url = 'create_mpi_cluster'
 
 	def test(self):
 		self.render_to_response()
