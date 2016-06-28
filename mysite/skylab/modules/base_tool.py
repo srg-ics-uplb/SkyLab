@@ -2,6 +2,7 @@ from abc import abstractmethod
 from django import forms
 from skylab.models import SkyLabFile
 import pika
+import os.path
 
 
 class MPIModelChoiceField(forms.ModelChoiceField):

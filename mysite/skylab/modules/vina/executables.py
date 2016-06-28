@@ -1,6 +1,7 @@
 import os.path
 import re
 import shutil
+import shlex
 
 from django.conf import settings
 
@@ -25,7 +26,8 @@ class VinaExecutable(P2CToolGeneric):
         for f in files:
             sftp = self.shell._open_sftp_client()
             mkdir_p(sftp, f.upload_path)
-            sftp.putfo(f.file, '.')  # At this point, you are in remote_path
+
+            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
     # raise not implemented error
@@ -40,7 +42,7 @@ class VinaExecutable(P2CToolGeneric):
 
         self.print_msg("Running %s" % exec_string)
 
-        exec_shell = self.shell.run(["sh", "-c", "%s" % (exec_string)])
+        exec_shell = self.shell.run(["sh", "-c", exec_string])
         # cwd=self.working_dir)
 
         self.print_msg(exec_shell.output)
@@ -89,4 +91,80 @@ class VinaExecutable(P2CToolGeneric):
 
 
 class VinaSplitExecutable(P2CToolGeneric):
-    pass
+    def __init__(self, **kwargs):
+        self.shell = kwargs.get('shell')
+        self.id = kwargs.get('id')
+        self.working_dir = "/mirror/tool_activity_%d" % self.id
+        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
+        super(VinaSplitExecutable, self).__init__(self, **kwargs)
+
+    def handle_input_files(self, **kwargs):
+        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
+        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
+        files = SkyLabFile.objects.filter(input_files__pk=self.id)
+        for f in files:
+            sftp = self.shell._open_sftp_client()
+            mkdir_p(sftp, f.upload_path)
+            sftp.putfo(f.file, 'f.filename')  # At this point, you are in remote_path
+            sftp.close()
+
+    # raise not implemented error
+    def print_msg(self, msg):
+        print ("VinaSplit (Tool Activity %d) : %s" % (self.id, msg))
+
+    def run_tool(self, **kwargs):
+        self.handle_input_files()
+
+        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
+        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+
+        self.print_msg("Running %s" % exec_string)
+
+        exec_shell = self.shell.run(["sh", "-c", "%s" % (exec_string)])
+        # cwd=self.working_dir)
+
+        self.print_msg(exec_shell.output)
+
+        self.print_msg("Finished command execution")
+        ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+
+        self.handle_output_files()
+
+        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
+
+    def handle_output_files(self, **kwargs):
+        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
+        self.print_msg("Sending output files to server")
+        media_root = getattr(settings, "MEDIA_ROOT")
+
+        remote_dir = "tool_activity_%d" % self.id
+        os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
+
+        local_dir = "%s/output/" % remote_dir
+        server_path = os.path.join(media_root, local_dir)
+        sftp = self.shell._open_sftp_client()
+        remote_path = "/mirror/%d/output" % remote_dir
+
+        remote_files = sftp.listdir(path=remote_path)
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            local_filepath = os.path.join(server_path, remote_file)
+            sftp.get(remote_filepath, local_filepath)
+            with open(local_filepath, "rb") as local_file:
+                new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+                                                     filename=remote_file)
+                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+                new_file.save()
+                tool_activity = ToolActivity.objects.get(pk=self.id)
+                tool_activity.output_files.add(new_file)
+                tool_activity.save()
+                local_file.close()
+            # todo: insert code for sending file
+            sftp.remove(remote_filepath)  # delete after transfer
+        sftp.close()
+
+        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
+        self.print_msg("Output files sent")
+
+    def changeStatus(self, status):
+        pass

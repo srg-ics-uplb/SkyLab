@@ -24,7 +24,7 @@ class RayExecutable(P2CToolGeneric):
         for f in files:
             sftp = self.shell._open_sftp_client()
             mkdir_p(sftp, f.upload_path)
-            sftp.putfo(f.file, '.')  # At this point, you are in remote_path
+            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
     # raise not implemented error

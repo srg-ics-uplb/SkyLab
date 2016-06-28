@@ -137,7 +137,7 @@ class ConsumerThread(threading.Thread):
         # self.print_to_console("Received %s" % data)
         if data['actions'] == "use_tool":
             selected_tool = data['tool']
-            selected_executable = "%sExecutable" % data['executable'].title()
+            selected_executable = "%sExecutable" % ''.join(word.title() for word in data['executable'].split(' '))
             self.print_to_console("Using %s : %s" % (selected_tool, selected_executable))
             mod = __import__("%s.%s.executables" % (settings.SKYLAB_MODULES_PACKAGE, selected_tool), globals(),
                              locals(),

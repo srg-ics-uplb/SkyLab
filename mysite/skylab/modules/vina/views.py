@@ -162,7 +162,7 @@ class VinaSplitView(FormView):
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "vina_split",
+            "executable": "vina split",
         }
         message = json.dumps(data)
         print message
