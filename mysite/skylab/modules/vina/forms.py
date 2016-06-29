@@ -88,7 +88,7 @@ class VinaForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
@@ -228,7 +228,7 @@ class VinaSplitForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q,
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
@@ -239,7 +239,9 @@ class VinaSplitForm(forms.Form):
                 Field('mpi_cluster', wrapper_class='col-xs-5'),
                 css_class="col-sm-12"
             ),
-            Field('param_input', wrapper_class="col-sm-12"),
+            Div(Div('param_input', css_class="col-xs-6"),
+                css_class="row-fluid col-sm-12"
+                ),
             Div(
                 Field('param_ligand_prefix', wrapper_class='col-xs-4'),
                 Field('param_flex_prefix', wrapper_class='col-xs-4 col-xs-offset-1'),

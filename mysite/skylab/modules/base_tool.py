@@ -7,7 +7,7 @@ import os.path
 
 class MPIModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        return "%s (size : %d)" % (obj.cluster_name, obj.cluster_size)
+        return "%s (nodes : %d)" % (obj.cluster_name, obj.cluster_size)
 
 
 def create_skylab_file(tool_activity, directory, file):
