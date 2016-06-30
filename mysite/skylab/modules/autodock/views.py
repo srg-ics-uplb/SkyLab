@@ -34,6 +34,32 @@ class AutodockView(FormView):
         )
         self.kwargs['id'] = tool_activity.id
 
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+
+        exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
+
+        if form.cleaned_data.get('param_dlg_filename'):
+            exec_string += "-l output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+        else:
+            exec_string += "-l output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
+
+        if form.cleaned_data['param_k']:
+            exec_string += "-k "
+
+        if form.cleaned_data['param_i']:
+            exec_string += "-i "
+
+        if form.cleaned_data['param_t']:
+            exec_string += "-t "
+
+        if form.cleaned_data['param_d']:
+            exec_string += "-d "
+
+        exec_string += ";"
+
+
         return super(AutodockView, self).form_valid(form)
 
 
@@ -55,14 +81,17 @@ class AutogridView(FormView):
         cluster = form.cleaned_data['mpi_cluster']
         receptor_file = form.cleaned_data['param_receptor_file']
 
-        exec_string = "autodock4 "
+        exec_string = "autogrid4 "
         tool_activity = ToolActivity.objects.create(
             mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
             exec_string=exec_string
         )
         self.kwargs['id'] = tool_activity.id
+
         create_skylab_file(tool_activity, 'input', form.cleaned_data['param_gpf_file'])
-        print form.cleaned_data['param_gpf_file'].name
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
+
         exec_string += "-p workdir/%s " % form.cleaned_data['param_gpf_file'].name
 
         if form.cleaned_data.get('param_glg_filename'):
@@ -75,7 +104,27 @@ class AutogridView(FormView):
         exec_string += "; "
 
         if form.cleaned['param_use_with_autodock']:
-            # insert parsing autodock parameters
-            pass
+            create_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+
+            exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
+
+            if form.cleaned_data.get('param_dlg_filename'):
+                exec_string += "-l output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+            else:
+                exec_string += "-l output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
+
+            if form.cleaned_data['param_k']:
+                exec_string += "-k "
+
+            if form.cleaned_data['param_i']:
+                exec_string += "-i "
+
+            if form.cleaned_data['param_t']:
+                exec_string += "-t "
+
+            if form.cleaned_data['param_d_dock']:
+                exec_string += "-d "
+
+            exec_string += ";"
 
         return super(AutogridView, self).form_valid(form)
