@@ -3,11 +3,11 @@ from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 from django import forms
 from django.shortcuts import render, redirect
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-from skylab.modules.base_tool import send_mpi_message, create_skylab_file
+from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 import os.path
 import json
 from django.utils.text import get_valid_filename
-from skylab.modules.base_tool import create_skylab_file
+from skylab.modules.base_tool import create_input_skylab_file
 
 
 class VinaView(TemplateView):
@@ -31,11 +31,12 @@ class VinaView(TemplateView):
                 exec_string=exec_string_template
             )
 
-            receptor_filepath = create_skylab_file(tool_activity, 'input', vina_form.cleaned_data['param_receptor'])
+            receptor_filepath = create_input_skylab_file(tool_activity, 'input',
+                                                         vina_form.cleaned_data['param_receptor'])
             exec_string_template += "--receptor %s " % receptor_filepath
 
             if vina_form.cleaned_data.get('param_flex'):
-                flex_filepath = create_skylab_file(tool_activity, 'input', vina_form.cleaned_data['param_flex'])
+                flex_filepath = create_input_skylab_file(tool_activity, 'input', vina_form.cleaned_data['param_flex'])
                 exec_string_template += "--flex %s " % flex_filepath
 
             exec_string_template += "--ligand %s --out %s/out.pdbqt --log %s/log.txt "
@@ -94,7 +95,7 @@ class VinaView(TemplateView):
             # LAST
             exec_string = ""
             for file in vina_form.cleaned_data['param_ligands']:
-                filepath = create_skylab_file(tool_activity, 'input/ligands', file)
+                filepath = create_input_skylab_file(tool_activity, 'input/ligands', file)
                 basename = os.path.splitext(file.name)[0]
                 outpath = "tool_activity_%d/output/%s" % (tool_activity.id, basename)
 
@@ -156,7 +157,7 @@ class VinaSplitView(FormView):
             exec_string=exec_string
         )
         self.kwargs['id'] = tool_activity.id
-        create_skylab_file(tool_activity, 'input', input_file)
+        create_input_skylab_file(tool_activity, 'input', input_file)
 
         data = {
             "actions": "use_tool",

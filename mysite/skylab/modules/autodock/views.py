@@ -3,11 +3,11 @@ from skylab.modules.autodock.forms import AutodockForm, AutogridForm
 from django import forms
 from django.shortcuts import render, redirect
 from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-from skylab.modules.base_tool import send_mpi_message, create_skylab_file
+from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 import os.path
 import json
 from django.utils.text import get_valid_filename
-from skylab.modules.base_tool import create_skylab_file
+from skylab.modules.base_tool import create_input_skylab_file
 
 
 class AutodockView(FormView):
@@ -34,9 +34,12 @@ class AutodockView(FormView):
         )
         self.kwargs['id'] = tool_activity.id
 
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+
+        for grid_file in form.cleaned_data['param_grid_files']:
+            create_input_skylab_file(tool_activity, 'input', grid_file)
 
         exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
 
@@ -88,9 +91,9 @@ class AutogridView(FormView):
         )
         self.kwargs['id'] = tool_activity.id
 
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_gpf_file'])
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
-        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_gpf_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
+        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
 
         exec_string += "-p workdir/%s " % form.cleaned_data['param_gpf_file'].name
 
@@ -104,7 +107,7 @@ class AutogridView(FormView):
         exec_string += "; "
 
         if form.cleaned['param_use_with_autodock']:
-            create_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+            create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
 
             exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
 
