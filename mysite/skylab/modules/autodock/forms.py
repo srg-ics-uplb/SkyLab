@@ -188,6 +188,7 @@ class AutogridForm(forms.Form):
             )
         )
 
-        def clean(self):
-            # todo: check checkbox
-            pass
+    def clean(self):
+        if self.cleaned_data['param_use_with_autodock']:
+            if not self.cleaned_data['param_dpf_file']:
+                raise forms.ValidationError(u'Missing dock parameter file', code="missing_dock_parameter")
