@@ -24,7 +24,18 @@ class AutodockView(FormView):
         return "../toolactivity/%d" % self.kwargs['id']
 
     def form_valid(self, form):
-        pass
+        cluster = form.cleaned_data['mpi_cluster']
+        receptor_file = form.cleaned_data['param_receptor_file']
+
+        exec_string = "autodock4 "
+        tool_activity = ToolActivity.objects.create(
+            mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
+            exec_string=exec_string
+        )
+        self.kwargs['id'] = tool_activity.id
+
+        return super(AutodockView, self).form_valid(form)
+
 
 
 class AutogridView(FormView):
@@ -41,4 +52,30 @@ class AutogridView(FormView):
         return "../toolactivity/%d" % self.kwargs['id']
 
     def form_valid(self, form):
-        pass
+        cluster = form.cleaned_data['mpi_cluster']
+        receptor_file = form.cleaned_data['param_receptor_file']
+
+        exec_string = "autodock4 "
+        tool_activity = ToolActivity.objects.create(
+            mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
+            exec_string=exec_string
+        )
+        self.kwargs['id'] = tool_activity.id
+        create_skylab_file(tool_activity, 'input', form.cleaned_data['param_gpf_file'])
+        print form.cleaned_data['param_gpf_file'].name
+        exec_string += "-p workdir/%s " % form.cleaned_data['param_gpf_file'].name
+
+        if form.cleaned_data.get('param_glg_filename'):
+            exec_string += "-l output/%s.glg " % get_valid_filename(form.cleaned_data['param_glg_filename'])
+        else:
+            exec_string += "-l output/%s.glg " % os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0]
+
+        if form.cleaned_data['param_d']:
+            exec_string += "-d "
+        exec_string += "; "
+
+        if form.cleaned['param_use_with_autodock']:
+            # insert parsing autodock parameters
+            pass
+
+        return super(AutogridView, self).form_valid(form)

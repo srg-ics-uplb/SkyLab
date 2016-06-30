@@ -26,3 +26,23 @@
     </div>
 
 {% endblock %}
+
+{% block js %}
+
+    <script type="text/javascript">
+        $('a[href="#autodock4"]').removeAttr("data-toggle");
+        $('a[href="#autodock4"]').parent().addClass('disabled');
+
+
+        $('#id_param_use_with_autodock').change(function () {
+            if ($(this).is(":checked")) {
+                $('a[href="#autodock4"]').attr("data-toggle", 'tab');
+                $('a[href="#autodock4"]').parent().removeClass('disabled');
+            } else {
+                $('a[href="#autodock4"]').removeAttr("data-toggle");
+                $('a[href="#autodock4"]').parent().addClass('disabled');
+            }
+        });
+
+    </script>
+{% endblock %}
