@@ -15,17 +15,17 @@ class AutodockExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d" % self.id
+        self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
         ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(AutodockExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
+        self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
         ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, f.upload_path)
+            mkdir_p(sftp, "tool_activity_%d/workdir" % self.id)
 
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
@@ -42,7 +42,7 @@ class AutodockExecutable(P2CToolGeneric):
 
         self.print_msg("Running %s" % exec_string)
 
-        exec_shell = self.shell.run(["sh", "-c", exec_string])
+        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd=self.working_dir)
         # cwd=self.working_dir)
 
         self.print_msg(exec_shell.output)
@@ -61,10 +61,26 @@ class AutodockExecutable(P2CToolGeneric):
 
         remote_dir = "tool_activity_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
-        output_filename = "VinaOutput_%d.zip" % self.id
+        output_filename = "AutoDockOutput_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
 
-        self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
+        sftp = self.shell._open_sftp_client()
+        remote_path = "/mirror/tool_activity_%d/workdir/" % self.id
+
+        remote_files = sftp.listdir(path=remote_path)
+
+        input_files = SkyLabFile.objects.filter(input_files__pk=self.id)
+        input_filenames = [file.filename for file in input_files]
+
+        # remove input files in workdir
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if remote_file.name in input_filenames:
+                sftp.remove(remote_filepath)  # delete after transfer
+        sftp.close()
+
+        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/tool_activity_%d/" % self.id)
+        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/tool_activity_%d/" % self.id)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
             with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
@@ -75,7 +91,7 @@ class AutodockExecutable(P2CToolGeneric):
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename=output_filename)
+                                                 filename=output_filename, file=local_file)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)
@@ -99,12 +115,12 @@ class AutogridExecutable(P2CToolGeneric):
         super(AutogridExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
+        self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
         ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, 'tool_activity_%d/output' % self.id)
+            mkdir_p(sftp, 'tool_activity_%d/workdir' % self.id)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
@@ -120,7 +136,7 @@ class AutogridExecutable(P2CToolGeneric):
 
         self.print_msg("Running %s" % exec_string)
 
-        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd="tool_activity_%d/output" % self.id)
+        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd=self.working_dir)
         # cwd=self.working_dir)
 
         self.print_msg(exec_shell.output)
@@ -142,14 +158,23 @@ class AutogridExecutable(P2CToolGeneric):
         output_filename = "VinaSplitOutput_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
 
-        # remove input file in output directory
         sftp = self.shell._open_sftp_client()
-        remote_file = SkyLabFile.objects.filter(input_files__pk=self.id)[0].filename
-        remote_filepath = os.path.join("/mirror/%s/output" % remote_dir, remote_file)
-        sftp.remove(remote_filepath)
+        remote_path = "/mirror/tool_activity_%d/workdir/" % self.id
+
+        remote_files = sftp.listdir(path=remote_path)
+
+        input_files = SkyLabFile.objects.filter(input_files__pk=self.id)
+        input_filenames = [file.filename for file in input_files]
+
+        # remove input files in workdir
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if remote_file.name in input_filenames:
+                sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
-        self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
+        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/tool_activity_%d/" % self.id)
+        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/tool_activity_%d/" % self.id)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
             with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
@@ -160,7 +185,7 @@ class AutogridExecutable(P2CToolGeneric):
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename=output_filename)
+                                                 filename=output_filename, file=local_file)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)

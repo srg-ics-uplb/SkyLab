@@ -41,12 +41,12 @@ class AutodockView(FormView):
         for grid_file in form.cleaned_data['param_grid_files']:
             create_input_skylab_file(tool_activity, 'input', grid_file)
 
-        exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
+        exec_string += "-p %s" % form.cleaned_data['param_dpf_file'].name
 
         if form.cleaned_data.get('param_dlg_filename'):
-            exec_string += "-l output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+            exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
         else:
-            exec_string += "-l output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
+            exec_string += "-l ../output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
 
         if form.cleaned_data['param_k']:
             exec_string += "-k "
@@ -95,12 +95,12 @@ class AutogridView(FormView):
         create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
         create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
 
-        exec_string += "-p workdir/%s " % form.cleaned_data['param_gpf_file'].name
+        exec_string += "-p %s " % form.cleaned_data['param_gpf_file'].name
 
         if form.cleaned_data.get('param_glg_filename'):
-            exec_string += "-l output/%s.glg " % get_valid_filename(form.cleaned_data['param_glg_filename'])
+            exec_string += "-l ../output/%s.glg " % get_valid_filename(form.cleaned_data['param_glg_filename'])
         else:
-            exec_string += "-l output/%s.glg " % os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0]
+            exec_string += "-l ../output/%s.glg " % os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0]
 
         if form.cleaned_data['param_d']:
             exec_string += "-d "
@@ -109,12 +109,12 @@ class AutogridView(FormView):
         if form.cleaned['param_use_with_autodock']:
             create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
 
-            exec_string += "-p workdir/%s" % form.cleaned_data['param_dpf_file'].name
+            exec_string += "-p %s" % form.cleaned_data['param_dpf_file'].name
 
             if form.cleaned_data.get('param_dlg_filename'):
-                exec_string += "-l output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+                exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
             else:
-                exec_string += "-l output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
+                exec_string += "-l ../output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
 
             if form.cleaned_data['param_k']:
                 exec_string += "-k "
