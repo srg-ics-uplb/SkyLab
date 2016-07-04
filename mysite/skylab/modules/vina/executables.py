@@ -75,7 +75,7 @@ class VinaExecutable(P2CToolGeneric):
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename=output_filename, file=local_file)
+                                                 filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)
@@ -160,7 +160,7 @@ class VinaSplitExecutable(P2CToolGeneric):
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename=output_filename, file=local_file)
+                                                 filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)

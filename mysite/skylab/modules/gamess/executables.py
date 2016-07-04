@@ -119,7 +119,7 @@ class GamessExecutable(P2CToolGeneric):
             sftp.get(remote_filepath, local_filepath)
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                     filename=remote_file, file=local_file)
+                                                     filename=remote_file)
                 new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
                 tool_activity = ToolActivity.objects.get(pk=self.id)

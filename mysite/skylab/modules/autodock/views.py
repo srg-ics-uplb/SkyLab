@@ -41,7 +41,7 @@ class AutodockView(FormView):
         for grid_file in form.cleaned_data['param_grid_files']:
             create_input_skylab_file(tool_activity, 'input', grid_file)
 
-        exec_string += "-p %s" % form.cleaned_data['param_dpf_file'].name
+        exec_string += "-p %s " % form.cleaned_data['param_dpf_file'].name
 
         if form.cleaned_data.get('param_dlg_filename'):
             exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
@@ -62,6 +62,20 @@ class AutodockView(FormView):
 
         exec_string += ";"
 
+        tool_activity.exec_string = exec_string
+        tool_activity.save()
+
+        data = {
+            "actions": "use_tool",
+            "activity": tool_activity.id,
+            "tool": tool_activity.tool_name,
+            "executable": "autodock",
+        }
+        message = json.dumps(data)
+        print message
+        # find a way to know if thread is already running
+        send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+        tool_activity.status = "Task Queued"
 
         return super(AutodockView, self).form_valid(form)
 
@@ -106,10 +120,10 @@ class AutogridView(FormView):
             exec_string += "-d "
         exec_string += "; "
 
-        if form.cleaned['param_use_with_autodock']:
+        if form.cleaned_data['param_use_with_autodock']:
             create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
 
-            exec_string += "-p %s" % form.cleaned_data['param_dpf_file'].name
+            exec_string += "autodock4 -p %s " % form.cleaned_data['param_dpf_file'].name
 
             if form.cleaned_data.get('param_dlg_filename'):
                 exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
@@ -129,5 +143,22 @@ class AutogridView(FormView):
                 exec_string += "-d "
 
             exec_string += ";"
+
+            tool_activity.exec_string = exec_string
+            tool_activity.save()
+
+            data = {
+                "actions": "use_tool",
+                "activity": tool_activity.id,
+                "tool": tool_activity.tool_name,
+                "executable": "autogrid",
+            }
+            message = json.dumps(data)
+            print message
+            # find a way to know if thread is already running
+            send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+            tool_activity.status = "Task Queued"
+
+
 
         return super(AutogridView, self).form_valid(form)
