@@ -7,6 +7,7 @@ from validators import pdbqt_file_extension_validator, dpf_file_extension_valida
     multi_grid_map_file_validator
 from skylab.models import MPI_Cluster
 from django.db.models import Q
+from django.utils.text import get_valid_filename
 
 from skylab.modules.base_tool import MPIModelChoiceField
 
@@ -30,6 +31,9 @@ class AutodockForm(forms.Form):
                                  help_text="Parse the PDBQT file to check torsions, then stop.")
     param_d = forms.BooleanField(required=False, label="-d", help_text="Increment debug level")
 
+    def clean_param_dlg_filename(self):
+        output_prefix = self.cleaned_data['param_dlg_filename']
+        return get_valid_filename(output_prefix)
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -110,6 +114,14 @@ class AutogridForm(forms.Form):
     param_t = forms.BooleanField(required=False, label="-t",
                                  help_text="Parse the PDBQT file to check torsions, then stop.")
     param_d_dock = forms.BooleanField(required=False, label="-d", help_text="Increment debug level")
+
+    def clean_param_dlg_filename(self):
+        output_prefix = self.cleaned_data['param_dlg_filename']
+        return get_valid_filename(output_prefix)
+
+    def clean_param_glg_filename(self):
+        output_prefix = self.cleaned_data['param_glg_filename']
+        return get_valid_filename(output_prefix)
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')

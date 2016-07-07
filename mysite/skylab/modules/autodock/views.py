@@ -25,7 +25,7 @@ class AutodockView(FormView):
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
-        receptor_file = form.cleaned_data['param_receptor_file']
+
 
         exec_string = "autodock4 "
         tool_activity = ToolActivity.objects.create(
@@ -44,7 +44,7 @@ class AutodockView(FormView):
         exec_string += "-p %s " % form.cleaned_data['param_dpf_file'].name
 
         if form.cleaned_data.get('param_dlg_filename'):
-            exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+            exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])
         else:
             exec_string += "-l ../output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
 
@@ -112,7 +112,7 @@ class AutogridView(FormView):
         exec_string += "-p %s " % form.cleaned_data['param_gpf_file'].name
 
         if form.cleaned_data.get('param_glg_filename'):
-            exec_string += "-l ../output/%s.glg " % get_valid_filename(form.cleaned_data['param_glg_filename'])
+            exec_string += "-l ../output/%s.glg " % (form.cleaned_data['param_glg_filename'])
         else:
             exec_string += "-l ../output/%s.glg " % os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0]
 
@@ -126,7 +126,7 @@ class AutogridView(FormView):
             exec_string += "autodock4 -p %s " % form.cleaned_data['param_dpf_file'].name
 
             if form.cleaned_data.get('param_dlg_filename'):
-                exec_string += "-l ../output/%s.dlg " % get_valid_filename(form.cleaned_data['param_dlg_filename'])
+                exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])
             else:
                 exec_string += "-l ../output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
 

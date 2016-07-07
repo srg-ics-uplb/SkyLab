@@ -5,6 +5,7 @@ from skylab.modules.gamess.views import GamessView
 from skylab.modules.ray.views import RayView
 from skylab.modules.vina.views import VinaView, VinaSplitView
 from skylab.modules.autodock.views import AutodockView, AutogridView
+from skylab.modules.dock6.views import DockFormView, GridFormView
 from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file
 
 urlpatterns = [
@@ -20,6 +21,8 @@ urlpatterns = [
     url(r'^vina/vina_split', VinaSplitView.as_view(), name="use_vina_split"),
     url(r'^autodock/autodock$', AutodockView.as_view(), name="use_autodock"),
     url(r'^autodock/autogrid', AutogridView.as_view(), name="use_autogrid"),
+    url(r'^dock6/dock6', DockFormView.as_view(), name="use_dock6_dock6"),
+    url(r'^dock6/grid', GridFormView.as_view(), name="use_dock6_grid"),
     url(r'^$', HomeView.as_view(), name='skylab-home'),
     url(r'^create_mpi_cluster$', CreateMPIView.as_view(), name='create_mpi'),
     url(r'^auth/', include('registration.backends.hmac.urls')),
