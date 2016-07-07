@@ -193,5 +193,8 @@ class GridExecutable(P2CToolGeneric):
             tool_activity.save()
             local_file.close()
 
+        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
+        self.print_msg("Output files sent")
+
     def changeStatus(self, status):
         pass

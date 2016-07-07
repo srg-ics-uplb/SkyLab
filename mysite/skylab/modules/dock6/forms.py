@@ -12,11 +12,13 @@ from django.utils.text import get_valid_filename
 
 
 class GridForm(forms.Form):
-    param_input_file = forms.FileField(label="Input file (.in)", validators=[dock6_in_extension_validator])
+    param_input_file = forms.FileField(label="Input file (.in)",
+                                       help_text="All input files and produced files other than .out files are stored in a single directory during execution.",
+                                       validators=[dock6_in_extension_validator])
     param_other_files = MultiFileField(label="Other input resources", help_text="(.pdb), (.sph), (.mol2)", min_num=1,
                                        validators=[multi_grid_other_resources_validator])
     param_output_prefix = forms.CharField(required=False, label="Output file prefix",
-                                          help_text="default: input_filename.out",
+                                          help_text="default: input_filename",
                                           widget=forms.TextInput(attrs={'placeholder': 'filename'}))
     param_terse = forms.BooleanField(required=False, label="-t", help_text="Terse program output")
     param_verbose = forms.BooleanField(required=False, label="-v", help_text="Verbose program output")
@@ -75,12 +77,14 @@ class GridForm(forms.Form):
 
 
 class DockForm(forms.Form):
-    param_input_file = forms.FileField(label="Input file (.in)", validators=[dock6_in_extension_validator])
+    param_input_file = forms.FileField(label="Input file (.in)",
+                                       help_text="All input files and produced files other than .out files are stored in a single directory during execution.",
+                                       validators=[dock6_in_extension_validator])
     param_other_files = MultiFileField(label="Other input resources", min_num=1,
                                        help_text="(.pdb), (.sph), (.mol2), (.nrg), (.bmp)",
                                        validators=[multi_dock6_other_resources_validator])
     param_output_prefix = forms.CharField(required=False, label="Output file prefix",
-                                          help_text="default: input_filename.out",
+                                          help_text="default: input_filename",
                                           widget=forms.TextInput(attrs={'placeholder': 'filename'}))
 
     def clean_param_output_prefix(self):

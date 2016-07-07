@@ -11,7 +11,7 @@ def dock6_in_extension_validator(file):
 
 def dock6_other_resources_extension_validator(file):
     ext = os.path.splitext(file.name)[1]
-    valid_extensions = ['.mol2', '.pdb', '.sph', '.bmp''.nrg']
+    valid_extensions = ['.mol2', '.pdb', '.sph', '.bmp', '.nrg']
     if ext.lower() not in valid_extensions:
         raise forms.ValidationError(u'Only .mol2, .pdb, .sph, .bmp, .nrg files accepted',
                                     code="dock6_invalid_input_file")
