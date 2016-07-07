@@ -50,9 +50,9 @@ class DockFormView(FormView):
             create_input_skylab_file(tool_activity, 'input', file)
 
         if form.cleaned_data.get('param_output_prefix'):
-            exec_string += "-o %s.out " % form.cleaned_data['param_output_prefix']
+            exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
         else:
-            exec_string += "-o %s.out " % os.path.splitext(input_file.name)[0]
+            exec_string += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
 
         tool_activity.exec_string = exec_string
         tool_activity.save()
@@ -104,9 +104,9 @@ class GridFormView(FormView):
             create_input_skylab_file(tool_activity, 'input', file)
 
         if form.cleaned_data.get('param_output_prefix'):
-            exec_string += "-o %s.out " % form.cleaned_data['param_output_prefix']
+            exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
         else:
-            exec_string += "-o %s.out " % os.path.splitext(input_file.name)[0]
+            exec_string += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
 
         if form.cleaned_data['param_terse']:
             exec_string += "-t "
