@@ -32,9 +32,14 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'registration',
+    # 'registration',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
     'crispy_forms',
     'skylab',
+    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -72,6 +77,20 @@ TEMPLATES = [
         },
     },
 ]
+
+AUTHENTICATION_BACKENDS = (
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
+SOCIALACCOUNT_PROVIDERS = \
+    {'google':
+         {'SCOPE': ['profile', 'email'],
+          'AUTH_PARAMS': {'access_type': 'online'}}}
+
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
 
@@ -171,3 +190,7 @@ SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
 
 CLUSTER_PASSWORD = "mpiuser"
+
+SITE_ID = 1
+SOCIALACCOUNT_ADAPTER = "skylab.googleadapter.UniversityAccountAdapter"
+SOCIALACCOUNT_QUERY_EMAIL = True
