@@ -25,6 +25,9 @@ urlpatterns = [
     url(r'^dock6/grid', GridFormView.as_view(), name="use_dock6_grid"),
     url(r'^$', HomeView.as_view(), name='skylab-home'),
     url(r'^create_mpi_cluster$', CreateMPIView.as_view(), name='create_mpi'),
+    # skip logout confirmation
+    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
+        {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),
     # url(r'^auth/', include('registration.backends.hmac.urls')),
     url(r'^{0}(?P<path>.*(?P<filename>.*\..*))$'.format(settings.PRIVATE_MEDIA_URL.lstrip('/')), serve_private_file, ),

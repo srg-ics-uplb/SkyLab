@@ -2,11 +2,12 @@
 {% extends '_layouts/base.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %} SkyLab | Home {% endblock %}
 
-{% block headline %}<h1>SkyLab Home Page</h1>{% endblock headline %}
+{#{% block headline %}<h1>SkyLab Home Page</h1>{% endblock headline %}#}
 
 
 {% block content %}
-<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+    <p>Howdy{% if user.is_authenticated %} {{ user.first_name }}{% endif %}!</p>
 
 {% endblock %}
