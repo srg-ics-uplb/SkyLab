@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.conf.urls import include, url
+from django.contrib.auth.views import logout
 
 from skylab.modules.gamess.views import GamessView
 from skylab.modules.ray.views import RayView
@@ -26,8 +27,7 @@ urlpatterns = [
     url(r'^$', HomeView.as_view(), name='skylab-home'),
     url(r'^create_mpi_cluster$', CreateMPIView.as_view(), name='create_mpi'),
     # skip logout confirmation
-    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',
-        {'next_page': '/'}),
+    url(r'^accounts/logout/$', logout, {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),
     # url(r'^auth/', include('registration.backends.hmac.urls')),
     url(r'^{0}(?P<path>.*(?P<filename>.*\..*))$'.format(settings.PRIVATE_MEDIA_URL.lstrip('/')), serve_private_file, ),

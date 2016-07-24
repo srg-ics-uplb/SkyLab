@@ -4,12 +4,34 @@
 {% block content %}
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
-            <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
             <h1>Tool Activity {{ object.id }}</h1>
+            {# progress bars #}
+            {% if object.status_code == 0 or object.status_code == 1 %} {# task initializing/queued/in progress #}
+                <div class="progress progress-striped active">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+                         aria-valuemax="100" style="width: 100%">
+                        {{ object.status }}
+                    </div>
+                </div>
+
+            {% elif object.status_code == 2 %} {# task finished successfully #}
+                <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"
+                     aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                    {{ object.status }}
+                </div>
+
+            {% elif object.status_code == 3 %}  {# error encountered #}
+                <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
+                     aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                    {{ object.status }}
+                </div>
+            {% endif %}
+
             <p>Tool: {{ object.tool_name }}</p>
             <p>MPI Cluster: {{ object.mpi_cluster }}</p>
             <p>Command: {{ object.exec_string }}</p>
-            <p>Status: {{ object.status }}</p>
+            {#            <p>Status: {{ object.status }}</p>#}
+
             <p>Input Files: </p>
             {% for file in object.input_files.all %}
                 <li><a href="/media/tool_activity_{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
