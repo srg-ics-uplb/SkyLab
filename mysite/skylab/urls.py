@@ -15,7 +15,7 @@ urlpatterns = [
 
                   # url(r'^$', views.use_impi, name='home'),
 
-    url(r'^toolactivity/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='toolactivity_detailview'),
+    url(r'^task/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='toolactivity_detailview'),
     url(r'^use_gamess$', GamessView.as_view(), name='use_gamess'),
     url(r'^ray/ray$', RayView.as_view(), name='use_ray'),
     url(r'^vina/vina$', VinaView.as_view(), name="use_vina"),

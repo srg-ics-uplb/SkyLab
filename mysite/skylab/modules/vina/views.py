@@ -136,7 +136,7 @@ class VinaSplitView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return "../toolactivity/%d" % self.kwargs['id']
+        return "../task/%d" % self.kwargs['id']
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']

@@ -167,7 +167,7 @@ class RayView(TemplateView):
             send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
             tool_activity.status = "Task Queued"
 
-            return redirect("../toolactivity/%d" % tool_activity.id)
+            return redirect("../task/%d" % tool_activity.id)
         else:
             return render(request, 'modules/ray/use_ray.html', {
                 'select_mpi_form': select_mpi_form,
