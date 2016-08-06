@@ -75,6 +75,29 @@ class ToolActivity(models.Model):
         return self.tool_name
 
 # @python_2_unicode_compatible
+# class Toolset(models.Model):
+#     toolset_name = models.CharField(max_length=50)
+#     description = models.CharField(max_length=300)
+#
+#     def __str__(self):
+#         return self.toolset_name
+#
+# @python_2_unicode_compatible
+# class Tool(models.Model):
+#     tool_name = models.CharField(max_length=50)
+#     view_name = models.CharField(max_length=50)
+#     executable_name = models.CharField(max_length=50)
+#     toolset = models.ForeignKey(Toolset, on_delete=models.CASCADE)
+#     description = models.CharField(max_length=300)
+#     source_url = models.URLField(max_length=100)
+#     local_url = models.URLField(max_length=100)
+#
+#     def __str__(self):
+#         return self.tool_name
+
+
+
+# @python_2_unicode_compatible
 # class ToolLogs(models.Model):
 #     status = models.CharField(max_length=200)
 #     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)

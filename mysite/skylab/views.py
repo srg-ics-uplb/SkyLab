@@ -7,6 +7,7 @@ from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
 from sendfile import sendfile
+from django_ajax.decorators import ajax
 
 from forms import Create_MPI_Cluster_Form
 from skylab.models import ToolActivity
@@ -74,3 +75,30 @@ class ToolActivityDetail(DetailView):
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
+
+
+@ajax
+def task_fragments_view(request, pk=None):
+	print pk
+	if pk is not None:
+		task = ToolActivity.objects.filter(pk=pk, user=request.user.id)[0]
+		print task.id
+
+		if task.status_code == 0 or task.status_code == 1:
+			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
+		elif task.status_code == 2:
+			progress_bar = '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div>'
+		elif task.status_code == 3:
+			progress_bar = '<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div>'
+		# progress_bar
+
+		data = {
+			'inner-fragments': {
+				'#task-output-files-list': '<li>replace element with this content1</li>',
+				'#progress-bar-container': progress_bar,
+				'#task-status': task.status,
+			},
+			'status_code': task.status_code
+
+		}
+		return data

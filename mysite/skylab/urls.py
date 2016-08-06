@@ -7,7 +7,7 @@ from skylab.modules.ray.views import RayView
 from skylab.modules.vina.views import VinaView, VinaSplitView
 from skylab.modules.autodock.views import AutodockView, AutogridView
 from skylab.modules.dock6.views import DockFormView, GridFormView
-from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file
+from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file, task_fragments_view
 
 urlpatterns = [
                   # url(r'^$', views.index, name='index'),
@@ -15,7 +15,8 @@ urlpatterns = [
 
                   # url(r'^$', views.use_impi, name='home'),
 
-    url(r'^task/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='toolactivity_detailview'),
+    url(r'^task/(?P<pk>\d+)/$', ToolActivityDetail.as_view(), name='task_detailview'),
+    url(r'^task-fragments/(?P<pk>\d+)$', task_fragments_view, name='task_fragments'),
     url(r'^use_gamess$', GamessView.as_view(), name='use_gamess'),
     url(r'^ray/ray$', RayView.as_view(), name='use_ray'),
     url(r'^vina/vina$', VinaView.as_view(), name="use_vina"),

@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # 'registration',
+    'django_ajax',
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
@@ -159,10 +160,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
-
-#django-registration-redux settings
-ACCOUNT_ACTIVATION_DAYS = 14
-LOGIN_REDIRECT_URL = "skylab-home"
 
 #crispy form settings
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
