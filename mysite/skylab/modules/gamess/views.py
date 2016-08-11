@@ -4,7 +4,7 @@ import os
 import pika
 from django.views.generic import FormView
 
-from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
+from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster, Logs
 from skylab.modules.gamess.forms import GamessForm
 from skylab.modules.base_tool import send_mpi_message
 
@@ -31,6 +31,10 @@ class GamessView(FormView):
             mpi_cluster=cluster, tool_name="gamess", executable_name="gamess", user=self.request.user,
             exec_string=exec_string
         )
+
+        tool_activity.change_status(100, "Task initialized")
+        # Create log file stating task is initialized
+
         self.kwargs['id'] = tool_activity.id
         new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/input" % tool_activity.id,
                                              file=self.request.FILES['inp_file'],
@@ -49,5 +53,9 @@ class GamessView(FormView):
         print message
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-        tool_activity.status = "Task Queued"
+
+        # Create log file stating task is queued
+        tool_activity.change_status(101, "Task queued")
+
+
         return super(GamessView, self).form_valid(form)

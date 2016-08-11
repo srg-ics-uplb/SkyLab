@@ -69,6 +69,11 @@ class ToolActivityDetail(DetailView):
 	model = ToolActivity
 	template_name = 'tool_activity_detail.html'
 
+	# def get_context_data(self, **kwargs):
+	# 	context = super(ToolActivityDetail,self).get_context_data(**kwargs)
+	# 	logs = Logs.objects.
+	# 	return context
+
 	def get_queryset(self):
 		qs = super(ToolActivityDetail, self).get_queryset()
 		return qs.filter(user=self.request.user)

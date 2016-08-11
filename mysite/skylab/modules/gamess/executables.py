@@ -12,17 +12,17 @@ cluster_password = settings.CLUSTER_PASSWORD
 
 class GamessExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
-
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
-        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
+
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=300)
         super(GamessExecutable, self).__init__(self, **kwargs)
 
         pass
 
     def handle_input_files(self, **kwargs):
-        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Uploading input files", status_code=301)
         remote_dir = "tool_activity_%d" % self.id
         x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
         print (x.output)
@@ -33,6 +33,64 @@ class GamessExecutable(P2CToolGeneric):
             with f.file as local_file:
                 shutil.copyfileobj(local_file, remote_file)
             remote_file.close()
+
+        def handle_output_files(self, **kwargs):
+            ToolActivity.objects.get(pk=self.id).change_status(status_msg="Retrieving output files", status_code=304)
+            self.print_msg("Sending output files to server")
+            media_root = getattr(settings, "MEDIA_ROOT")
+
+            remote_dir = "tool_activity_%d" % self.id
+            os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
+            local_dir = "%s/output/%s.log" % (remote_dir, self.filename)
+            server_path = os.path.join(media_root, local_dir)
+            # print "/mirror/%s/%s.log" % (remote_dir, self.filename)
+            # print server_path
+            with self.shell.open("/mirror/%s/%s.log" % (remote_dir, self.filename), "rb") as remote_file:
+                with open(server_path, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+                    shutil.copyfileobj(remote_file, local_file)
+                    local_file.close()
+
+                remote_file.close()
+            with open(server_path, "rb") as local_file:  # attach transferred file to database
+                new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+                                                     filename="%s.log" % self.filename)
+                new_file.file.name = local_dir
+                new_file.save()
+                tool_activity = ToolActivity.objects.get(pk=self.id)
+                tool_activity.output_files.add(new_file)
+                tool_activity.save()
+                local_file.close()
+            # retrieve and delete after produced scratch files
+            local_dir = "%s/output/" % remote_dir
+            server_path = os.path.join(media_root, local_dir)
+            sftp = self.shell._open_sftp_client()
+            remote_path = "/mirror/scr/"
+
+            remote_files = sftp.listdir(path=remote_path)
+            for remote_file in remote_files:
+                remote_filepath = os.path.join(remote_path, remote_file)
+                local_filepath = os.path.join(server_path, remote_file)
+                sftp.get(remote_filepath, local_filepath)
+                with open(local_filepath, "rb") as local_file:
+                    new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+                                                         filename=remote_file)
+                    new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+                    new_file.save()
+                    tool_activity = ToolActivity.objects.get(pk=self.id)
+                    tool_activity.output_files.add(new_file)
+                    tool_activity.save()
+                    local_file.close()
+                # todo: insert code for sending file
+                sftp.remove(remote_filepath)  # delete after transfer
+            sftp.close()
+
+            task = ToolActivity.objects.get(pk=self.id)
+            if task.status_code != 400:
+                task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
+            else:
+                task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
+
+            self.print_msg("Output files sent")
 
     # raise not implemented error
     def print_msg(self, msg):
@@ -52,7 +110,8 @@ class GamessExecutable(P2CToolGeneric):
         export_path = "/mirror/gamess"
 
         exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing tool script", status_code=302)
 
         self.print_msg("Running %s" % exec_string)
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
@@ -70,68 +129,17 @@ class GamessExecutable(P2CToolGeneric):
             # 2>&1 | tee nh3.hess.log;
             else:
                 self.print_msg("Finished command execution")
-                ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+
+                ToolActivity.objects.get(pk=self.id).change_status(status_msg="Tool execution successful",
+                                                                   status_code=303)
+
 
         else:
-            ToolActivity.objects.filter(pk=self.id).update(status="Error! See .log file for more information",
-                                                           status_code=4)
+            ToolActivity.objects.get(pk=self.id).change_status(
+                status_msg="Task execution error! See .log file for more information", status_code=400)
 
         self.handle_output_files()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
 
-    def handle_output_files(self, **kwargs):
-        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
-        self.print_msg("Sending output files to server")
-        media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
-        os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
-        local_dir = "%s/output/%s.log" % (remote_dir, self.filename)
-        server_path = os.path.join(media_root, local_dir)
-        # print "/mirror/%s/%s.log" % (remote_dir, self.filename)
-        # print server_path
-        with self.shell.open("/mirror/%s/%s.log" % (remote_dir, self.filename), "rb") as remote_file:
-            with open(server_path, "wb") as local_file:  # transfer to media/tool_activity_%d/output
-                shutil.copyfileobj(remote_file, local_file)
-                local_file.close()
 
-            remote_file.close()
-        with open(server_path, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename="%s.log" % self.filename)
-            new_file.file.name = local_dir
-            new_file.save()
-            tool_activity = ToolActivity.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
-            local_file.close()
-        # retrieve and delete after produced scratch files
-        local_dir = "%s/output/" % remote_dir
-        server_path = os.path.join(media_root, local_dir)
-        sftp = self.shell._open_sftp_client()
-        remote_path = "/mirror/scr/"
-
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            local_filepath = os.path.join(server_path, remote_file)
-            sftp.get(remote_filepath, local_filepath)
-            with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                     filename=remote_file)
-                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
-                new_file.save()
-                tool_activity = ToolActivity.objects.get(pk=self.id)
-                tool_activity.output_files.add(new_file)
-                tool_activity.save()
-                local_file.close()
-            # todo: insert code for sending file
-            sftp.remove(remote_filepath)  # delete after transfer
-        sftp.close()
-
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
-        self.print_msg("Output files sent")
-
-    def changeStatus(self, status):
-        pass

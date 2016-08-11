@@ -54,6 +54,17 @@
                 {% endfor %}
             </ul>
 
+            <p>Logs:</p>
+            <ul id="task-logs-list">
+                {% for log in object.logs_set %}
+                    <li>
+                        <p>Date: {{ log.timestamp }}</p>
+                        <p>Status Code: {{ log.status_code }}</p>
+                        <p>Message: {{ log.status_msg }}</p>
+                    </li>
+                {% endfor %}
+            </ul>
+
         </div>
     </div>
 

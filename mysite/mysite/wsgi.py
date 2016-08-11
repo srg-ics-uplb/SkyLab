@@ -187,12 +187,6 @@ class ConsumerThread(threading.Thread):
 
     def activate_tool(self,tool_name):
         self.print_to_console("Activating %s" % tool_name)
-        # if tool_name == "gamess":
-        #     fix = "sudo /sbin/sysctl -w kernel.shmmax=500000000"
-        #     fix_shmmax = self.cluster_shell.spawn(shlex.split(fix), use_pty=True)
-        #     fix_shmmax.stdin_write(cluster_password + "\n")
-        #     print fix_shmmax.wait_for_result().output
-
 
         tool_activator = self.cluster_shell.spawn(["p2c-tools","activate",tool_name], use_pty=True)
         tool_activator.stdin_write(cluster_password + "\n")

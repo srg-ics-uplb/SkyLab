@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from django import forms
-from skylab.models import SkyLabFile
+from skylab.models import SkyLabFile, Logs
 import pika
 import os.path
 
@@ -59,6 +59,7 @@ def send_mpi_message(routing_key, body):
 
     print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
     connection.close()
+
 
 class P2CToolGeneric(object):
 	# frontend_ip = "10.0.3.101"

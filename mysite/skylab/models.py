@@ -64,7 +64,7 @@ class ToolActivity(models.Model):
     executable_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
-    status = models.CharField(default="Task Created",max_length=200)
+    status_msg = models.CharField(default="Task Created", max_length=200)
     status_code = models.SmallIntegerField(default=0)
     input_files = models.ManyToManyField(SkyLabFile, related_name="input_files", blank=True)
     output_files = models.ManyToManyField(SkyLabFile, related_name="output_files", blank=True)
@@ -73,6 +73,12 @@ class ToolActivity(models.Model):
 
     def __str__(self):
         return self.tool_name
+
+    def change_status(self, status_code=0, status_msg="Default"):
+        self.status_code = status_code
+        self.status_msg = status_msg
+        self.save()
+        Logs.objects.create(status_code=status_code, status_msg=status_msg, tool_activity=self)
 
 # @python_2_unicode_compatible
 # class Toolset(models.Model):
@@ -97,12 +103,13 @@ class ToolActivity(models.Model):
 
 
 
-# @python_2_unicode_compatible
-# class ToolLogs(models.Model):
-#     status = models.CharField(max_length=200)
-#     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-#     tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
-#
-#     @property
-#     def __str__(self):
-#         return "activity{1}_log{2}".format(self.tool_activity.id, self.id)
+@python_2_unicode_compatible
+class Logs(models.Model):
+    status_code = models.PositiveSmallIntegerField()
+    status_msg = models.CharField(max_length=200)
+    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
+
+    @property
+    def __str__(self):
+        return "task-{1}_log_{2}".format(self.tool_activity.id, self.timestamp.ctime())
