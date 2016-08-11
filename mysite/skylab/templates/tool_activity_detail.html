@@ -56,7 +56,7 @@
 
             <p>Logs:</p>
             <ul id="task-logs-list">
-                {% for log in object.logs_set %}
+                {% for log in object.logs %}
                     <li>
                         <p>Date: {{ log.timestamp }}</p>
                         <p>Status Code: {{ log.status_code }}</p>

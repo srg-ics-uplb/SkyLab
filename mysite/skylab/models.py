@@ -64,8 +64,8 @@ class ToolActivity(models.Model):
     executable_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
-    status_msg = models.CharField(default="Task Created", max_length=200)
-    status_code = models.SmallIntegerField(default=0)
+    # status_msg = models.CharField(default="Task Created", max_length=200)
+    # status_code = models.SmallIntegerField(default=0)
     input_files = models.ManyToManyField(SkyLabFile, related_name="input_files", blank=True)
     output_files = models.ManyToManyField(SkyLabFile, related_name="output_files", blank=True)
     updated = models.DateTimeField(auto_now=True, auto_now_add=False)
@@ -74,11 +74,31 @@ class ToolActivity(models.Model):
     def __str__(self):
         return self.tool_name
 
-    def change_status(self, status_code=0, status_msg="Default"):
-        self.status_code = status_code
-        self.status_msg = status_msg
-        self.save()
+    def get_default_status_msg(self, status_code):
+        status_msgs = {
+            100: "Initializing",
+            101: "Queued",
+            150: "Task started",
+            151: "Uploading input files",
+            152: "Executing tool script",
+            153: "Tool execution successful",
+            154: "Retrieving output files",
+            200: "Task completed",
+            400: "Task execution error",
+            500: "MPI cluster connection error",
+        }
+
+        return status_msgs.get(status_code, "Status code %d not recognized" % status_code)
+
+    def change_status(self, **kwargs):
+        status_code = kwargs.get('status_code', self.logs.latest('id').status_code)
+        status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
         Logs.objects.create(status_code=status_code, status_msg=status_msg, tool_activity=self)
+
+    # workaround for accessing all logs in template
+    @property
+    def logs(self):
+        return self.logs_set.all()
 
 # @python_2_unicode_compatible
 # class Toolset(models.Model):

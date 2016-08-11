@@ -19,7 +19,7 @@ class GamessView(FormView):
         return kwargs
 
     def get_success_url(self):
-        return "../task/%d" % self.kwargs['id']
+        return "task/%d" % self.kwargs['id']
 
     def form_valid(self, form):
         cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])

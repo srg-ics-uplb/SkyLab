@@ -6,9 +6,6 @@
         <div class='col-sm-6 col-sm-offset-3'>
             <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
             {% crispy form %}
-            <a class="btn btn-social btn-google">
-                <i class="fa fa-google" aria-hidden="true"></i> Sign in
-            </a>
         </div>
     </div>
 
