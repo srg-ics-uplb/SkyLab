@@ -100,6 +100,11 @@ class ToolActivity(models.Model):
     def logs(self):
         return self.logs_set.all()
 
+    # workaround for accessing latest log from template
+    @property
+    def latest_log(self):
+        return self.logs_set.latest('timestamp')
+
 # @python_2_unicode_compatible
 # class Toolset(models.Model):
 #     toolset_name = models.CharField(max_length=50)

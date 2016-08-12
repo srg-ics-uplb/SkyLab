@@ -8,6 +8,7 @@ from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster, Logs
 from skylab.modules.gamess.forms import GamessForm
 from skylab.modules.base_tool import send_mpi_message
 
+
 class GamessView(FormView):
     template_name = "modules/gamess/use_gamess.html"
     form_class = GamessForm

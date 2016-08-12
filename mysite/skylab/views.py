@@ -2,7 +2,7 @@ import os
 
 import pika
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, response
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
@@ -19,6 +19,16 @@ def has_read_permission(request, path):
 
 	return request.user.is_authenticated()
 
+
+def display_private_file_content(request, path, filename):
+	if has_read_permission(request, path):
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
+		print fullpath
+		file = open(fullpath, 'r')
+		response = file.read()
+		print response
+		file.close()
+		return HttpResponse(response.replace('\n', '<br>'))
 
 def serve_private_file(request, path, filename):
 	"Simple example of a view to serve private files with xsendfile"

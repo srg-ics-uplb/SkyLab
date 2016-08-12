@@ -191,3 +191,5 @@ CLUSTER_PASSWORD = "mpiuser"
 SITE_ID = 1
 SOCIALACCOUNT_ADAPTER = "skylab.googleadapter.UniversityAccountAdapter"
 SOCIALACCOUNT_QUERY_EMAIL = True
+LOGIN_URL = '/skylab/accounts/google/login/?process=login'
+LOGIN_REDIRECT_URL = '/skylab'

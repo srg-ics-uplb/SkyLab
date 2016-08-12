@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.conf.urls import include, url
+from django.conf.urls.static import static
 from django.contrib.auth.views import logout
 
 from skylab.modules.gamess.views import GamessView
@@ -7,7 +8,8 @@ from skylab.modules.ray.views import RayView
 from skylab.modules.vina.views import VinaView, VinaSplitView
 from skylab.modules.autodock.views import AutodockView, AutogridView
 from skylab.modules.dock6.views import DockFormView, GridFormView
-from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file, task_fragments_view
+from .views import CreateMPIView, HomeView, ToolActivityDetail, serve_private_file, task_fragments_view, \
+    display_private_file_content
 
 urlpatterns = [
                   # url(r'^$', views.index, name='index'),
@@ -32,5 +34,6 @@ urlpatterns = [
     url(r'^accounts/', include('allauth.urls')),
     # url(r'^auth/', include('registration.backends.hmac.urls')),
     url(r'^{0}(?P<path>.*(?P<filename>.*\..*))$'.format(settings.PRIVATE_MEDIA_URL.lstrip('/')), serve_private_file, ),
+    url(r'^view/(?P<path>.*(?P<filename>.*\..*))$', display_private_file_content, )
 
 ]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
