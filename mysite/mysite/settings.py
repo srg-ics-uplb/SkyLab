@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     # 'registration',
+    # 'corsheaders',
     'django_ajax',
     'allauth',
     'allauth.account',
@@ -50,6 +51,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
+    #'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -193,3 +195,5 @@ SOCIALACCOUNT_ADAPTER = "skylab.googleadapter.UniversityAccountAdapter"
 SOCIALACCOUNT_QUERY_EMAIL = True
 LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
+
+CORS_ORIGIN_ALLOW_ALL = True

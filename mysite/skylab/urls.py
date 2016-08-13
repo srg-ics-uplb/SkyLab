@@ -33,7 +33,7 @@ urlpatterns = [
     url(r'^accounts/logout/$', logout, {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),
     # url(r'^auth/', include('registration.backends.hmac.urls')),
-    url(r'^{0}(?P<path>.*(?P<filename>.*\..*))$'.format(settings.PRIVATE_MEDIA_URL.lstrip('/')), serve_private_file, ),
-    url(r'^view/(?P<path>.*(?P<filename>.*\..*))$', display_private_file_content, )
+                  #   url(r'^{0}(?P<path>.*(?P<filename>.*\..*))$'.format(settings.PRIVATE_MEDIA_URL.lstrip('/')), serve_private_file, ),
+                  # url(r'^view/(?P<path>.*(?P<filename>.*\..*))$', display_private_file_content, )
 
-]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
