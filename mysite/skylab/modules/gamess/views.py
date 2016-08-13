@@ -7,9 +7,10 @@ from django.views.generic import FormView
 from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster, Logs
 from skylab.modules.gamess.forms import GamessForm
 from skylab.modules.base_tool import send_mpi_message
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class GamessView(FormView):
+class GamessView(LoginRequiredMixin, FormView):
     template_name = "modules/gamess/use_gamess.html"
     form_class = GamessForm
 

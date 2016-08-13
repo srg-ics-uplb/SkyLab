@@ -8,9 +8,11 @@ import os.path
 import json
 from django.utils.text import get_valid_filename
 from skylab.modules.base_tool import create_input_skylab_file
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class AutodockView(FormView):
+class AutodockView(LoginRequiredMixin, FormView):
     template_name = "modules/autodock/use_autodock.html"
     form_class = AutodockForm
 
@@ -80,8 +82,7 @@ class AutodockView(FormView):
         return super(AutodockView, self).form_valid(form)
 
 
-
-class AutogridView(FormView):
+class AutogridView(LoginRequiredMixin, FormView):
     template_name = "modules/autodock/use_autogrid.html"
     form_class = AutogridForm
 

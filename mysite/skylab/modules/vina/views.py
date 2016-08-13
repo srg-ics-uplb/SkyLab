@@ -8,9 +8,10 @@ import os.path
 import json
 from django.utils.text import get_valid_filename
 from skylab.modules.base_tool import create_input_skylab_file
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class VinaView(TemplateView):
+class VinaView(LoginRequiredMixin, TemplateView):
     template_name = "modules/vina/use_vina.html"
 
     def get_context_data(self, **kwargs):
@@ -125,7 +126,7 @@ class VinaView(TemplateView):
             })
 
 
-class VinaSplitView(FormView):
+class VinaSplitView(LoginRequiredMixin, FormView):
     template_name = "modules/vina/use_vina_split.html"
     form_class = VinaSplitForm
 

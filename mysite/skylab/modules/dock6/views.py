@@ -8,9 +8,10 @@ import os.path
 import json
 from django.utils.text import get_valid_filename
 from skylab.modules.base_tool import create_input_skylab_file
+from django.contrib.auth.mixins import LoginRequiredMixin
 
 
-class DockFormView(FormView):
+class DockFormView(LoginRequiredMixin, FormView):
     template_name = "modules/dock6/use_dock6.html"
     form_class = DockForm
 
@@ -66,7 +67,7 @@ class DockFormView(FormView):
         return super(DockFormView, self).form_valid(form)
 
 
-class GridFormView(FormView):
+class GridFormView(LoginRequiredMixin, FormView):
     template_name = "modules/dock6/use_grid.html"
     form_class = GridForm
 

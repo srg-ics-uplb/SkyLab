@@ -6,8 +6,10 @@ import json
 from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
+from django.contrib.auth.mixins import LoginRequiredMixin
 
-class RayView(TemplateView):
+
+class RayView(LoginRequiredMixin, TemplateView):
     template_name = "modules/ray/use_ray.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
                                     validate_min=False, can_delete=True)

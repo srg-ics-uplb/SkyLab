@@ -42,7 +42,7 @@
             <ul id="task-input-files-list">
                 {% for file in object.input_files.all %}
                     <li>
-                        <a href="/media/tool_activity_{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="skylab/media/tool_activity_{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
                     </li>
                 {% endfor %}
             </ul>
@@ -50,7 +50,7 @@
             <ul id="task-output-files-list">
                 {% for file in object.output_files.all %}
                     <li>
-                        <a href="/media/tool_activity_{{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="skylab/media/tool_activity_{{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
                     </li>
                 {% endfor %}
             </ul>

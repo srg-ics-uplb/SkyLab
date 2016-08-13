@@ -6,36 +6,46 @@ from django.http import HttpResponse, response
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from sendfile import sendfile
 from django_ajax.decorators import ajax
 
 from forms import Create_MPI_Cluster_Form
 from skylab.models import ToolActivity
+from django.http import HttpResponseForbidden
 
 
-def has_read_permission(request, path):
+def has_read_permission(request, task_id):
 	# TODO: query if user in toolactivity
 	"Only show to authenticated users - extend this as desired"
+	if ToolActivity.objects.get(pk=task_id).user_id == request.user.id:
+		return True
+	else:
+		return False
 
-	return request.user.is_authenticated()
 
+# def display_private_file_content(request, path, filename):
+# 	if has_read_permission(request, path):
+# 		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
+# 		print fullpath
+# 		file = open(fullpath, 'r')
+# 		response = file.read()
+# 		print response
+# 		file.close()
+# 		return HttpResponse(response.replace('\n', '<br>'))
 
-def display_private_file_content(request, path, filename):
-	if has_read_permission(request, path):
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
-		print fullpath
-		file = open(fullpath, 'r')
-		response = file.read()
-		print response
-		file.close()
-		return HttpResponse(response.replace('\n', '<br>'))
-
-def serve_private_file(request, path, filename):
+@login_required
+def serve_private_file(request, task_id, directory, filename):
+	print task_id, directory, filename
 	"Simple example of a view to serve private files with xsendfile"
-	if has_read_permission(request, path):
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, path)
-
+	if has_read_permission(request, task_id):
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "tool_activity_%s/%s/%s" % (task_id, directory, filename))
+		print fullpath
 		return sendfile(request, fullpath, attachment=True)
+	else:  # if user fails test return 403
+		return HttpResponseForbidden()
+
 
 def send_mpi_message(routing_key, body):
 	connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -61,7 +71,8 @@ def send_mpi_message(routing_key, body):
 class HomeView(TemplateView):
 	template_name = "home.html"
 
-class CreateMPIView(CreateView):
+
+class CreateMPIView(LoginRequiredMixin, CreateView):
 	template_name = 'create_mpi_cluster.html'
 	form_class = Create_MPI_Cluster_Form
 	success_url = 'create_mpi_cluster'
@@ -75,7 +86,8 @@ class CreateMPIView(CreateView):
 		kwargs['user'] = self.request.user
 		return kwargs
 
-class ToolActivityDetail(DetailView):
+
+class ToolActivityDetail(LoginRequiredMixin, DetailView):
 	model = ToolActivity
 	template_name = 'tool_activity_detail.html'
 
@@ -92,6 +104,7 @@ def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
 
+@login_required
 @ajax
 def task_fragments_view(request, pk=None):
 	print pk
