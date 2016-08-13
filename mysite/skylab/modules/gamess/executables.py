@@ -53,7 +53,7 @@ class GamessExecutable(P2CToolGeneric):
             remote_file.close()
         with open(server_path, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename="%s.log" % self.filename)
+                                                 filename="%s.log" % self.filename, render_with_jsmol=True)
             new_file.file.name = local_dir
             new_file.save()
             tool_activity = ToolActivity.objects.get(pk=self.id)

@@ -53,6 +53,7 @@ class SkyLabFile(models.Model):
     upload_path = models.CharField(max_length=200)
     file = models.FileField(upload_to=get_upload_path, blank=True)
     filename = models.CharField(max_length=200)
+    render_with_jsmol = models.BooleanField(default=False)
 
     def __str__(self):
         return self.filename

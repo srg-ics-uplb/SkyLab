@@ -47,6 +47,12 @@ def serve_private_file(request, task_id, directory, filename):
 		return HttpResponseForbidden()
 
 
+def serve_file_for_jsmol(request, task_id, directory, filename):
+	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "tool_activity_%s/%s/%s" % (task_id, directory, filename))
+	print fullpath
+	return sendfile(request, fullpath, attachment=True)
+
+
 def send_mpi_message(routing_key, body):
 	connection = pika.BlockingConnection(pika.ConnectionParameters(
 		host='localhost'))
