@@ -42,7 +42,7 @@
             <ul id="task-input-files-list">
                 {% for file in object.input_files.all %}
                     <li>
-                        <a href="skylab/media/tool_activity_{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="/skylab/files/task/{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
                     </li>
                 {% endfor %}
             </ul>
@@ -50,7 +50,7 @@
             <ul id="task-output-files-list">
                 {% for file in object.output_files.all %}
                     <li>
-                        <a href="skylab/media/tool_activity_{{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
                     </li>
                 {% endfor %}
             </ul>
@@ -76,7 +76,7 @@
 {% block js %}
     {# insert ajax-request. replace input and output files list with the received content    #}
     <script type="text/javascript">
-        var statusCode =
+        var statusCode = object.latest_log.status_code
         {{ object.status_code }}
 
         var retrieveCurrentStatus = function () {
