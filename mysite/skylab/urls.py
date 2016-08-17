@@ -32,8 +32,10 @@ urlpatterns = [
     url(r'^accounts/logout/$', logout, {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),
     # url(r'^auth/', include('registration.backends.hmac.urls')),
-    url(r'^files/task/(?P<task_id>\d+)/(?P<directory>.+)/(?P<filename>.*\..*)$', views.serve_private_file, ),
-    url(r'^jsmol/task/(?P<task_id>\d+)/(?P<directory>.+)/(?P<filename>.*\..*)$', views.serve_file_for_jsmol, ),
+    url(r'^jsmol/task/(?P<task_id>\d+)/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_private_file,
+        name="skylab_file_url"),
+    url(r'^jsmol/task/(?P<task_id>\d+)/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_file_for_jsmol,
+        name='jsmol_file_url'),
     # url(r'^view/(?P<path>.*(?P<filename>.*\..*))$', display_private_file_content, )
 
 ]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

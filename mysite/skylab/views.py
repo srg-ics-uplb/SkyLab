@@ -8,12 +8,14 @@ from django.views.generic.base import TemplateView
 from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from sendfile import sendfile
 from django_ajax.decorators import ajax
 
 from forms import Create_MPI_Cluster_Form
 from skylab.models import ToolActivity
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, Http404
 
 
 def has_read_permission(request, task_id):
@@ -36,26 +38,44 @@ def has_read_permission(request, task_id):
 # 		return HttpResponse(response.replace('\n', '<br>'))
 
 @login_required
-def serve_private_file(request, task_id, directory, filename):
-	print task_id, directory, filename
-	"Simple example of a view to serve private files with xsendfile"
+def serve_private_file(request, task_id, type, filename):
+	try:
+		task = ToolActivity.objects.get(pk=task_id)
+
+		if type == "input":
+			file = task.input_files.get(filename__exact=filename)
+		elif type == "output":
+			file = task.output_files.get(filename__exact=filename)
+	except ObjectDoesNotExist:
+		return Http404
+
 	if has_read_permission(request, task_id):
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "tool_activity_%s/%s/%s" % (task_id, directory, filename))
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT,
+								"%s/%s" % (file.upload_path, filename))
 		print fullpath
 		return sendfile(request, fullpath, attachment=True)
 	else:  # if user fails test return 403
 		return HttpResponseForbidden()
 
 
-def serve_file_for_jsmol(request, task_id, directory, filename):
-	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "tool_activity_%s/%s/%s" % (task_id, directory, filename))
-	print fullpath
-	return sendfile(request, fullpath, attachment=True)
+def serve_file_for_jsmol(request, task_id, type, filename):
+	try:
+		task = ToolActivity.objects.get(pk=task_id)
 
+		if type == "input":
+			file = task.input_files.get(filename__exact=filename)
+		elif type == "output":
+			file = task.output_files.get(filename__exact=filename)
+
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "%s/%s" % (file.upload_path, filename))
+		print fullpath
+		return sendfile(request, fullpath, attachment=True)
+
+	except ObjectDoesNotExist:
+		return Http404
 
 def send_mpi_message(routing_key, body):
-	connection = pika.BlockingConnection(pika.ConnectionParameters(
-		host='localhost'))
+	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
 
 	channel = connection.channel()
 
@@ -99,7 +119,22 @@ class ToolActivityDetail(LoginRequiredMixin, DetailView):
 
 	def get_context_data(self, **kwargs):
 		context = super(ToolActivityDetail, self).get_context_data(**kwargs)
+		print context.keys()
 
+		jsmol_files_absolute_uris = []
+		print context["object"].id
+
+		output_files = context["object"].output_files.filter(render_with_jsmol=True)
+		for file in output_files:
+			jsmol_files_absolute_uris.append(self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={
+				"task_id": context["object"].id, "type": "output", "filename": file.filename})))
+
+		input_files = context["object"].input_files.filter(render_with_jsmol=True)
+		for file in input_files:
+			jsmol_files_absolute_uris.append(self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={
+				"task_id": context["object"].id, "type": "input", "filename": file.filename})))
+
+		context["jsmol_files_absolute_uris"] = jsmol_files_absolute_uris
 		return context
 
 	def get_queryset(self):

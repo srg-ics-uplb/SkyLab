@@ -44,7 +44,8 @@
             <ul id="task-input-files-list">
                 {% for file in object.input_files.all %}
                     <li>
-                        <a href="/skylab/files/task/{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="{% url "skylab_file_url" task_id=object.id type="input" filename=file.filename %}">{{ file.filename }}</a>
+                        {#                        <a href="/skylab/files/task/{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>#}
                     </li>
                 {% endfor %}
             </ul>
@@ -52,7 +53,8 @@
             <ul id="task-output-files-list">
                 {% for file in object.output_files.all %}
                     <li>
-                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
+                        <a href="{% url "skylab_file_url" task_id=object.id type="output" filename=file.filename %}">{{ file.filename }}</a>
+                        {#                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>#}
                     </li>
                 {% endfor %}
             </ul>
@@ -137,11 +139,11 @@
                 + 'set errorCallback "myCallback";'
                 + 'set defaultloadscript;'
                 + 'set zoomlarge false;'//set echo top left;echo loading XXXX...;refresh;'
-                {% for jsmol_file in object.jsmol_output_files %}
-                    {% if forloop.first %}
-                        + 'load "/skylab/jsmol/task/{{ object.id }}/output/{{ jsmol_file.filename }}"'
-                    {% endif %}
-                {% endfor %}
+                {% with jsmol_files_absolute_uris|first as first_jsmol_uri%}
+
+                    + 'load "{{ first_jsmol_uri }}"'
+
+                {% endwith %}
                 // +'load "http://www.rcsb.org/pdb/files/XXXX.pdb";set echo top center;echo XXXX;'
                 + 'spacefill off;wireframe off;cartoons on;color structure;'
 
