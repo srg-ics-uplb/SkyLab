@@ -106,6 +106,14 @@ class ToolActivity(models.Model):
     def latest_log(self):
         return self.logs_set.latest('timestamp')
 
+    @property
+    def jsmol_output_files(self):
+        return self.output_files.filter(render_with_jsmol=True)
+
+    @property
+    def jsmol_input_files(self):
+        return self.input_files.filter(render_with_jsmol=True)
+
 # @python_2_unicode_compatible
 # class Toolset(models.Model):
 #     toolset_name = models.CharField(max_length=50)

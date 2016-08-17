@@ -95,7 +95,7 @@ class CreateMPIView(LoginRequiredMixin, CreateView):
 
 class ToolActivityDetail(LoginRequiredMixin, DetailView):
 	model = ToolActivity
-	template_name = 'tool_activity_detail.html'
+	template_name = 'jsmol_test_detail.html'
 
 	def get_context_data(self, **kwargs):
 		context = super(ToolActivityDetail, self).get_context_data(**kwargs)
@@ -117,22 +117,24 @@ def task_fragments_view(request, pk=None):
 	if pk is not None:
 		task = ToolActivity.objects.filter(pk=pk, user=request.user.id)[0]
 		print task.id
-
-		if task.status_code == 0 or task.status_code == 1:
+		print "Status code", task.latest_log.status_code
+		if task.latest_log.status_code < 200:
 			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-		elif task.status_code == 2:
-			progress_bar = '<div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div>'
-		elif task.status_code == 3:
-			progress_bar = '<div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div>'
+		elif task.latest_log.status_code == 200:
+			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+		elif task.latest_log.status_code >= 400:
+			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
 		# progress_bar
 
 		data = {
 			'inner-fragments': {
 				'#task-output-files-list': '<li>replace element with this content1</li>',
-				'#progress-bar-container': progress_bar,
-				'#task-status': task.status,
+				'#task-status': task.latest_log.status_msg,
 			},
-			'status_code': task.status_code
+			'fragments': {
+				'#progress': progress_bar,
+			},
+			'status_code': task.latest_log.status_code
 
 		}
 		return data

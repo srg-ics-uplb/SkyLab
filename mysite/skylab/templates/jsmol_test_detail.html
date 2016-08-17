@@ -1,0 +1,175 @@
+{% extends '_layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load staticfiles %}
+
+{% block content %}
+    <div class='row'>
+        <div class='col-sm-6 col-sm-offset-3'>
+            <h1>Tool Activity {{ object.id }}</h1>
+            <p id="task-status">{{ object.status }}</p>
+            {#            <div id="progress-bar-container">#}
+            {# progress bars #}
+            {% if object.latest_log.status_code < 200 %}
+                {# task initializing/queued/in progress #}
+
+                <div class="progress progress-striped active">
+                    <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"
+                         aria-valuemax="100" style="width: 100%">
+
+                    </div>
+                </div>
+
+            {% elif object.latest_log.status_code == 200 %} {# task finished successfully #}
+                <div class="progress progress-striped">
+                    <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"
+                         aria-valuemin="0" aria-valuemax="100" style="width:100%">
+
+                    </div>
+                </div>
+
+            {% elif object.latest_log.status_code >= 400 %}  {# error encountered #}
+                <div class="progress progress-striped">
+                    <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
+                         aria-valuemin="0" aria-valuemax="100" style="width:100%">
+                    </div>
+                </div>
+            {% endif %}
+            {#            </div>#}
+            <p>Tool: {{ object.tool_name }}</p>
+            <p>MPI Cluster: {{ object.mpi_cluster }}</p>
+            <p>Command: {{ object.exec_string }}</p>
+
+
+            <p>Input Files: </p>
+            <ul id="task-input-files-list">
+                {% for file in object.input_files.all %}
+                    <li>
+                        <a href="/skylab/files/task/{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            <p>Output Files: </p>
+            <ul id="task-output-files-list">
+                {% for file in object.output_files.all %}
+                    <li>
+                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {#Display logs#}
+            {#            <p>Logs:</p>#}
+            {#            <ul id="task-logs-list">#}
+            {#                {% for log in object.logs %}#}
+            {#                    <li>#}
+            {#                        <p>Date: {{ log.timestamp }}</p>#}
+            {#                        <p>Status Code: {{ log.status_code }}</p>#}
+            {#                        <p>Message: {{ log.status_msg }}</p>#}
+            {#                    </li>#}
+            {#                {% endfor %}#}
+            {#            </ul>#}
+
+            {#    JSmol container        #}
+            <div id="appdiv"></div>
+        </div>
+
+    </div>
+
+
+
+{% endblock %}
+
+{% block js %}
+    {# insert ajax-request. replace input and output files list with the received content    #}
+    <script type="text/javascript">
+        var statusCode =
+        {{ object.latest_log.status_code }}
+
+        var retrieveCurrentStatus = function () {
+            ajaxGet('../../task-fragments/{{ object.id }}', function (content) {
+                //onSuccess
+                alert(content.status_code);
+                statusCode = content.status_code
+                if (statusCode == 200 | statusCode == 400) {
+                    clearInterval(statusRefresher)
+                }
+
+
+            })
+        };
+
+        var statusRefresher = setInterval(retrieveCurrentStatus, 10000);
+        {##}
+        {##}
+        {#    function setStatusCode(statusCode) {#}
+        {#      statusCode = statusCode;#}
+        {#      my_callback(); // this is whatever you wanted to call onChange#}
+        {#    }#}
+
+    </script>
+    <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
+    <script type="text/javascript">
+
+        Jmol._isAsync = false;
+
+        // last update 2/18/2014 2:10:06 PM
+
+        var jmolApplet0; // set up in HTML table, below
+
+        // logic is set by indicating order of USE -- default is HTML5 for this test page, though
+
+        var s = document.location.search;
+
+        // Developers: The _debugCode flag is checked in j2s/core/core.z.js,
+        // and, if TRUE, skips loading the core methods, forcing those
+        // to be read from their individual directories. Set this
+        // true if you want to do some code debugging by inserting
+        // System.out.println, document.title, or alert commands
+        // anywhere in the Java or Jmol code.
+
+        Jmol._debugCode = (s.indexOf("debugcode") >= 0);
+
+        jmol_isReady = function (applet) {
+            document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion)
+            Jmol._getElement(applet, "appletdiv").style.border = "1px solid blue"
+        };
+
+        script = 'h2oOn=true;set animframecallback'
+                + 'set errorCallback "myCallback";'
+                + 'set defaultloadscript;'
+                + 'set zoomlarge false;'//set echo top left;echo loading XXXX...;refresh;'
+                {% for jsmol_file in object.jsmol_output_files %}
+                    {% if forloop.first %}
+                        + 'load "/skylab/jsmol/task/{{ object.id }}/output/{{ jsmol_file.filename }}"'
+                    {% endif %}
+                {% endfor %}
+                // +'load "http://www.rcsb.org/pdb/files/XXXX.pdb";set echo top center;echo XXXX;'
+                + 'spacefill off;wireframe off;cartoons on;color structure;'
+
+        var Info = {
+            width: 420,
+            height: 300,
+            debug: false,
+            color: "0xFFFFFF",
+            addSelectionOptions: true,
+            use: "HTML5",   // JAVA HTML5 WEBGL are all options
+            j2sPath: "{% static 'jsmol/j2s' %}", // this needs to point to where the j2s directory is.
+            jarPath: "{% static 'jsmol/java' %}",// this needs to point to where the java directory is.
+            jarFile: "JmolAppletSigned.jar",
+            isSigned: true,
+            script: script,
+            serverURL: "http://webserver.localhost.com/jsmol/php/jsmol.php",
+            readyFunction: jmol_isReady,
+            disableJ2SLoadMonitor: true,
+            disableInitialConsole: true,
+            allowJavaScript: true
+            //defaultModel: "$dopamine",
+            //console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"
+        };
+
+        $(document).ready(function () {
+            $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info))
+            alert("echo")
+        });
+        var lastPrompt = 0;
+    </script>
+{% endblock %}
