@@ -114,6 +114,33 @@ class ToolActivity(models.Model):
     def jsmol_input_files(self):
         return self.input_files.filter(render_with_jsmol=True)
 
+    def get_dict_jsmol_files_uris(self, request):
+        jsmol_files_absolute_uris = []
+        output_files = self.output_files.filter(render_with_jsmol=True)
+        for file in output_files:
+            jsmol_files_absolute_uris.append(
+                {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                                                           kwargs={"task_id": self.id,
+                                                                   "type": "output", "filename": file.filename})),
+                 "filename": file.filename}
+            )
+
+        input_files = self.input_files.filter(render_with_jsmol=True)
+        for file in input_files:
+            jsmol_files_absolute_uris.append(
+                {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                                                           kwargs={"task_id": self.id,
+                                                                   "type": "input", "filename": file.filename})),
+                 "filename": file.filename}
+            )
+
+        return jsmol_files_absolute_uris
+
+    @property
+    def has_jsmol_file(self):
+        if self.output_files.filter(render_with_jsmol=True) or self.input_files.filter(render_with_jsmol=True):
+            return True
+        return False
 # @python_2_unicode_compatible
 # class Toolset(models.Model):
 #     toolset_name = models.CharField(max_length=50)

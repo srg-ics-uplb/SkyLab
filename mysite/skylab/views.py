@@ -1,6 +1,7 @@
 import os
 
 import pika
+import json
 from django.conf import settings
 from django.http import HttpResponse, response
 from django.views.generic import DetailView
@@ -119,22 +120,29 @@ class ToolActivityDetail(LoginRequiredMixin, DetailView):
 
 	def get_context_data(self, **kwargs):
 		context = super(ToolActivityDetail, self).get_context_data(**kwargs)
-		print context.keys()
+		# print context.keys()
 
-		jsmol_files_absolute_uris = []
-		print context["object"].id
+		# jsmol_files_absolute_uris = []
+		# print context["object"].id
+		#
+		# output_files = context["object"].output_files.filter(render_with_jsmol=True)
+		# for file in output_files:
+		# 	jsmol_files_absolute_uris.append(
+		# 		{"uri": self.request.build_absolute_uri(reverse('jsmol_file_url',
+		# 														kwargs={"task_id": context["object"].id,
+		# 																"type": "output", "filename": file.filename})),
+		# 		 "filename": file.filename}
+		# 	)
+		#
+		# input_files = context["object"].input_files.filter(render_with_jsmol=True)
+		# for file in input_files:
+		# 	jsmol_files_absolute_uris.append(
+		# 		{"uri" : self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={"task_id": context["object"].id, "type": "input", "filename": file.filename})),
+		# 		 "filename" : file.filename}
+		# 	)
 
-		output_files = context["object"].output_files.filter(render_with_jsmol=True)
-		for file in output_files:
-			jsmol_files_absolute_uris.append(self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={
-				"task_id": context["object"].id, "type": "output", "filename": file.filename})))
-
-		input_files = context["object"].input_files.filter(render_with_jsmol=True)
-		for file in input_files:
-			jsmol_files_absolute_uris.append(self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={
-				"task_id": context["object"].id, "type": "input", "filename": file.filename})))
-
-		context["jsmol_files_absolute_uris"] = jsmol_files_absolute_uris
+		context["jsmol_files_absolute_uris"] = context["object"].get_dict_jsmol_files_uris(self.request)
+		context["jsmol_server_url"] = settings.JSMOL_SERVER_URL
 		return context
 
 	def get_queryset(self):
@@ -169,7 +177,9 @@ def task_fragments_view(request, pk=None):
 			'fragments': {
 				'#progress': progress_bar,
 			},
-			'status_code': task.latest_log.status_code
+			'status_code': task.latest_log.status_code,
+			# 'has_jsmol_file': task.has_jsmol_file,
+			'uri_dict': task.get_dict_jsmol_files_uris(request),
 
 		}
 		return data

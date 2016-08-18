@@ -197,3 +197,4 @@ LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
 
 CORS_ORIGIN_ALLOW_ALL = True
+JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
