@@ -163,21 +163,25 @@ def task_fragments_view(request, pk=None):
 		print "Status code", task.latest_log.status_code
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
+			status_msg = '<p id="task-status" class="text-info">' + task.latest_log.status_msg + '</p>'
 		elif task.latest_log.status_code == 200:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+			status_msg = '<p id="task-status" class="text-success">' + task.latest_log.status_msg + '</p>'
 		elif task.latest_log.status_code >= 400:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+			status_msg = '<p id="task-status" class="text-danger">' + task.latest_log.status_msg + '</p>'
 		# progress_bar
 
 		data = {
 			'inner-fragments': {
 				'#task-output-files-list': '<li>replace element with this content1</li>',
-				'#task-status': task.latest_log.status_msg,
 			},
 			'fragments': {
 				'#progress': progress_bar,
+				'#task-status': status_msg,
 			},
 			'status_code': task.latest_log.status_code,
+
 			# 'has_jsmol_file': task.has_jsmol_file,
 			'uri_dict': task.get_dict_jsmol_files_uris(request),
 

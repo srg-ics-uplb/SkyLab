@@ -3,7 +3,7 @@
 {% load staticfiles %}
 
 {% block content %}
-    <div class='row'>
+    <div class='row' xmlns="http://www.w3.org/1999/html">
         <div class='col-sm-6 col-sm-offset-3'>
             <h1>Tool Activity {{ object.id }}</h1>
             <p id="task-status">{{ object.status }}</p>
@@ -73,14 +73,29 @@
             {#    JSmol container        #}
             <div id="appdiv"></div>
             <div id="jsmol_options_div">
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 8')">8</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 7')">7</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 6')">6</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 5')">5</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 4')">4</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 3')">3</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 2')">2</a>
-                <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 1')">1</a>
+
+                <p class="float-right">
+                    Set platform speed
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="1">1</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="2">2</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="3">3</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="4">4</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="5">5</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="6">6</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="7">7</label>
+                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="8">8</label>
+
+
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 8')">8</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 7')">7</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 6')">6</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 5')">5</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 4')">4</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 3')">3</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 2')">2</a>#}
+                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 1')">1</a>#}
+                </p>
+
             </div>
         </div>
 
@@ -97,7 +112,6 @@
             Models.push([item["uri"], item["filename"]]);
         }
 
-
         var statusCode = {{ object.latest_log.status_code }}
                 $('#jsmol_options_div').hide()
         Models = [];
@@ -105,8 +119,10 @@
         var retrieveCurrentStatus = function () {
             ajaxGet('../../task-fragments/{{ object.id }}', function (content) {
                 //onSuccess
-                alert(content.status_code);
+                {#                alert(content.status_code);#}
                 statusCode = content.status_code;
+
+
                 if (statusCode == 200 || statusCode == 400) {
                     clearInterval(statusRefresher);
 
@@ -171,10 +187,10 @@
 
 
         var Info = {
-            width: 420,
-            height: 300,
+            width: 580,
+            height: 450,
             debug: false,
-            color: "0xFFFFFF",
+            color: "0xccffff",
             addSelectionOptions: false,
             use: "HTML5",   // JAVA HTML5 WEBGL are all options
             j2sPath: "{% static 'jsmol/j2s' %}", // this needs to point to where the j2s directory is.
@@ -216,5 +232,10 @@
             Jmol.jmolMenu(jmolApplet0, a)
         }
 
+    </script>
+    <script type="text/javascript">
+        $('input[type=radio][name=platformSpeed]').change(function () {
+            Jmol.script(jmolApplet0, 'set platformSpeed ' + this.value);
+        });
     </script>
 {% endblock %}
