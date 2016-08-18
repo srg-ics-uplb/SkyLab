@@ -165,8 +165,8 @@
         }
 
         var statusCode = {{ object.latest_log.status_code }}
-                $('#jsmol_options_div').hide()
-        $('#isosurface_options_div').hide()
+                $('#jsmol_options_div').hide();
+        $('#isosurface_options_div').hide();
         Models = [];
 
         var retrieveCurrentStatus = function () {
@@ -186,17 +186,8 @@
                         {#                        {% endfor %}#}
 
                         $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info));
-
-                        loadFile = 'load "' + $("#jsmol_file_list option:first").val() + '"';
-                        Jmol.script(jmolApplet0, loadFile);
-
-                        $('#jsmol_options_div').show()
-
-
                     }
                 }
-
-
             })
         };
         retrieveCurrentStatus();
@@ -228,8 +219,18 @@
         Jmol._debugCode = (s.indexOf("debugcode") >= 0);
 
         jmol_isReady = function (applet) {
-            document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion)
-            Jmol._getElement(applet, "appletdiv").style.border = "1px solid blue"
+            document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion);
+            Jmol._getElement(applet, "appletdiv").style.border = "1px solid blue";
+
+            loadFile = 'load "' + $("#jsmol_file_list option:first").val() + '"';
+            Jmol.script(jmolApplet0, loadFile);
+
+            jsmol_options = $('#jsmol_options_div')
+            jsmol_options.show();
+            $('html, body').animate({
+                scrollTop: jsmol_options.offset().top
+            }, 2000);
+
         };
 
         script = 'h2oOn=true;set animframecallback'
@@ -313,9 +314,10 @@
 
         $('input[type=radio][name=isosurface]').change(function () {
             Jmol.script(jmolApplet0, this.value);
-            $('#isosurface_options_div').show()
+            isosurface_options = $('#isosurface_options_div')
+            isosurface_options.show()
             $('html, body').animate({
-                scrollTop: $("#isosurface_options_div").offset().top
+                scrollTop: isosurface_options.offset().top
             }, 2000);
 
         });
