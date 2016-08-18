@@ -292,13 +292,9 @@
 
     </script>
     <script type="text/javascript">
-        {#        $('input').change(function () {#}
-        {#            Jmol.script(jmolApplet0, this.value);#}
-        {#        });#}
         $('#jsmol_file_list').change(function () {
-            Jmol.script(jmolApplet0, 'load "' + this.val() + '"');
+            Jmol.script(jmolApplet0, 'load "' + this.value + '"');
         });
-
 
         $('input[type=radio][name=platformSpeed]').change(function () {
             Jmol.script(jmolApplet0, this.value);
