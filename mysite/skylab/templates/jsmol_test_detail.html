@@ -3,7 +3,7 @@
 {% load staticfiles %}
 
 {% block content %}
-    <div class='row' xmlns="http://www.w3.org/1999/html">
+    <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
             <h1>Tool Activity {{ object.id }}</h1>
             <p id="task-status">{{ object.status }}</p>
@@ -73,33 +73,82 @@
             {#    JSmol container        #}
             <div id="appdiv"></div>
             <div id="jsmol_options_div">
+                <div class="form-row">
+                    <label>File</label>
+                    <select id="jsmol_file_list"></select>
+                </div>
 
-                <p class="float-right">
-                    Set platform speed
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="1">1</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="2">2</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="3">3</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="4">4</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="5">5</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="6">6</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="7">7</label>
-                    <label class="radio-inline"><input type="radio" name="platformSpeed" value="8">8</label>
+                <div class="form-row">
+                    <label>Display quality:</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 1">1</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 2">2</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 3">3</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 4">4</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 5">5</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 6">6</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 7">7</label>
+                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
+                                                                     value="set platformSpeed 8">8</label>
+                </div>
 
+                <div class="form-row">
+                    <label>Display as:</label>
+                    <label class="radio-inline"><input type="radio" name="displayAs"
+                                                       value="select *;cartoons off;spacefill only">Spacefill</label>
+                    <label class="radio-inline"><input type="radio" name="displayAs"
+                                                       value="select *;cartoons off;wireframe -0.1">Wire</label>
+                    <label class="radio-inline"><input type="radio" name="displayAs"
+                                                       value="select *;cartoons off;spacefill 23%;wireframe 0.15">Ball &
+                        Stick</label>
+                    <label class="radio-inline"><input type="radio" name="displayAs"
+                                                       value="select protein or nucleic;cartoons only; set cartoonFancy false">Cartoon</label>
+                    <label class="radio-inline"><input type="radio" name="displayAs"
+                                                       value="select protein or nucleic;cartoons only; set cartoonFancy true">Fancy
+                        cartoon</label>
+                </div>
 
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 8')">8</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 7')">7</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 6')">6</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 5')">5</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 4')">4</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 3')">3</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 2')">2</a>#}
-                    {#                    <a href="javascript:Jmol.script(jmolApplet0, 'set platformSpeed 1')">1</a>#}
-                </p>
+                <div class="form-row">
+                    <label>Color Scheme:</label>
+                    <label class="radio-inline"><input type="radio" name="color" value="color property atomno">Atom no.</label>
+                    <label class="radio-inline"><input type="radio" name="color" value="color cpk">CPK</label>
+                    <label class="radio-inline"><input type="radio" name="color" value="color amino">Amino</label>
+                    <label class="radio-inline"><input type="radio" name="color"
+                                                       value="color structure">Structure</label>
+                </div>
 
+                <div class="form-row">
+                    <label>Isosurface:</label>
+                    <label class="radio-inline"><input type="radio" name="isosurface" value="select *;isosurface vdw">vdW</label>
+                    <label class="radio-inline"><input type="radio" name="isosurface"
+                                                       value="if ({atomno < 10}.partialcharge == 0){calculate partialcharge};isosurface vdw map mep">MEP</label>
+                </div>
+
+                <div id="isosurface_options_div" class="form-row">
+                    <label>Isosurface options: </label>
+                    <label class="radio-inline"><input type="radio" name="isosurface-options"
+                                                       value="isosurface translucent">Translucent</label>
+                    <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface opaque">Opaque</label>
+                    <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface delete">Off</label>
+                </div>
+
+                <div class="form-row">
+                    <label>Labels:</label>
+                    <label class="checkbox-inline"><input type="checkbox" name="displayLabel"
+                                                          value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
+                    <label class="checkbox-inline"><input type="checkbox" name="displayLabel"
+                                                          value="select *;labels off">Off</label>
+                </div>
             </div>
         </div>
-
     </div>
+
 
 
 
@@ -109,11 +158,15 @@
     {# insert ajax-request. replace input and output files list with the received content    #}
     <script type="text/javascript">
         function addModel(item) {
-            Models.push([item["uri"], item["filename"]]);
+            {#            Models.push([item["uri"], item["filename"]]);#}
+            $('#jsmol_file_list').append(
+                    $('<option></option>').val(item["uri"]).html(item["filename"])
+            );
         }
 
         var statusCode = {{ object.latest_log.status_code }}
                 $('#jsmol_options_div').hide()
+        $('#isosurface_options_div').hide()
         Models = [];
 
         var retrieveCurrentStatus = function () {
@@ -133,7 +186,13 @@
                         {#                        {% endfor %}#}
 
                         $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info));
+
+                        loadFile = 'load "' + $("#jsmol_file_list option:first").val() + '"';
+                        Jmol.script(jmolApplet0, loadFile);
+
                         $('#jsmol_options_div').show()
+
+
                     }
                 }
 
@@ -190,7 +249,7 @@
             width: 580,
             height: 450,
             debug: false,
-            color: "0xccffff",
+            color: "0x468499",
             addSelectionOptions: false,
             use: "HTML5",   // JAVA HTML5 WEBGL are all options
             j2sPath: "{% static 'jsmol/j2s' %}", // this needs to point to where the j2s directory is.
@@ -211,7 +270,6 @@
 
 
         });
-        var lastPrompt = 0;
 
         // these are conveniences that mimic behavior of Jmol.js
 
@@ -234,8 +292,46 @@
 
     </script>
     <script type="text/javascript">
-        $('input[type=radio][name=platformSpeed]').change(function () {
-            Jmol.script(jmolApplet0, 'set platformSpeed ' + this.value);
+        {#        $('input').change(function () {#}
+        {#            Jmol.script(jmolApplet0, this.value);#}
+        {#        });#}
+        $('#jsmol_file_list').change(function () {
+            Jmol.script(jmolApplet0, 'load "' + this.val() + '"');
         });
+
+
+        $('input[type=radio][name=platformSpeed]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+
+        });
+        $('input[type=radio][name=displayAs]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+        });
+        $('input[type=radio][name=color]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+        });
+
+        $('input[type=checkbox][name=displayLabel]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+        });
+
+        $('input[type=radio][name=isosurface]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+            $('#isosurface_options_div').show()
+            $('html, body').animate({
+                scrollTop: $("#isosurface_options_div").offset().top
+            }, 2000);
+
+        });
+        $('input[type=radio][name=isosurface-options]').change(function () {
+            Jmol.script(jmolApplet0, this.value);
+            if (this.value == "isosurface delete") {
+                $('input[type=radio][name=isosurface]:checked').attr('checked', false);
+                $('input[type=radio][name=isosurface-options]:checked').attr('checked', false);
+                $('#isosurface_options_div').hide()
+            }
+
+        });
+
     </script>
 {% endblock %}
