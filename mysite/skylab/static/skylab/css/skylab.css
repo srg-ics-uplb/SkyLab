@@ -49,3 +49,7 @@
 .file-select {
 	width: 200px;
 }
+
+#platformSpeedSlider .slider-selection {
+	background: #BABABA;
+}

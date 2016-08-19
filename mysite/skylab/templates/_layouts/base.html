@@ -3,10 +3,11 @@
 <head>
     <title>{% block title %}SkyLab{% endblock title %}</title>
     {% load staticfiles %}
+    {% block head %}
     <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'font-awesome-4.6.3/css/font-awesome.min.css' %}">
-    <link rel="stylesheet" href="{% static 'bootstrap-social.css' %}">
     <link rel="stylesheet" href="{% static 'skylab/css/skylab.css' %}">
+    {% endblock %}
     {#    <link rel="stylesheet" href="{% static 'metisMenu/dist/metisMenu.min.css' %}">#}
     {#    <link rel="stylesheet" href="{% static 'sb-admin-2/css/sb-admin-2.css' %}">#}
     <!-- Timeline CSS -->
@@ -149,12 +150,13 @@
 <div class="container">
         {% block content %}{% endblock content %}
     </div>
+{% block js_imports %}
     <script src="{% static 'jquery/js/jquery-1.12.4.min.js' %}"></script>
     <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
 {#<script src="{% static 'metisMenu/dist/metisMenu.min.js' %}"></script>#}
 {#<script src="{% static 'sb-admin-2/js/sb-admin-2.js' %}"></script>#}
 <script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
-
+{% endblock %}
 {% block js %}{% endblock js %}
 </body>
 </html>

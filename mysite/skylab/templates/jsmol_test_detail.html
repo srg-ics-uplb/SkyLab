@@ -2,6 +2,11 @@
 {% load crispy_forms_tags %}
 {% load staticfiles %}
 
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
+{% endblock %}
+
 {% block content %}
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
@@ -80,22 +85,8 @@
 
                 <div class="form-row">
                     <label>Display quality:</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 1">1</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 2">2</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 3">3</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 4">4</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 5">5</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 6">6</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 7">7</label>
-                    <label class="radio-inline control-label"><input type="radio" name="platformSpeed"
-                                                                     value="set platformSpeed 8">8</label>
+                    <input id="platformSpeed" data-slider-id='platformSpeedSlider' type="range" data-slider-min="1"
+                           data-slider-max="8" data-slider-step="1" data-slider-value="8"/>
                 </div>
 
                 <div class="form-row">
@@ -154,6 +145,13 @@
 
 {% endblock %}
 
+{% block js_imports %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'bootstrap-slider/dist/bootstrap-slider.min.js' %}"></script>
+    <script type="text/javascript" src="{% static 'bootstrap-slider/dependencies/js/modernizr.js' %}"></script>
+{% endblock %}
+
 {% block js %}
     {# insert ajax-request. replace input and output files list with the received content    #}
     <script type="text/javascript">
@@ -195,7 +193,7 @@
 
 
     </script>
-    <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
+
     <script type="text/javascript">
         //based on jsmol/simple.htm, jsmol/jsmol.htm
 
@@ -293,12 +291,9 @@
 
     </script>
     <script type="text/javascript">
+        {# jquery onchange events        #}
         $('#jsmol_file_list').change(function () {
             Jmol.script(jmolApplet0, 'load "' + this.value + '"');
-        });
-
-        $('input[type=radio][name=platformSpeed]').change(function () {
-            Jmol.script(jmolApplet0, this.value);
         });
 
         $('input[type=radio][name=displayAs]').change(function () {
@@ -329,6 +324,17 @@
                 $('input[type=radio][name=isosurface-options]:checked').attr('checked', false);
                 $('#isosurface_options_div').hide();
             }
+        });
+
+        {# bootstrap-slider #}
+        var platformSpeedInput = $('#platformSpeed');
+        platformSpeedInput.slider({
+            formatter: function (value) {
+                return 'Current value: ' + value;
+            }
+        });
+        platformSpeedInput.on("slide", function (slideEvt) {
+            Jmol.script(jmolApplet0, 'set platformSpeed ' + slideEvt.value);
         });
 
     </script>
