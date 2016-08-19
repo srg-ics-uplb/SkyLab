@@ -110,8 +110,8 @@
                     <label class="radio-inline"><input type="radio" name="displayAs"
                                                        value="select protein or nucleic;cartoons only; set cartoonFancy false">Cartoon</label>
                     <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select protein or nucleic;cartoons only; set cartoonFancy true">Fancy
-                        cartoon</label>
+                                                       value="select protein or nucleic;cartoons only; set cartoonFancy true">Cartoon
+                        (fancy)</label>
                 </div>
 
                 <div class="form-row">
@@ -218,14 +218,14 @@
 
         Jmol._debugCode = (s.indexOf("debugcode") >= 0);
 
-        jmol_isReady = function (applet) {
+        var jmol_isReady = function (applet) {
             document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion);
             Jmol._getElement(applet, "appletdiv").style.border = "1px solid blue";
 
-            loadFile = 'load "' + $("#jsmol_file_list option:first").val() + '"';
+            var loadFile = 'load "' + $("#jsmol_file_list").find("option:first").val() + '"';
             Jmol.script(jmolApplet0, loadFile);
 
-            jsmol_options = $('#jsmol_options_div')
+            var jsmol_options = $('#jsmol_options_div');
             jsmol_options.show();
             $('html, body').animate({
                 scrollTop: jsmol_options.offset().top
@@ -236,14 +236,14 @@
         script = 'h2oOn=true;set animframecallback'
                 + 'set errorCallback "myCallback";'
                 + 'set defaultloadscript;'
-                + 'set zoomlarge false;'//set echo top left;echo loading XXXX...;refresh;'
+                + 'set zoomlarge false;'{# set echo top left;echo loading XXXX...;refresh;' #}
                 {#                {% with jsmol_files_absolute_uris|first as first_jsmol_uri%}#}
                 {##}
                 {#                    + 'load "{{ first_jsmol_uri }}"'#}
                 {##}
                 {#                {% endwith %}#}
-                // +'load "http://www.rcsb.org/pdb/files/XXXX.pdb";set echo top center;echo XXXX;'
-                + 'spacefill off;wireframe off;cartoons on;color structure;'
+                {#                 +'load "http://www.rcsb.org/pdb/files/XXXX.pdb";set echo top center;echo XXXX;'#}
+                + 'spacefill off;wireframe off;cartoons on;color structure;';
 
 
         var Info = {
@@ -252,9 +252,9 @@
             debug: false,
             color: "0x468499",
             addSelectionOptions: false,
-            use: "HTML5",   // JAVA HTML5 WEBGL are all options
-            j2sPath: "{% static 'jsmol/j2s' %}", // this needs to point to where the j2s directory is.
-            jarPath: "{% static 'jsmol/java' %}",// this needs to point to where the java directory is.
+            use: "HTML5", {# JAVA HTML5 WEBGL are all options #}
+            j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
+            jarPath: "{% static 'jsmol/java' %}", {# this needs to point to where the java directory is.  #}
             jarFile: "JmolAppletSigned.jar",
             isSigned: true,
             script: script,
@@ -263,8 +263,8 @@
             disableJ2SLoadMonitor: true,
             disableInitialConsole: true,
             allowJavaScript: true
-            //defaultModel: "$dopamine",
-            //console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"
+            {#            defaultModel: "$dopamine",#}
+            {#            console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"#}
         };
 
         $(document).ready(function () {
@@ -272,24 +272,24 @@
 
         });
 
-        // these are conveniences that mimic behavior of Jmol.js
+        {# these are conveniences that mimic behavior of Jmol.js#}
 
-        function jmolCheckbox(script1, script0, text, ischecked) {
-            Jmol.jmolCheckbox(jmolApplet0, script1, script0, text, ischecked)
-        }
-        function jmolButton(script, text) {
-            Jmol.jmolButton(jmolApplet0, script, text)
-        }
-        function jmolHtml(s) {
-            document.write(s)
-        }
-        ;
-        function jmolBr() {
-            jmolHtml("<br>")
-        }
-        function jmolMenu(a) {
-            Jmol.jmolMenu(jmolApplet0, a)
-        }
+        {#        function jmolCheckbox(script1, script0, text, ischecked) {#}
+        {#            Jmol.jmolCheckbox(jmolApplet0, script1, script0, text, ischecked)#}
+        {#        }#}
+        {#        function jmolButton(script, text) {#}
+        {#            Jmol.jmolButton(jmolApplet0, script, text)#}
+        {#        }#}
+        {#        function jmolHtml(s) {#}
+        {#            document.write(s)#}
+        {#        }#}
+        {#        #}
+        {#        function jmolBr() {#}
+        {#            jmolHtml("<br>")#}
+        {#        }#}
+        {#        function jmolMenu(a) {#}
+        {#            Jmol.jmolMenu(jmolApplet0, a)#}
+        {#        }#}
 
     </script>
     <script type="text/javascript">
@@ -299,11 +299,12 @@
 
         $('input[type=radio][name=platformSpeed]').change(function () {
             Jmol.script(jmolApplet0, this.value);
-
         });
+
         $('input[type=radio][name=displayAs]').change(function () {
             Jmol.script(jmolApplet0, this.value);
         });
+
         $('input[type=radio][name=color]').change(function () {
             Jmol.script(jmolApplet0, this.value);
         });
@@ -314,21 +315,20 @@
 
         $('input[type=radio][name=isosurface]').change(function () {
             Jmol.script(jmolApplet0, this.value);
-            isosurface_options = $('#isosurface_options_div')
-            isosurface_options.show()
+            var isosurface_options = $('#isosurface_options_div');
+            isosurface_options.show();
             $('html, body').animate({
                 scrollTop: isosurface_options.offset().top
             }, 2000);
-
         });
+
         $('input[type=radio][name=isosurface-options]').change(function () {
             Jmol.script(jmolApplet0, this.value);
             if (this.value == "isosurface delete") {
                 $('input[type=radio][name=isosurface]:checked').attr('checked', false);
                 $('input[type=radio][name=isosurface-options]:checked').attr('checked', false);
-                $('#isosurface_options_div').hide()
+                $('#isosurface_options_div').hide();
             }
-
         });
 
     </script>

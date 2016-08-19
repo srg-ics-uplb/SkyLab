@@ -32,8 +32,6 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    # 'registration',
-    # 'corsheaders',
     'django_ajax',
     'allauth',
     'allauth.account',
@@ -51,7 +49,6 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE_CLASSES = [
-    #'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -196,5 +193,4 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
 
-CORS_ORIGIN_ALLOW_ALL = True
 JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
