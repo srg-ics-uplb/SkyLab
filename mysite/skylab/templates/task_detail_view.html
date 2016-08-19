@@ -2,6 +2,8 @@
 {% load crispy_forms_tags %}
 {% load staticfiles %}
 
+
+{% block title %}{{ block.super }}Task {{ object.id }}{% endblock %}
 {% block head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
@@ -10,7 +12,7 @@
 {% block content %}
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
-            <h1>Tool Activity {{ object.id }}</h1>
+            <h1>Task {{ object.id }}</h1>
             <p id="task-status">{{ object.status }}</p>
             {#            <div id="progress-bar-container">#}
             {# progress bars #}
@@ -40,29 +42,29 @@
                 </div>
             {% endif %}
             {#            </div>#}
-            <p>Tool: {{ object.tool_name }}</p>
-            <p>MPI Cluster: {{ object.mpi_cluster }}</p>
-            <p>Command: {{ object.exec_string }}</p>
+            {#            <p>Tool: {{ object.tool_name }}</p>#}
+            {#            <p>MPI Cluster: {{ object.mpi_cluster }}</p>#}
+            {#            <p>Command: {{ object.exec_string }}</p>#}
 
 
-            <p>Input Files: </p>
-            <ul id="task-input-files-list">
+            <strong>Input Files: </strong>
+
+            <div id="task-input-files-list" class="list-group">
                 {% for file in object.input_files.all %}
-                    <li>
-                        <a href="{% url "skylab_file_url" task_id=object.id type="input" filename=file.filename %}">{{ file.filename }}</a>
-                        {#                        <a href="/skylab/files/task/{{ object.id }}/input/{{ file.filename }}">{{ file.filename }}</a>#}
-                    </li>
+                    <a class="list-group-item"
+                       href="{% url "skylab_file_url" task_id=object.id type="input" filename=file.filename %}">{{ file.filename }}</a>
                 {% endfor %}
-            </ul>
-            <p>Output Files: </p>
-            <ul id="task-output-files-list">
+            </div>
+
+            <strong>Output Files: </strong>
+            <div id="task-output-files-list" class="list-group">
                 {#                {% for file in object.output_files.all %}#}
                 {#                    <li>#}
                 {#                        <a href="{% url "skylab_file_url" task_id=object.id type="output" filename=file.filename %}">{{ file.filename }}</a>#}
                         {#                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>#}
                 {#                    </li>#}
                 {#                {% endfor %}#}
-            </ul>
+            </div>
             {#Display logs#}
             {#            <p>Logs:</p>#}
             {#            <ul id="task-logs-list">#}
@@ -217,7 +219,7 @@
         Jmol._debugCode = (s.indexOf("debugcode") >= 0);
 
         var jmol_isReady = function (applet) {
-            document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion);
+            {#            document.title = (applet._id + " - Jmol " + Jmol.___JmolVersion);#}
             Jmol._getElement(applet, "appletdiv").style.border = "1px solid blue";
 
             var loadFile = 'load "' + $("#jsmol_file_list").find("option:first").val() + '"';
@@ -245,7 +247,7 @@
 
 
         var Info = {
-            width: 580,
+            width: 550,
             height: 450,
             debug: false,
             color: "0x468499",

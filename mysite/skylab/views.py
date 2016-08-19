@@ -116,31 +116,10 @@ class CreateMPIView(LoginRequiredMixin, CreateView):
 
 class ToolActivityDetail(LoginRequiredMixin, DetailView):
 	model = ToolActivity
-	template_name = 'jsmol_test_detail.html'
+	template_name = 'task_detail_view.html'
 
 	def get_context_data(self, **kwargs):
 		context = super(ToolActivityDetail, self).get_context_data(**kwargs)
-		# print context.keys()
-
-		# jsmol_files_absolute_uris = []
-		# print context["object"].id
-		#
-		# output_files = context["object"].output_files.filter(render_with_jsmol=True)
-		# for file in output_files:
-		# 	jsmol_files_absolute_uris.append(
-		# 		{"uri": self.request.build_absolute_uri(reverse('jsmol_file_url',
-		# 														kwargs={"task_id": context["object"].id,
-		# 																"type": "output", "filename": file.filename})),
-		# 		 "filename": file.filename}
-		# 	)
-		#
-		# input_files = context["object"].input_files.filter(render_with_jsmol=True)
-		# for file in input_files:
-		# 	jsmol_files_absolute_uris.append(
-		# 		{"uri" : self.request.build_absolute_uri(reverse('jsmol_file_url', kwargs={"task_id": context["object"].id, "type": "input", "filename": file.filename})),
-		# 		 "filename" : file.filename}
-		# 	)
-
 		context["jsmol_files_absolute_uris"] = context["object"].get_dict_jsmol_files_uris(self.request)
 		context["jsmol_server_url"] = settings.JSMOL_SERVER_URL
 		return context
@@ -152,29 +131,31 @@ class ToolActivityDetail(LoginRequiredMixin, DetailView):
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
-
 @login_required
 @ajax
 def task_fragments_view(request, pk=None):
-	print pk
 	if pk is not None:
 		task = ToolActivity.objects.filter(pk=pk, user=request.user.id)[0]
-		print task.id
-		print "Status code", task.latest_log.status_code
+		# print task.id
+		# print "Status code", task.latest_log.status_code
 
 		task_output_file_list = ''
 		for item in task.get_output_files_urls():
-			task_output_file_list += '<li><a href="%s">%s</a>' % (item.get("url"), item.get("filename"))
+			task_output_file_list += '<a class="list-group-item" href="%s">%s</a>' % (
+			item.get("url"), item.get("filename"))
 
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<p id="task-status" class="text-info">' + task.latest_log.status_msg + '</p>'
+			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
+																  task.mpi_cluster) + '</span><span id="task-status" class="text-info pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code == 200:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<p id="task-status" class="text-success">' + task.latest_log.status_msg + '</p>'
+			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
+																  task.mpi_cluster) + '</span><span id="task-status" class="text-success pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code >= 400:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<p id="task-status" class="text-danger">' + task.latest_log.status_msg + '</p>'
+			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
+																  task.mpi_cluster) + '</span><span id="task-status" class="text-danger pull-right">' + task.latest_log.status_msg + '</span>'
 		# progress_bar
 
 		data = {
