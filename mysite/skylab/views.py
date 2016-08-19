@@ -161,6 +161,11 @@ def task_fragments_view(request, pk=None):
 		task = ToolActivity.objects.filter(pk=pk, user=request.user.id)[0]
 		print task.id
 		print "Status code", task.latest_log.status_code
+
+		task_output_file_list = ''
+		for item in task.get_output_files_urls():
+			task_output_file_list += '<li><a href="%s">%s</a>' % (item.get("url"), item.get("filename"))
+
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
 			status_msg = '<p id="task-status" class="text-info">' + task.latest_log.status_msg + '</p>'
@@ -174,7 +179,7 @@ def task_fragments_view(request, pk=None):
 
 		data = {
 			'inner-fragments': {
-				'#task-output-files-list': '<li>replace element with this content1</li>',
+				'#task-output-files-list': task_output_file_list,
 			},
 			'fragments': {
 				'#progress': progress_bar,

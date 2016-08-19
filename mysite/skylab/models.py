@@ -114,6 +114,16 @@ class ToolActivity(models.Model):
     def jsmol_input_files(self):
         return self.input_files.filter(render_with_jsmol=True)
 
+    def get_output_files_urls(self):
+        output_files_urls_dict = []
+        for file in self.output_files.all():
+            output_files_urls_dict.append({'url': reverse('skylab_file_url',
+                                                          kwargs={'task_id': self.id, 'type': 'output',
+                                                                  'filename': file.filename}),
+                                           'filename': file.filename})
+
+        return output_files_urls_dict
+
     def get_dict_jsmol_files_uris(self, request):
         jsmol_files_absolute_uris = []
         output_files = self.output_files.filter(render_with_jsmol=True)

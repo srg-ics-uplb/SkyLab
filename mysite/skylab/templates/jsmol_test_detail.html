@@ -56,12 +56,12 @@
             </ul>
             <p>Output Files: </p>
             <ul id="task-output-files-list">
-                {% for file in object.output_files.all %}
-                    <li>
-                        <a href="{% url "skylab_file_url" task_id=object.id type="output" filename=file.filename %}">{{ file.filename }}</a>
+                {#                {% for file in object.output_files.all %}#}
+                {#                    <li>#}
+                {#                        <a href="{% url "skylab_file_url" task_id=object.id type="output" filename=file.filename %}">{{ file.filename }}</a>#}
                         {#                        <a href="/skylab/files/task/{ object.id }}/output/{{ file.filename }}">{{ file.filename }}</a>#}
-                    </li>
-                {% endfor %}
+                {#                    </li>#}
+                {#                {% endfor %}#}
             </ul>
             {#Display logs#}
             {#            <p>Logs:</p>#}
