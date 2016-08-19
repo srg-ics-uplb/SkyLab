@@ -330,6 +330,32 @@
         var platformSpeedInput = $('#platformSpeed');
         platformSpeedInput.slider({
             formatter: function (value) {
+                switch (value) {
+                    case 1:
+                        return 'wireframe only';
+                        break;
+                    case 2:
+                        return 'ellipsoids as dots';
+                        break;
+                    case 3:
+                        return 'geosurfaces as dots';
+                        break;
+                    case 4:
+                        return 'cartoons as trace';
+                        break;
+                    case 5:
+                        return 'surfaces dotted';
+                        break;
+                    case 6:
+                        return 'no translucency';
+                        break;
+                    case 7:
+                        return 'no antialiasing';
+                        break;
+                    case 8:
+                        return 'all features';
+                        break;
+                }
                 return 'Current value: ' + value;
             }
         });
