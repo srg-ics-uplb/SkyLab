@@ -53,3 +53,7 @@
 #platformSpeedSlider .slider-selection {
 	background: #BABABA;
 }
+
+.list-group > a:hover, .list-group > a:focus {
+	color: #0645AD;
+}
