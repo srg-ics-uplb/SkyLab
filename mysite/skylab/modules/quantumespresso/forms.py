@@ -20,7 +20,7 @@ class SelectMPIFilesForm(forms.Form):
         # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_qe = Q(supported_tools="quantumespresso")
+        supports_qe = Q(supported_tools="quantum espresso")
         # is_ready = Q(status=1)
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_qe).exclude(status=4)  # exclude unusable clusters
