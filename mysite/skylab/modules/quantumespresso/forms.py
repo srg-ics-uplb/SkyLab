@@ -12,7 +12,7 @@ from skylab.modules.base_tool import MPIModelChoiceField
 
 class SelectMPIFilesForm(forms.Form):
     param_pseudopotentials = forms.CharField(label="Pseudopotentials", required=False,
-                                             help_text="Name of pseudopotentials needed separated by comma. (xx.UPF, yy.UPF)")
+                                             help_text="Name of pseudopotentials needed separated by commas. (xx.UPF, yy.UPF)")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -20,7 +20,7 @@ class SelectMPIFilesForm(forms.Form):
         # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_qe = Q(supported_tools="quantum espresso")
+        supports_qe = Q(supported_tools="quantumespresso")
         # is_ready = Q(status=1)
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_qe).exclude(status=4)  # exclude unusable clusters
@@ -38,12 +38,12 @@ class SelectMPIFilesForm(forms.Form):
 
 
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                Field('mpi_cluster'),
                 css_class="col-sm-12"
             ),
 
             Div(
-                Div('param_pseudopotentials', css_class='col-xs-12'),
+                Div('param_pseudopotentials'),
                 css_class='row-fluid col-sm-12'
             )
             ,
@@ -64,7 +64,7 @@ class InputParameterForm(forms.Form):
         ('pw.x', 'pw.x'),
     )
     executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
-    input_file = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
+    input_file = forms.FileField(label="Input file", validators=[ray_file_extension_validator], required=False)
 
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)
@@ -78,8 +78,8 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('executable', css_class='parameter'), css_class='col-xs-2'),
-                Div(Field('input_file'), css_class='col-xs-3 col-xs-offset-1'),
+                Div(Field('executable', css_class='parameter'), css_class='col-xs-5'),
+                Div(Field('input_file'), css_class='col-xs-5 col-xs-offset-1'),
 
                 css_class='row-fluid col-sm-12 form-container'
             ),

@@ -65,7 +65,6 @@
                 } else {
                     // Otherwise, just insert the remove button as the
                     // last child element of the form's container:
-
                     row.append('<a class="' + options.deleteCssClass + '" href="javascript:void(0)">' + options.deleteText + '</a>');
                 }
                 // Check if we're under the minimum number of forms - not to display delete link at rendering
@@ -186,16 +185,14 @@
                 addButton = buttonRow.find('a');
             } else {
                 // Otherwise, insert it immediately after the last form:
-                $$.filter(':last').after('<div class="col-sm-12"><button type="button" class="' + options.addCssClass + ' btn btn-success">' + options.addText + '</button></div>');
-
-                // $$.filter(':last').after('<a class="' + options.addCssClass + '" href="javascript:void(0)">' + options.addText + '</a>');
+                $$.filter(':last').after('<a class="' + options.addCssClass + '" href="javascript:void(0)">' + options.addText + '</a>');
                 addButton = $$.filter(':last').next();
                 if (hideAddButton) addButton.hide();
             }
             addButton.click(function () {
                 var formCount = parseInt(totalForms.val()),
                     row = options.formTemplate.clone(true).removeClass('formset-custom-template'),
-                    buttonRow = $($(this).parents('tr.' + options.formCssClass + '-add').get(0) || this)
+                    buttonRow = $($(this).parents('tr.' + options.formCssClass + '-add').get(0) || this);
                 delCssSelector = $.trim(options.deleteCssClass).replace(/\s+/g, '.');
                 applyExtraClasses(row, formCount);
                 row.insertBefore(buttonRow).show();

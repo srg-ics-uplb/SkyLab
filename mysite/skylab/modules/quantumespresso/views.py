@@ -5,12 +5,13 @@ from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 import json
 from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 
-from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
+from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 
 
+
 class QuantumEspressoView(LoginRequiredMixin, TemplateView):
-    template_name = "modules/ray/use_ray.html"
+    template_name = "modules/quantum espresso/use_quantum_espresso.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
@@ -19,7 +20,7 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
         context = super(QuantumEspressoView, self).get_context_data(**kwargs)
         context['select_mpi_form'] = SelectMPIFilesForm()
         context['input_formset'] = self.input_forms
-        context['other_parameter_form'] = OtherParameterForm()
+
         context['user'] = self.request.user
         return context
 
