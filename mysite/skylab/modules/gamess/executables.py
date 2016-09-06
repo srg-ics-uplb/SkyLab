@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -82,6 +83,8 @@ class GamessExecutable(P2CToolGeneric):
                 local_file.close()
             # todo: insert code for sending file
             sftp.remove(remote_filepath)  # delete after transfer
+
+        sftp.rmdir("/mirror/tool_activity_%d" % self.id)
         sftp.close()
 
         task = ToolActivity.objects.get(pk=self.id)
@@ -109,13 +112,13 @@ class GamessExecutable(P2CToolGeneric):
 
         export_path = "/mirror/gamess"
 
-        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
+        exec_string = json.loads(ToolActivity.objects.get(pk=self.id).command_list)[0]
 
         ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing tool script", status_code=152)
 
         self.print_msg("Running %s" % exec_string)
-        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
-                                    cwd=self.working_dir)
+        exec_shell = self.shell.run(["sh", "-c", "echo $PATH; %s;" % (export_path, exec_string)],
+                                    cwd=self.working_dir, update_env={"PATH": "$PATH:%s" % export_path})
         p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
         m = p.search(exec_shell.output)
         print (exec_shell.output)

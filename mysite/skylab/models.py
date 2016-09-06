@@ -60,7 +60,7 @@ class SkyLabFile(models.Model):
 
 @python_2_unicode_compatible
 class ToolActivity(models.Model):
-    exec_string = models.CharField(max_length=200)
+    command_list = models.CharField(max_length=500)
     tool_name = models.CharField(max_length=50)
     executable_name = models.CharField(max_length=50)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

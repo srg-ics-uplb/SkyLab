@@ -37,39 +37,21 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             # -n cluster_size
             exec_string = "mpiexec -n %s " % cluster_size
 
-            # -bynode
-            if select_mpi_form.cleaned_data['param_bynode']:
-                exec_string += "-bynode "
-
             tool_activity = ToolActivity.objects.create(
-                mpi_cluster=cluster_name, tool_name="ray", executable_name="ray", user=self.request.user,
+                mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
+                user=self.request.user,
                 exec_string=exec_string
             )
 
             exec_string += "Ray -o tool_activity_%d/output " % tool_activity.id
 
-            # k-mer length
-
-
-            # -mini-ranks-per-rank
-            if select_mpi_form.cleaned_data.get('param_mini_ranks'):
-                exec_string += "-mini-ranks-per-rank %s " % select_mpi_form.cleaned_data["param_mini_ranks"]
-
             for form in input_formset:
-                parameter = form.cleaned_data.get('parameter')
-                if parameter:  # ignore blank parameter value
+                executable = form.cleaned_data.get('executable')
+                if executable:  # ignore blank parameter value
 
-                    input_file1 = form.cleaned_data['input_file1']
-                    filepath1 = create_input_skylab_file(tool_activity, 'input', input_file1)
+                    input_file = form.cleaned_data['input_file']
+                    filepath1 = create_input_skylab_file(tool_activity, 'input', input_file)
 
-                if parameter == "-p":
-                    input_file2 = form.cleaned_data['input_file2']
-                    filepath2 = create_input_skylab_file(tool_activity, 'input', input_file2)
-
-                    exec_string += "%s %s %s " % (parameter, filepath1, filepath2)
-
-                elif parameter == "-s" or parameter == "-i":
-                    exec_string += "%s %s " % (parameter, filepath1)
 
 
             tool_activity.exec_string = exec_string

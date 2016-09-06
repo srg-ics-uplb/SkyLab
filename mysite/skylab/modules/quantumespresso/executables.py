@@ -1,6 +1,7 @@
 import os.path
 import re
 import shutil
+import json
 
 from django.conf import settings
 
@@ -10,17 +11,17 @@ from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class RayExecutable(P2CToolGeneric):
+class QuantumEspressoExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
-        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(RayExecutable, self).__init__(self, **kwargs)
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
+        super(QuantumEspressoExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
-        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Fetching input files", status_code=151)
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
@@ -30,36 +31,29 @@ class RayExecutable(P2CToolGeneric):
 
     # raise not implemented error
     def print_msg(self, msg):
-        print ("Ray (Tool Activity %d) : %s" % (self.id, msg))
+        print ("Quantum Espresso (Tool Activity %d) : %s" % (self.id, msg))
 
     def run_tool(self, **kwargs):
         self.handle_input_files()
 
+        # TODO: change export path
         export_path = "/mirror/Ray-2.3.1/build"
 
-        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+        command_list = json.loads(ToolActivity.objects.get(pk=self.id).command_list)
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing task command", status_code=152)
 
-        # todo: download ontologyterms.txt
-        # if -gene-ontology is found
-
-        p = re.compile("-gene-ontology")
-        m = p.search(exec_string)
-        if m is not None:
-            self.print_msg(
-                "Downloading OntologyTerms from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo")
-            self.shell.run(["wget", "-O", "OntologyTerms.txt",
-                            "http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo"],
-                           cwd=self.working_dir + "/input")
-
-        self.print_msg("Running %s" % exec_string)
+        # self.print_msg("Running %s" % command_list)
 
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
+        for command in command_list:
+            # TODO: use .format
+            exec_shell = self.shell.run(["sh", ""])
+        # catch spur.results.RunProcessError
         # cwd=self.working_dir)
         print (exec_shell.output)
 
         self.print_msg("Finished command execution")
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Tool execution successful", status_code=153)
 
         self.handle_output_files()
 

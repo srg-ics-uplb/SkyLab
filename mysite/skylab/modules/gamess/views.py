@@ -28,10 +28,10 @@ class GamessView(LoginRequiredMixin, FormView):
         print cluster
         filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
         exec_string = "rungms %s 01 1 2>&1 | tee %s.log" % (filename, filename)
-        # exec_string = "rungms %s 01" % (filename)
+        # command_list = "rungms %s 01" % (filename)
         tool_activity = ToolActivity.objects.create(
             mpi_cluster=cluster, tool_name="gamess", executable_name="gamess", user=self.request.user,
-            exec_string=exec_string
+            command_list=json.dumps([exec_string])
         )
 
         tool_activity.change_status(100, "Task initialized")

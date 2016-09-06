@@ -171,7 +171,7 @@ class GridExecutable(P2CToolGeneric):
             remote_filepath = os.path.join(remote_path, remote_file)
             if remote_file in input_filenames:
                 sftp.remove(remote_filepath)  # delete after transfer
-        sftp.close()
+
 
         self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/tool_activity_%d/" % self.id)
         self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/tool_activity_%d/" % self.id)
@@ -182,6 +182,10 @@ class GridExecutable(P2CToolGeneric):
                 local_file.close()
 
             remote_file.close()
+
+        # delete tool_activity directory
+        sftp.rmdir("/mirror/tool_activity_%d" % self.id)
+        sftp.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
