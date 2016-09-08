@@ -1,4 +1,5 @@
 import re
+import json
 
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
@@ -25,6 +26,8 @@ class SelectMPIFilesForm(forms.Form):
             p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
             if not p:
                 raise forms.ValidationError("Invalid UPF file : %s" % upf_file)
+
+        return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')

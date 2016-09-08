@@ -24,7 +24,8 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Fetching input files", status_code=151)
+        tool_activity = ToolActivity.objects.get(pk=self.id)
+        tool_activity.change_status(status_msg="Fetching input files", status_code=151)
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
@@ -33,7 +34,11 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             sftp.close()
 
         self.shell.run(["sh", "-c", "mkdir pseudo;"], cwd=self.working_dir)
-    # TODO: create pseudo folder. download pseudopotentials
+        pseudopotentials = json.loads(tool_activity.additional_info).get("pseudopotentials", None)
+        if pseudopotentials:
+            for pseudo_file in pseudopotentials:
+                pass
+                # TODO: download pseudopotentials
 
     # raise not implemented error
     def print_msg(self, msg):

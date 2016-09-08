@@ -51,6 +51,7 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             tool_activity = ToolActivity.objects.create(
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
+                additional_info=select_mpi_form.cleaned_data['param_pseudopotentials']
                 # command_list=json.dumps(command_list)
             )
 
@@ -73,8 +74,6 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
                     else:
                         command_list.append("%s %s %s < %s > %s.out" % (
                         para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
-
-            # check pseudopotentials
 
             tool_activity.command_list = json.dumps(command_list)
             tool_activity.save()
