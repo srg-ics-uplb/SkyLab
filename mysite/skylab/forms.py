@@ -93,7 +93,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 
 # class ImpiForm(forms.Form):
 # 	mpi_cluster_size = forms.IntegerField(max_value=3, min_value=1)
-# 	# input_file = forms.ImageField()
+# 	# param_input_file = forms.ImageField()
 # 	auto_destroy = forms.BooleanField()
 #
 # 	def __init__(self, *args, **kwargs):

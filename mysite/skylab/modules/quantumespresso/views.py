@@ -38,7 +38,7 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             cluster_size = MPI_Cluster.objects.get(cluster_name=cluster_name).cluster_size
 
             # -n cluster_size
-            command_list = []
+
 
             # based on intial environment variables config on quantum espresso
             para_prefix = "mpiexec -n %s " % cluster_size
@@ -51,15 +51,16 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             tool_activity = ToolActivity.objects.create(
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
-                command_list=json.dumps(command_list)
+                # command_list=json.dumps(command_list)
             )
 
-
+            # build command list
+            command_list = []
             for form in input_formset:
-                executable = form.cleaned_data.get('executable')
+                executable = form.cleaned_data.get('param_executable')
                 if executable:  # ignore blank parameter value
 
-                    input_file = form.cleaned_data['input_file']
+                    input_file = form.cleaned_data["param_input_file"]
                     filepath1 = create_input_skylab_file(tool_activity, 'input', input_file)
 
                     # neb.x -inp filename.in
@@ -73,6 +74,8 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
                         command_list.append("%s %s %s < %s > %s.out" % (
                         para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
 
+            # check pseudopotentials
+
             tool_activity.command_list = json.dumps(command_list)
             tool_activity.save()
 
@@ -82,7 +85,7 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             #     "actions": "use_tool",
             #     "activity": tool_activity.id,
             #     "tool": tool_activity.tool_name,
-            #     "executable": tool_activity.executable_name,
+            #     "param_executable": tool_activity.executable_name,
             # }
             # message = json.dumps(data)
             # print message

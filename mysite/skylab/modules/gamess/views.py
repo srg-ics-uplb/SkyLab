@@ -49,7 +49,7 @@ class GamessView(LoginRequiredMixin, FormView):
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "gamess",
+            "param_executable": "gamess",
         }
         message = json.dumps(data)
         print message

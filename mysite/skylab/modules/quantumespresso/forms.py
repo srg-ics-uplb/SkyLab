@@ -1,18 +1,30 @@
+import re
+
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
 from django import forms
 from django.db.models import Q
-from django.core.validators import MinValueValidator, MaxValueValidator
-from multiupload.fields import MultiFileField
-from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
-    multi_graph_files_validator, multi_ray_files_validator
+from django.utils.text import get_valid_filename
+
+from validators import in_file_extension_validator
 from skylab.models import MPI_Cluster
 from skylab.modules.base_tool import MPIModelChoiceField
 
 
 class SelectMPIFilesForm(forms.Form):
-    param_pseudopotentials = forms.CharField(label="Pseudopotentials", required=False,
-                                             help_text="Name of pseudopotentials needed separated by commas. (xx.UPF, yy.UPF)")
+    param_pseudopotentials = forms.CharField(label="Pseudopotentials", required=False, validators=[],
+                                             help_text="UPF files separated by spaces. (xx.UPF yy.UPF)")
+
+    def clean_param_pseudopotentials(self):
+        pseudopotentials = self.cleaned_data['param_pseudopotentials']
+        # atomic_symbol.description.UPF
+        # "^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}([a-zA-Z0-9]+(_[a-zA-Z0-9]+)?$"
+
+        # description = [field1-][field2-]field3-[field4-]field5[_field6]
+        for upf_file in pseudopotentials.split(' '):
+            p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
+            if not p:
+                raise forms.ValidationError("Invalid UPF file : %s" % upf_file)
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -63,8 +75,8 @@ class InputParameterForm(forms.Form):
         ('', '---------'),
         ('pw.x', 'pw.x'),
     )
-    executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
-    input_file = forms.FileField(label="Input file", validators=[ray_file_extension_validator], required=False)
+    param_executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
+    param_input_file = forms.FileField(label="Input file", validators=[in_file_extension_validator], required=False)
 
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)
@@ -78,8 +90,8 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('executable', css_class='parameter'), css_class='col-xs-5'),
-                Div(Field('input_file'), css_class='col-xs-5 col-xs-offset-1'),
+                Div(Field('param_executable', css_class='parameter'), css_class='col-xs-5'),
+                Div(Field('param_input_file'), css_class='col-xs-5 col-xs-offset-1'),
 
                 css_class='row-fluid col-sm-12 form-container'
             ),
@@ -87,7 +99,7 @@ class InputParameterForm(forms.Form):
 
     def clean(self):
         if self.cleaned_data:
-            executable = self.cleaned_data["executable"]
+            executable = self.cleaned_data["param_executable"]
             input_file1 = self.cleaned_data.get('input_file1')
 
             # print parameter, input_file1

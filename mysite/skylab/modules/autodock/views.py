@@ -71,7 +71,7 @@ class AutodockView(LoginRequiredMixin, FormView):
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "autodock",
+            "param_executable": "autodock",
         }
         message = json.dumps(data)
         print message
@@ -152,7 +152,7 @@ class AutogridView(LoginRequiredMixin, FormView):
                 "actions": "use_tool",
                 "activity": tool_activity.id,
                 "tool": tool_activity.tool_name,
-                "executable": "autogrid",
+                "param_executable": "autogrid",
             }
             message = json.dumps(data)
             print message

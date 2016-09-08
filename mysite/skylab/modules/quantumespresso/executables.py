@@ -16,6 +16,9 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
+        self.pseudo_dir = self.working_dir + "/pseudo"
+        self.tmp_dir = self.working_dir + "/tempdir"
+
         ToolActivity.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
         super(QuantumEspressoExecutable, self).__init__(self, **kwargs)
 
@@ -29,6 +32,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
+        self.shell.run(["sh", "-c", "mkdir pseudo;"], cwd=self.working_dir)
     # TODO: create pseudo folder. download pseudopotentials
 
     # raise not implemented error

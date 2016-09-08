@@ -110,7 +110,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 "actions": "use_tool",
                 "activity": tool_activity.id,
                 "tool": tool_activity.tool_name,
-                "executable": "vina",
+                "param_executable": "vina",
             }
             message = json.dumps(data)
             print message
@@ -164,7 +164,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "vina split",
+            "param_executable": "vina split",
         }
         message = json.dumps(data)
         print message

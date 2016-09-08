@@ -51,12 +51,12 @@ class DockFormView(LoginRequiredMixin, FormView):
         tool_activity.exec_string = exec_string
         tool_activity.save()
 
-        # todo: access toolname and executable name from database
+        # todo: access toolname and param_executable name from database
         data = {
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "dock6",
+            "param_executable": "dock6",
         }
         message = json.dumps(data)
         print message
@@ -111,12 +111,12 @@ class GridFormView(LoginRequiredMixin, FormView):
         tool_activity.exec_string = exec_string
         tool_activity.save()
 
-        # todo: access toolname and executable name from database
+        # todo: access toolname and param_executable name from database
         data = {
             "actions": "use_tool",
             "activity": tool_activity.id,
             "tool": tool_activity.tool_name,
-            "executable": "grid",
+            "param_executable": "grid",
         }
         message = json.dumps(data)
         print message
