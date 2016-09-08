@@ -29,6 +29,8 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
+    # TODO: create pseudo folder. download pseudopotentials
+
     # raise not implemented error
     def print_msg(self, msg):
         print ("Quantum Espresso (Tool Activity %d) : %s" % (self.id, msg))
@@ -36,8 +38,14 @@ class QuantumEspressoExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
 
+        # TODO: create temp folder, create output folder
+        # TMP_DIR = "tempdir", PSEUDO_DIR = "/pseudo"
+
         # TODO: change export path
         export_path = "/mirror/Ray-2.3.1/build"
+
+        # TODO set env_vars
+        env_vars = {"PATH": "$PATH:%s" % export_path, "TMP_DIR": "/tempdir", "PSEUDO_DIR": "/pseudo"}
 
         command_list = json.loads(ToolActivity.objects.get(pk=self.id).command_list)
         ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing task command", status_code=152)
@@ -47,6 +55,9 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
         for command in command_list:
             # TODO: use .format
+            # need to set TMP_DIR, PSEUDO_DIR
+
+
             exec_shell = self.shell.run(["sh", ""])
         # catch spur.results.RunProcessError
         # cwd=self.working_dir)
@@ -87,6 +98,11 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
+
+        error_flag = kwargs.get("error", False)
+        if error_flag:
+            pass
+            # TODO: delete tool_activity_folder
 
         ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
