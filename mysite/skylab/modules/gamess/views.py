@@ -1,13 +1,16 @@
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
+
 import json
 import os
 
-import pika
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster, Logs
-from skylab.modules.gamess.forms import GamessForm
+from skylab.models import ToolActivity, SkyLabFile, MPI_Cluster
 from skylab.modules.base_tool import send_mpi_message
-from django.contrib.auth.mixins import LoginRequiredMixin
+from skylab.modules.gamess.forms import GamessForm
 
 
 class GamessView(LoginRequiredMixin, FormView):
@@ -25,7 +28,7 @@ class GamessView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
-        print cluster
+        print(cluster)
         filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
         exec_string = "rungms %s 01 1 2>&1 | tee %s.log" % (filename, filename)
         # command_list = "rungms %s 01" % (filename)
@@ -43,7 +46,7 @@ class GamessView(LoginRequiredMixin, FormView):
                                              filename=self.request.FILES['inp_file'].name)
         tool_activity.input_files.add(new_file)
 
-        print self.request.FILES['inp_file'].name
+        print(self.request.FILES['inp_file'].name)
 
         data = {
             "actions": "use_tool",
@@ -52,7 +55,7 @@ class GamessView(LoginRequiredMixin, FormView):
             "param_executable": "gamess",
         }
         message = json.dumps(data)
-        print message
+        print(message)
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
 

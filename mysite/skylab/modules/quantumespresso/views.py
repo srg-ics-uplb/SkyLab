@@ -1,16 +1,16 @@
+from __future__ import print_function
+
 import json
 import os.path
 
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
 
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
-
+from skylab.models import MPI_Cluster, ToolActivity
+from skylab.modules.base_tool import create_input_skylab_file
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
-from django.contrib.auth.mixins import LoginRequiredMixin
-
 
 
 class QuantumEspressoView(LoginRequiredMixin, TemplateView):
@@ -34,65 +34,80 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
         if select_mpi_form.is_valid() and input_formset.is_valid():
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
-            cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
+            # cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
+            cluster_name = MPI_Cluster.objects.get(pk=31)
             cluster_size = MPI_Cluster.objects.get(cluster_name=cluster_name).cluster_size
 
             # -n cluster_size
 
 
             # based on intial environment variables config on quantum espresso
-            para_prefix = "mpiexec -n %s " % cluster_size
+            para_prefix = 'mpiexec -n {0} '.format(cluster_size)
             para_postfix = "-nk 1 -nd 1 -nb 1 -nt 1 "
 
+            # copied from espresso's default env var value
             para_image_prefix = "mpiexec -n 4"
-            param_image_postfix = "-ni 2 %s" % para_postfix
+            param_image_postfix = '-ni 2 {0}'.format(para_postfix)
 
 
             tool_activity = ToolActivity.objects.create(
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
-                additional_info=select_mpi_form.cleaned_data['param_pseudopotentials']
+                # additional_info=
                 # command_list=json.dumps(command_list)
             )
 
             # build command list
             command_list = []
+            additional_info = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
+            scf_output_files = []
             for form in input_formset:
                 executable = form.cleaned_data.get('param_executable')
                 if executable:  # ignore blank parameter value
 
                     input_file = form.cleaned_data["param_input_file"]
-                    filepath1 = create_input_skylab_file(tool_activity, 'input', input_file)
+                    filepath = create_input_skylab_file(tool_activity, 'input', input_file)
+
+                    if executable == "pw.x":
+                        pass
+
+                    # TODO: parse input file and check if calculation is not found or calculation = 'scf'
+                    # if True:  scf_output_files.append(os.path.splitext(input_file.name)[0])
+
 
                     # neb.x -inp filename.in
                     # ph.x can be run using images #not supported
 
                     if executable == "neb.x":
                         command_list.append(
-                            "%s %s %s -inp %s > %s.out" % (para_prefix, executable, para_postfix, input_file.name,
-                                                           os.path.splitext(input_file.name)[0]))
+                            '{0} {1} {2} -inp input/{3} > output/{4}.out'.format(para_prefix, executable, para_postfix,
+                                                                                 input_file.name,
+                                                                                 os.path.splitext(input_file.name)[0]))
+
                     else:
-                        command_list.append("%s %s %s < %s > %s.out" % (
+                        command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
                         para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
 
+            additional_info['scf_output_files'] = scf_output_files
+            tool_activity.additional_info = json.dumps(additional_info)
             tool_activity.command_list = json.dumps(command_list)
             tool_activity.save()
 
-            print tool_activity.command_list
+            print(tool_activity.command_list)
 
             # data = {
             #     "actions": "use_tool",
-            #     "activity": tool_activity.id,
-            #     "tool": tool_activity.tool_name,
-            #     "param_executable": tool_activity.executable_name,
+            #     "activity": mpi_cluster.id,
+            #     "tool": mpi_cluster.tool_name,
+            #     "param_executable": mpi_cluster.executable_name,
             # }
             # message = json.dumps(data)
             # print message
             # # find a way to know if thread is already running
-            # send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-            # tool_activity.status = "Task Queued"
+            # send_mpi_message("skylab.consumer.%d" % mpi_cluster.mpi_cluster.id, message)
+            # mpi_cluster.status = "Task Queued"
 
-            return redirect("../task/%d" % tool_activity.id)
+            return redirect('../task/{0}'.format(tool_activity.id))
         else:
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
                 'select_mpi_form': select_mpi_form,

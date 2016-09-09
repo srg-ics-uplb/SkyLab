@@ -88,7 +88,7 @@ class GamessExecutable(P2CToolGeneric):
         sftp.close()
 
         task = ToolActivity.objects.get(pk=self.id)
-        if task.logs_set.latest('timestamp').status_code != 400:
+        if task.tasklog_set.latest('timestamp').status_code != 400:
             task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
             task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
@@ -117,7 +117,7 @@ class GamessExecutable(P2CToolGeneric):
         ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing tool script", status_code=152)
 
         self.print_msg("Running %s" % exec_string)
-        exec_shell = self.shell.run(["sh", "-c", "echo $PATH; %s;" % (export_path, exec_string)],
+        exec_shell = self.shell.run(["sh", "-c", exec_string],
                                     cwd=self.working_dir, update_env={"PATH": "$PATH:%s" % export_path})
         p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
         m = p.search(exec_shell.output)

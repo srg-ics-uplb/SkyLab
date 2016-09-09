@@ -1,15 +1,14 @@
-import re
 import json
+import re
 
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
+from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.db.models import Q
-from django.utils.text import get_valid_filename
 
-from validators import in_file_extension_validator
 from skylab.models import MPI_Cluster
 from skylab.modules.base_tool import MPIModelChoiceField
+from validators import in_file_extension_validator
 
 
 class SelectMPIFilesForm(forms.Form):
@@ -17,17 +16,18 @@ class SelectMPIFilesForm(forms.Form):
                                              help_text="UPF files separated by spaces. (xx.UPF yy.UPF)")
 
     def clean_param_pseudopotentials(self):
-        pseudopotentials = self.cleaned_data['param_pseudopotentials']
-        # atomic_symbol.description.UPF
-        # "^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}([a-zA-Z0-9]+(_[a-zA-Z0-9]+)?$"
+        pseudopotentials = self.cleaned_data.get('param_pseudopotentials', None)
+        if pseudopotentials:
+            # atomic_symbol.description.UPF
+            # "^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}([a-zA-Z0-9]+(_[a-zA-Z0-9]+)?$"
 
-        # description = [field1-][field2-]field3-[field4-]field5[_field6]
-        for upf_file in pseudopotentials.split(' '):
-            p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
-            if not p:
-                raise forms.ValidationError("Invalid UPF file : %s" % upf_file)
+            # description = [field1-][field2-]field3-[field4-]field5[_field6]
+            for upf_file in pseudopotentials.split(' '):
+                p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
+                if not p:
+                    raise forms.ValidationError("Invalid UPF file : {0}".format(upf_file))
 
-        return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
+            return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
@@ -40,7 +40,7 @@ class SelectMPIFilesForm(forms.Form):
         q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_qe).exclude(status=4)  # exclude unusable clusters
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(required=False, queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
 
         self.helper = FormHelper()
@@ -79,7 +79,8 @@ class InputParameterForm(forms.Form):
         ('pw.x', 'pw.x'),
     )
     param_executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
-    param_input_file = forms.FileField(label="Input file", validators=[in_file_extension_validator], required=False)
+    param_input_file = forms.FileField(label="Input file", validators=[in_file_extension_validator], required=False,
+                                       help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)

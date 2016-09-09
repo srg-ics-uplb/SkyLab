@@ -1,14 +1,16 @@
-from django.views.generic import TemplateView, FormView
-from skylab.modules.dock6.forms import DockForm, GridForm
-from django import forms
-from django.shortcuts import render, redirect
-from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
-import os.path
+from __future__ import print_function
+from __future__ import print_function
+
 import json
-from django.utils.text import get_valid_filename
-from skylab.modules.base_tool import create_input_skylab_file
+import os.path
+
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import FormView
+
+from skylab.models import ToolActivity
+from skylab.modules.base_tool import create_input_skylab_file
+from skylab.modules.base_tool import send_mpi_message
+from skylab.modules.dock6.forms import DockForm, GridForm
 
 
 class DockFormView(LoginRequiredMixin, FormView):
@@ -59,10 +61,10 @@ class DockFormView(LoginRequiredMixin, FormView):
             "param_executable": "dock6",
         }
         message = json.dumps(data)
-        print message
+        print(message)
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-        # tool_activity.status = "Task Queued"
+        # mpi_cluster.status = "Task Queued"
 
         return super(DockFormView, self).form_valid(form)
 
@@ -119,7 +121,7 @@ class GridFormView(LoginRequiredMixin, FormView):
             "param_executable": "grid",
         }
         message = json.dumps(data)
-        print message
+        print(message)
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
         tool_activity.status = "Task Queued"

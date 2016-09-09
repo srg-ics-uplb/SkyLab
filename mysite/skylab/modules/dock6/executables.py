@@ -1,7 +1,5 @@
 import os.path
-import re
 import shutil
-import shlex
 
 from django.conf import settings
 
@@ -183,7 +181,7 @@ class GridExecutable(P2CToolGeneric):
 
             remote_file.close()
 
-        # delete tool_activity directory
+        # delete mpi_cluster directory
         sftp.rmdir("/mirror/tool_activity_%d" % self.id)
         sftp.close()
 

@@ -19,9 +19,9 @@
                 {#                    </div>#}
                 {#                    <div class="panel-body">#}
                 {% crispy select_mpi_form %}
+
+
                 {{ input_formset.management_form }}
-
-
                 <div id="input-formset-container">
                     {% for form in input_formset.forms %}
                         {% crispy form %}
@@ -53,7 +53,7 @@
                 prefix: '{{ input_formset.prefix }}',
                 addText: 'Add input parameter',
                 addCssClass: 'btn btn-success',
-                deleteCssClass: 'btn btn-danger',
+                deleteCssClass: 'btn btn-danger'
 
             });
         });
