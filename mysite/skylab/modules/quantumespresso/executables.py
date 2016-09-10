@@ -4,7 +4,7 @@ import shutil
 
 from django.conf import settings
 
-from skylab.models import ToolActivity, SkyLabFile
+from skylab.models import Task, SkyLabFile
 from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
@@ -18,12 +18,12 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         self.pseudo_dir = self.working_dir + "/pseudo"
         self.tmp_dir = self.working_dir + "/tempdir"
 
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
+        Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
         super(QuantumEspressoExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir tool_activity_{0}".format(self.id)])
-        tool_activity = ToolActivity.objects.get(pk=self.id)
+        tool_activity = Task.objects.get(pk=self.id)
         tool_activity.change_status(status_msg="Fetching input files", status_code=151)
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
@@ -46,7 +46,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
 
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing task command", status_code=152)
+        Task.objects.get(pk=self.id).change_status(status_msg="Executing task command", status_code=152)
         self.shell.run(["sh", "-c", "mkdir pseudo; mkdir tempdir"], cwd=self.working_dir)
         # TMP_DIR = "tempdir", PSEUDO_DIR = "/pseudo"
 
@@ -56,7 +56,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         # TODO set env_vars
         env_vars = {"PATH": "$PATH:{0}".format(export_path), "TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir}
 
-        command_list = json.loads(ToolActivity.objects.get(pk=self.id).command_list)
+        command_list = json.loads(Task.objects.get(pk=self.id).command_list)
 
 
         # self.print_msg("Running %s" % command_list)
@@ -69,14 +69,14 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             print (exec_shell.output)
 
         self.print_msg("Finished command execution")
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Tool execution successful", status_code=153)
+        Task.objects.get(pk=self.id).change_status(status_msg="Tool execution successful", status_code=153)
 
         self.handle_output_files()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
+        Task.objects.filter(pk=self.id).update(status="Task finished")
 
     def handle_output_files(self, **kwargs):
-        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
+        Task.objects.filter(pk=self.id).update(status="Handling output files")
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
@@ -99,7 +99,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = ToolActivity.objects.get(pk=self.id)
+            tool_activity = Task.objects.get(pk=self.id)
             tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
@@ -111,7 +111,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
         error_flag = kwargs.get("error", False)
         if not error_flag:
-            ToolActivity.objects.get(pk=self.id).change_status(status_code=200, status_msg="Task Finished")
+            Task.objects.get(pk=self.id).change_status(status_code=200, status_msg="Task Finished")
             self.print_msg("Output files sent")
             pass
             # TODO: delete tool_activity_folder

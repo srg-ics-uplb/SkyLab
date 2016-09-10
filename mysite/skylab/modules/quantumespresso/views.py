@@ -8,7 +8,7 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
-from skylab.models import MPI_Cluster, ToolActivity
+from skylab.models import MPI_Cluster, Task
 from skylab.modules.base_tool import create_input_skylab_file
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 
@@ -49,8 +49,7 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             para_image_prefix = "mpiexec -n 4"
             param_image_postfix = '-ni 2 {0}'.format(para_postfix)
 
-
-            tool_activity = ToolActivity.objects.create(
+            tool_activity = Task.objects.create(
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
                 # additional_info=

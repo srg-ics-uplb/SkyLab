@@ -5,7 +5,7 @@ import shutil
 
 from django.conf import settings
 
-from skylab.models import ToolActivity, SkyLabFile
+from skylab.models import Task, SkyLabFile
 from skylab.modules.base_tool import P2CToolGeneric
 
 cluster_password = settings.CLUSTER_PASSWORD
@@ -17,13 +17,13 @@ class GamessExecutable(P2CToolGeneric):
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
 
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
+        Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
         super(GamessExecutable, self).__init__(self, **kwargs)
 
         pass
 
     def handle_input_files(self, **kwargs):
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Uploading input files", status_code=151)
+        Task.objects.get(pk=self.id).change_status(status_msg="Uploading input files", status_code=151)
         remote_dir = "tool_activity_%d" % self.id
         x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
         print (x.output)
@@ -36,7 +36,7 @@ class GamessExecutable(P2CToolGeneric):
             remote_file.close()
 
     def handle_output_files(self, **kwargs):
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Retrieving output files", status_code=154)
+        Task.objects.get(pk=self.id).change_status(status_msg="Retrieving output files", status_code=154)
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
@@ -57,7 +57,7 @@ class GamessExecutable(P2CToolGeneric):
                                                  filename="%s.log" % self.filename, render_with_jsmol=True)
             new_file.file.name = local_dir
             new_file.save()
-            tool_activity = ToolActivity.objects.get(pk=self.id)
+            tool_activity = Task.objects.get(pk=self.id)
             tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
@@ -77,7 +77,7 @@ class GamessExecutable(P2CToolGeneric):
                                                      filename=remote_file)
                 new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
-                tool_activity = ToolActivity.objects.get(pk=self.id)
+                tool_activity = Task.objects.get(pk=self.id)
                 tool_activity.output_files.add(new_file)
                 tool_activity.save()
                 local_file.close()
@@ -87,7 +87,7 @@ class GamessExecutable(P2CToolGeneric):
         sftp.rmdir("/mirror/tool_activity_%d" % self.id)
         sftp.close()
 
-        task = ToolActivity.objects.get(pk=self.id)
+        task = Task.objects.get(pk=self.id)
         if task.tasklog_set.latest('timestamp').status_code != 400:
             task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
@@ -102,23 +102,25 @@ class GamessExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
         # cleanup scratch directory
-        remote_path = "/mirror/scr/"
-        sftp = self.shell._open_sftp_client()
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            sftp.remove(remote_filepath)  # delete after transfer
-        sftp.close()
+        # remote_path = "/mirror/scr/"
+        # sftp = self.shell._open_sftp_client()
+        # remote_files = sftp.listdir(path=remote_path)
+        # for remote_file in remote_files:
+        #     remote_filepath = os.path.join(remote_path, remote_file)
+        #     sftp.remove(remote_filepath)  # delete after transfer
+        # sftp.close()
 
         export_path = "/mirror/gamess"
 
-        exec_string = json.loads(ToolActivity.objects.get(pk=self.id).command_list)[0]
+        exec_string = json.loads(Task.objects.get(pk=self.id).command_list)[0]
 
-        ToolActivity.objects.get(pk=self.id).change_status(status_msg="Executing tool script", status_code=152)
+        Task.objects.get(pk=self.id).change_status(status_msg="Executing tool script", status_code=152)
 
         self.print_msg("Running %s" % exec_string)
-        exec_shell = self.shell.run(["sh", "-c", exec_string],
-                                    cwd=self.working_dir, update_env={"PATH": "$PATH:%s" % export_path})
+        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
+                                    cwd=self.working_dir)
+        # exec_shell = self.shell.run(["sh", "-c", exec_string],
+        #                             cwd=self.working_dir, use_pty=True, update_env={"PATH": "$PATH:%s" % export_path})
         p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
         m = p.search(exec_shell.output)
         print (exec_shell.output)
@@ -133,12 +135,12 @@ class GamessExecutable(P2CToolGeneric):
             else:
                 self.print_msg("Finished command execution")
 
-                ToolActivity.objects.get(pk=self.id).change_status(status_msg="Tool execution successful",
-                                                                   status_code=153)
+                Task.objects.get(pk=self.id).change_status(status_msg="Tool execution successful",
+                                                           status_code=153)
 
 
         else:
-            ToolActivity.objects.get(pk=self.id).change_status(
+            Task.objects.get(pk=self.id).change_status(
                 status_msg="Task execution error! See .log file for more information", status_code=400)
 
         self.handle_output_files()

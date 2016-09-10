@@ -79,7 +79,8 @@ class InputParameterForm(forms.Form):
         ('pw.x', 'pw.x'),
     )
     param_executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
-    param_input_file = forms.FileField(label="Input file", validators=[in_file_extension_validator], required=False,
+    param_input_file = forms.FileField(label="Input file (.in)", validators=[in_file_extension_validator],
+                                       required=False,
                                        help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
     def __init__(self, *args, **kwargs):

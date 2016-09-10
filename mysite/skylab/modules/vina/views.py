@@ -1,14 +1,20 @@
-from django.views.generic import TemplateView, FormView
-from skylab.modules.vina.forms import VinaForm, VinaSplitForm
-from django import forms
-from django.shortcuts import render, redirect
-from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
-import os.path
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
+from __future__ import print_function
+
 import json
-from django.utils.text import get_valid_filename
-from skylab.modules.base_tool import create_input_skylab_file
+import os.path
+
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import render, redirect
+from django.utils.text import get_valid_filename
+from django.views.generic import TemplateView, FormView
+
+from skylab.models import Task
+from skylab.modules.base_tool import create_input_skylab_file
+from skylab.modules.base_tool import send_mpi_message
+from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 
 
 class VinaView(LoginRequiredMixin, TemplateView):
@@ -27,7 +33,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
             cluster_name = vina_form.cleaned_data['mpi_cluster']
 
             exec_string_template = "mkdir -p %s; vina "
-            tool_activity = ToolActivity.objects.create(
+            tool_activity = Task.objects.create(
                 mpi_cluster=cluster_name, tool_name="vina", executable_name="vina", user=self.request.user,
                 exec_string=exec_string_template
             )
@@ -105,7 +111,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
             tool_activity.exec_string = exec_string
             tool_activity.save()
 
-            print exec_string
+            print(exec_string)
             data = {
                 "actions": "use_tool",
                 "activity": tool_activity.id,
@@ -113,7 +119,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 "param_executable": "vina",
             }
             message = json.dumps(data)
-            print message
+            print(message)
             # find a way to know if thread is already running
             send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
             tool_activity.status = "Task Queued"
@@ -151,9 +157,9 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         if form.cleaned_data.get('param_flex_prefix'):
             exec_string += "--flex %s " % get_valid_filename(form.cleaned_data['param_flex_prefix'])
 
-        print exec_string
+        print(exec_string)
 
-        tool_activity = ToolActivity.objects.create(
+        tool_activity = Task.objects.create(
             mpi_cluster=cluster, tool_name="vina", executable_name="vina_split", user=self.request.user,
             exec_string=exec_string
         )
@@ -167,7 +173,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
             "param_executable": "vina split",
         }
         message = json.dumps(data)
-        print message
+        print(message)
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
         tool_activity.status = "Task Queued"

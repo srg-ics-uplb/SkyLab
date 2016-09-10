@@ -2,10 +2,11 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Fieldset, Submit
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.urlresolvers import reverse
 from django.db.models import Q
-from skylab.modules.base_tool import MPIModelChoiceField
 
 from skylab.models import MPI_Cluster
+from skylab.modules.base_tool import MPIModelChoiceField
 
 
 def validate_gamess_input_extension(value):
@@ -28,7 +29,8 @@ class GamessForm(forms.Form):
         q = q.filter(supports_gamess).exclude(status=4)
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_id = 'id-impiForm'

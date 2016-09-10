@@ -1,15 +1,13 @@
-from django.views.generic import TemplateView, FormView
-from skylab.modules.autodock.forms import AutodockForm, AutogridForm
-from django import forms
-from django.shortcuts import render, redirect
-from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
-import os.path
 import json
-from django.utils.text import get_valid_filename
-from skylab.modules.base_tool import create_input_skylab_file
-from django.contrib.auth.decorators import login_required
+import os.path
+
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import FormView
+
+from skylab.models import Task
+from skylab.modules.autodock.forms import AutodockForm, AutogridForm
+from skylab.modules.base_tool import create_input_skylab_file
+from skylab.modules.base_tool import send_mpi_message
 
 
 class AutodockView(LoginRequiredMixin, FormView):
@@ -30,7 +28,7 @@ class AutodockView(LoginRequiredMixin, FormView):
 
 
         exec_string = "autodock4 "
-        tool_activity = ToolActivity.objects.create(
+        tool_activity = Task.objects.create(
             mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
             exec_string=exec_string
         )
@@ -74,7 +72,7 @@ class AutodockView(LoginRequiredMixin, FormView):
             "param_executable": "autodock",
         }
         message = json.dumps(data)
-        print message
+        print (message)
         # find a way to know if thread is already running
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
         tool_activity.status = "Task Queued"
@@ -100,7 +98,7 @@ class AutogridView(LoginRequiredMixin, FormView):
         receptor_file = form.cleaned_data['param_receptor_file']
 
         exec_string = "autogrid4 "
-        tool_activity = ToolActivity.objects.create(
+        tool_activity = Task.objects.create(
             mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
             exec_string=exec_string
         )
@@ -155,7 +153,7 @@ class AutogridView(LoginRequiredMixin, FormView):
                 "param_executable": "autogrid",
             }
             message = json.dumps(data)
-            print message
+            print (message)
             # find a way to know if thread is already running
             send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
             tool_activity.status = "Task Queued"

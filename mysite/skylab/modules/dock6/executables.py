@@ -3,7 +3,7 @@ import shutil
 
 from django.conf import settings
 
-from skylab.models import ToolActivity, SkyLabFile
+from skylab.models import Task, SkyLabFile
 from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
@@ -14,12 +14,12 @@ class Dock6Executable(P2CToolGeneric):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
-        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
+        Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(Dock6Executable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
-        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
+        Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
@@ -35,8 +35,8 @@ class Dock6Executable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
 
-        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+        exec_string = Task.objects.get(pk=self.id).exec_string
+        Task.objects.filter(pk=self.id).update(status="Executing task command")
 
         self.print_msg("Running %s" % exec_string)
 
@@ -46,14 +46,14 @@ class Dock6Executable(P2CToolGeneric):
         self.print_msg(exec_shell.output)
 
         self.print_msg("Finished command execution")
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+        Task.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
 
         self.handle_output_files()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
+        Task.objects.filter(pk=self.id).update(status="Task finished")
 
     def handle_output_files(self, **kwargs):
-        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
+        Task.objects.filter(pk=self.id).update(status="Handling output files")
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
@@ -92,12 +92,12 @@ class Dock6Executable(P2CToolGeneric):
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = ToolActivity.objects.get(pk=self.id)
+            tool_activity = Task.objects.get(pk=self.id)
             tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
+        Task.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
     def changeStatus(self, status):
@@ -109,12 +109,12 @@ class GridExecutable(P2CToolGeneric):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
-        ToolActivity.objects.filter(pk=self.id).update(status="Task started", status_code=1)
+        Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(GridExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
-        ToolActivity.objects.filter(pk=self.id).update(status="Fetching input files")
+        Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
@@ -129,8 +129,8 @@ class GridExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):
         self.handle_input_files()
 
-        exec_string = ToolActivity.objects.get(pk=self.id).exec_string
-        ToolActivity.objects.filter(pk=self.id).update(status="Executing task command")
+        exec_string = Task.objects.get(pk=self.id).exec_string
+        Task.objects.filter(pk=self.id).update(status="Executing task command")
 
         self.print_msg("Running %s" % exec_string)
 
@@ -140,14 +140,14 @@ class GridExecutable(P2CToolGeneric):
         self.print_msg(exec_shell.output)
 
         self.print_msg("Finished command execution")
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+        Task.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
 
         self.handle_output_files()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Task finished")
+        Task.objects.filter(pk=self.id).update(status="Task finished")
 
     def handle_output_files(self, **kwargs):
-        ToolActivity.objects.filter(pk=self.id).update(status="Handling output files")
+        Task.objects.filter(pk=self.id).update(status="Handling output files")
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
@@ -190,12 +190,12 @@ class GridExecutable(P2CToolGeneric):
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = ToolActivity.objects.get(pk=self.id)
+            tool_activity = Task.objects.get(pk=self.id)
             tool_activity.output_files.add(new_file)
             tool_activity.save()
             local_file.close()
 
-        ToolActivity.objects.filter(pk=self.id).update(status="Finished handling output files")
+        Task.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
     def changeStatus(self, status):

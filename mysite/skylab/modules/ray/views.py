@@ -1,12 +1,13 @@
+import json
+
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
-from skylab.models import MPI_Cluster, ToolActivity, SkyLabFile
-import json
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 
+from skylab.models import MPI_Cluster, Task
+from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 
 class RayView(LoginRequiredMixin, TemplateView):
@@ -42,7 +43,7 @@ class RayView(LoginRequiredMixin, TemplateView):
             if select_mpi_form.cleaned_data['param_bynode']:
                 exec_string += "-bynode "
 
-            tool_activity = ToolActivity.objects.create(
+            tool_activity = Task.objects.create(
                 mpi_cluster=cluster_name, tool_name="ray", executable_name="ray", user=self.request.user,
                 exec_string=exec_string
             )
@@ -83,7 +84,7 @@ class RayView(LoginRequiredMixin, TemplateView):
 
             if other_parameter_form.cleaned_data['param_search']:
                 exec_string += "-search tool_activity_%d/input/search " % tool_activity.id
-                for file in form.cleaned_data['subparam_search_files']:
+                for file in other_parameter_form.cleaned_data['subparam_search_files']:
                     create_input_skylab_file(tool_activity, 'input/search', file)
 
 
@@ -155,7 +156,7 @@ class RayView(LoginRequiredMixin, TemplateView):
             tool_activity.exec_string = exec_string
             tool_activity.save()
 
-            print exec_string
+            print (exec_string)
 
             data = {
                 "actions": "use_tool",
@@ -164,7 +165,7 @@ class RayView(LoginRequiredMixin, TemplateView):
                 "param_executable": "ray",
             }
             message = json.dumps(data)
-            print message
+            print (message)
             # find a way to know if thread is already running
             send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
             tool_activity.status = "Task Queued"

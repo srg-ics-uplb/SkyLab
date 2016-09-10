@@ -7,7 +7,7 @@ import os.path
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import ToolActivity
+from skylab.models import Task
 from skylab.modules.base_tool import create_input_skylab_file
 from skylab.modules.base_tool import send_mpi_message
 from skylab.modules.dock6.forms import DockForm, GridForm
@@ -30,7 +30,7 @@ class DockFormView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
 
         exec_string = "mpirun -np 4 dock6.mpi "
-        tool_activity = ToolActivity.objects.create(
+        tool_activity = Task.objects.create(
             mpi_cluster=cluster, tool_name="dock6", executable_name="dock6", user=self.request.user,
             exec_string=exec_string
         )
@@ -86,7 +86,7 @@ class GridFormView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
 
         exec_string = "grid "
-        tool_activity = ToolActivity.objects.create(
+        tool_activity = Task.objects.create(
             mpi_cluster=cluster, tool_name="dock6", executable_name="grid", user=self.request.user,
             exec_string=exec_string
         )

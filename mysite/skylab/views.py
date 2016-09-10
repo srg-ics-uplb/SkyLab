@@ -1,32 +1,26 @@
 import os
 
 import pika
-import json
 from django.conf import settings
-from django.http import HttpResponse, response
-from django.views.generic import DetailView
-from django.views.generic.base import TemplateView
-from django.views.generic.edit import CreateView
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.urlresolvers import reverse
-from sendfile import sendfile
+from django.http import HttpResponse
+from django.http import HttpResponseForbidden, Http404
+from django.views.generic import DetailView
+from django.views.generic.base import TemplateView
+from django.views.generic.edit import CreateView
 from django_ajax.decorators import ajax
+from sendfile import sendfile
 
 from forms import Create_MPI_Cluster_Form
-from skylab.models import ToolActivity
-from django.http import HttpResponseForbidden, Http404
-
-from djangoformsetjs.utils import formset_media_js
-from django import forms
-from django.shortcuts import render
+from skylab.models import Task
 
 
 def has_read_permission(request, task_id):
 	# TODO: query if user in toolactivity
 	"Only show to authenticated users - extend this as desired"
-	if ToolActivity.objects.get(pk=task_id).user_id == request.user.id:
+	if Task.objects.get(pk=task_id).user_id == request.user.id:
 		return True
 	else:
 		return False
@@ -45,7 +39,7 @@ def has_read_permission(request, task_id):
 @login_required
 def serve_private_file(request, task_id, type, filename):
 	try:
-		task = ToolActivity.objects.get(pk=task_id)
+		task = Task.objects.get(pk=task_id)
 
 		if type == "input":
 			file = task.input_files.get(filename__exact=filename)
@@ -56,8 +50,8 @@ def serve_private_file(request, task_id, type, filename):
 
 	if has_read_permission(request, task_id):
 		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT,
-								"%s/%s" % (file.upload_path, filename))
-		print fullpath
+								"{0}/{1}".format(file.upload_path, filename))
+		print (fullpath)
 		return sendfile(request, fullpath, attachment=True)
 	else:  # if user fails test return 403
 		return HttpResponseForbidden()
@@ -65,15 +59,15 @@ def serve_private_file(request, task_id, type, filename):
 
 def serve_file_for_jsmol(request, task_id, type, filename):
 	try:
-		task = ToolActivity.objects.get(pk=task_id)
+		task = Task.objects.get(pk=task_id)
 
 		if type == "input":
 			file = task.input_files.get(filename__exact=filename)
 		elif type == "output":
 			file = task.output_files.get(filename__exact=filename)
 
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "%s/%s" % (file.upload_path, filename))
-		print fullpath
+		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "{0}/{1}".format(file.upload_path, filename))
+		print (fullpath)
 		return sendfile(request, fullpath, attachment=True)
 
 	except ObjectDoesNotExist:
@@ -106,10 +100,9 @@ class HomeView(TemplateView):
 class CreateMPIView(LoginRequiredMixin, CreateView):
 	template_name = 'create_mpi_cluster.html'
 	form_class = Create_MPI_Cluster_Form
-	success_url = 'create_mpi_cluster'
 
-	def test(self):
-		self.render_to_response()
+	# TODO: change success url (-> my mpi cluster view)
+	success_url = 'create_mpi_cluster'
 
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form
@@ -119,7 +112,7 @@ class CreateMPIView(LoginRequiredMixin, CreateView):
 
 
 class ToolActivityDetail(LoginRequiredMixin, DetailView):
-	model = ToolActivity
+	model = Task
 	template_name = 'task_detail_view.html'
 
 	def get_context_data(self, **kwargs):
@@ -139,7 +132,7 @@ def index(request):
 @ajax
 def task_fragments_view(request, pk=None):
 	if pk is not None:
-		task = ToolActivity.objects.filter(pk=pk, user=request.user.id)[0]
+		task = Task.objects.filter(pk=pk, user=request.user.id)[0]
 		# print task.id
 		# print "Status code", task.latest_log.status_code
 
@@ -150,16 +143,13 @@ def task_fragments_view(request, pk=None):
 
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
-																  task.mpi_cluster) + '</span><span id="task-status" class="text-info pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code == 200:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
-																  task.mpi_cluster) + '</span><span id="task-status" class="text-success pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code >= 400:
 			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span class="text-muted">' + '%s@%s' % (task.tool_name,
-																  task.mpi_cluster) + '</span><span id="task-status" class="text-danger pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.latest_log.status_msg + '</span>'
 		# progress_bar
 
 		data = {

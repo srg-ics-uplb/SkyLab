@@ -59,7 +59,7 @@ class SkyLabFile(models.Model):
         return self.filename
 
 @python_2_unicode_compatible
-class ToolActivity(models.Model):
+class Task(models.Model):
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
     tool_name = models.CharField(max_length=50)
@@ -79,6 +79,7 @@ class ToolActivity(models.Model):
 
     def get_default_status_msg(self, status_code):
         status_msgs = {
+            000: "Unknown",
             100: "Initializing",
             101: "Queued",
             150: "Task started",
@@ -94,7 +95,8 @@ class ToolActivity(models.Model):
         return status_msgs.get(status_code, "Status code %d not recognized" % status_code)
 
     def change_status(self, **kwargs):
-        status_code = kwargs.get('status_code', self.logs.latest('id').status_code)
+
+        status_code = kwargs.get('status_code', 000)
         status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, tool_activity=self)
 
@@ -182,7 +184,7 @@ class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
     status_msg = models.CharField(max_length=200)
     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-    tool_activity = models.ForeignKey(ToolActivity, on_delete=models.CASCADE, blank=True)
+    tool_activity = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True)
 
     @property
     def __str__(self):

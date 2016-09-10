@@ -13,7 +13,9 @@
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
             <h1>Task {{ object.id }}</h1>
-            <p id="task-status">{{ object.status }}</p>
+
+            <span class="text-muted">{{ object.tool_name }}@{{ object.mpi_cluster }}</span>
+            <span id="task-status">{{ object.status }}</span>
             {# progress bars #}
             {% if object.latest_log.status_code < 200 %}
                 {# task initializing/queued/in progress #}
