@@ -4,6 +4,7 @@ import re
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field
 from django import forms
+from django.core.urlresolvers import reverse
 from django.db.models import Q
 
 from skylab.models import MPI_Cluster
@@ -41,7 +42,8 @@ class SelectMPIFilesForm(forms.Form):
         q = q.filter(supports_qe).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(required=False, queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_tag = False

@@ -5,23 +5,19 @@
 
 {% block content %}
     <div class='row'>
-        <div class='col-sm-10 col-sm-offset-2'>
-            <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+        <div class='col-sm-10 col-sm-offset-1'>
+
 
             <form id="vina-form" action="" method="post" enctype="multipart/form-data">
 
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Use AutoGrid4</h3>
-                    </div>
-                    <div class="panel-body">
-                        {% crispy form %}
-                        <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
-                    </div>
-                </div>
+                <h1 class="text-center">Use AutoGrid4</h1>
+                <hr>
+
+                {% crispy form %}
+                <hr>
+                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
+
             </form>
-
-
         </div>
     </div>
 
@@ -30,19 +26,25 @@
 {% block js %}
 
     <script type="text/javascript">
-        $('a[href="#autodock4"]').removeAttr("data-toggle");
-        $('a[href="#autodock4"]').parent().addClass('disabled');
+        var autodock4Tab = $('a[href="#autodock4"]');
+        autodock4Tab.removeAttr("data-toggle");
+        autodock4Tab.parent().addClass('disabled');
 
+        var useWithAutoDockCheckBox = $('#id_param_use_with_autodock');
 
-        $('#id_param_use_with_autodock').change(function () {
+        if (useWithAutoDockCheckBox.is(":checked")) {
+            autodock4Tab.attr("data-toggle", 'tab');
+            autodock4Tab.parent().removeClass('disabled');
+        }
+
+        useWithAutoDockCheckBox.change(function () {
             if ($(this).is(":checked")) {
-                $('a[href="#autodock4"]').attr("data-toggle", 'tab');
-                $('a[href="#autodock4"]').parent().removeClass('disabled');
+                autodock4Tab.attr("data-toggle", 'tab');
+                autodock4Tab.parent().removeClass('disabled');
             } else {
-                $('a[href="#autodock4"]').removeAttr("data-toggle");
-                $('a[href="#autodock4"]').parent().addClass('disabled');
+                autodock4Tab.removeAttr("data-toggle");
+                autodock4Tab.parent().addClass('disabled');
             }
         });
-
     </script>
 {% endblock %}

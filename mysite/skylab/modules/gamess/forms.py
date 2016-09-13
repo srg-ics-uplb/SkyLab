@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit
+from crispy_forms.layout import Layout, Fieldset, Field, Div
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -38,10 +38,19 @@ class GamessForm(forms.Form):
         self.helper.form_method = 'post'
         self.helper.form_action = ''
         self.helper.layout = Layout(
-            Fieldset(
-                'Use Gamess',
-                'mpi_cluster',
-                'inp_file',
+
+            Div(
+                Field('mpi_cluster', wrapper_class='col-xs-6'),
+                css_class="col-sm-12"
             ),
-            Submit('submit', 'Execute')
+
+            Fieldset(
+                'Input',
+                Div(
+                    Div('inp_file', css_class='col-xs-6'),
+                    css_class='row-fluid col-sm-12'
+                ),
+
+            ),
+
         )

@@ -1,18 +1,20 @@
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
 from django import forms
-from django.db.models import Q
+from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Q
 from multiupload.fields import MultiFileField
-from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
-    multi_graph_files_validator, multi_ray_files_validator
+
 from skylab.models import MPI_Cluster
 from skylab.modules.base_tool import MPIModelChoiceField
+from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
+    multi_graph_files_validator, multi_ray_files_validator
 
 
 class SelectMPIFilesForm(forms.Form):
     param_bynode = forms.BooleanField(required=False, label="-bynode",
-                                      help_text="Launch processes one per node, cycling by node in a round-robin fashion. This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
+                                      help_text="Launch processes one per node, cycling by node in a round-robin fashion.")  # This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     # param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
     #                                       help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
     # mini-ranks max set to 4
@@ -33,7 +35,8 @@ class SelectMPIFilesForm(forms.Form):
         q = q.filter(supports_ray).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
 
         self.helper = FormHelper()
@@ -46,18 +49,18 @@ class SelectMPIFilesForm(forms.Form):
 
 
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                Field('mpi_cluster', wrapper_class='col-xs-6'),
                 css_class="col-sm-12"
             ),
 
             Fieldset(
                 'MiniRanks',
                 Div(
-                    Div('param_bynode', css_class='col-xs-12'),
                     Div('param_mini_ranks', css_class='col-xs-4'),
-
+                    Div('param_bynode', css_class='col-xs-6 col-xs-offset-2'),
                     css_class='row-fluid col-sm-12'
-                )
+                ),
+
             ),
 
 
@@ -245,7 +248,7 @@ class OtherParameterForm(forms.Form):
                 ),
                 Div(
                     Div('param_read_sample_graph', css_class='col-xs-6'),
-                    Div('subparam_graph_files', css_class='col-xs-3'),
+                    Div('subparam_graph_files', css_class='col-xs-4'),
                     css_class='row-fluid col-sm-12'
                 ),
             ),
@@ -254,7 +257,7 @@ class OtherParameterForm(forms.Form):
                 'Biological abundances',
                 Div(
                     Div('param_search', css_class='col-xs-6'),
-                    Div('subparam_search_files', css_class='col-xs-3'),
+                    Div('subparam_search_files', css_class='col-xs-4'),
                     css_class='row-fluid col-sm-12'
                 ),
                 Div(
@@ -285,24 +288,24 @@ class OtherParameterForm(forms.Form):
                         css_class='col-xs-5',
 
                     ),
-                    Div('subparam_annotations_file', css_class='col-xs-3'),
+                    Div('subparam_annotations_file', css_class='col-xs-4'),
                     css_class='row-fluid col-sm-12'
                 )
             ),
             Fieldset(
                 'Other outputs',
                 Div(
-                    Div('param_enable_neighbourhoods', css_class='col-xs-3'),
-                    Div('param_amos', css_class='col-xs-3'),
-                    Div('param_write_kmers', css_class='col-xs-3'),
-                    Div('param_graph_only', css_class='col-xs-3'),
-                    css_class='row-fluid col-sm-12'
-                ),
-                Div(
-                    Div('param_write_read_markers', css_class='col-xs-3'),
-                    Div('param_write_seeds', css_class='col-xs-3'),
-                    Div('param_write_extensions', css_class='col-xs-3'),
-                    Div('param_write_contig_paths', css_class='col-xs-3'),
+                    Div('param_enable_neighbourhoods', css_class='col-xs-12'),
+                    Div('param_amos', css_class='col-xs-12'),
+                    Div('param_write_kmers', css_class='col-xs-12'),
+                    Div('param_graph_only', css_class='col-xs-12'),
+                    # css_class='row-fluid col-sm-12'
+                    # ),
+                    # Div(
+                    Div('param_write_read_markers', css_class='col-xs-12'),
+                    Div('param_write_seeds', css_class='col-xs-12'),
+                    Div('param_write_extensions', css_class='col-xs-12'),
+                    Div('param_write_contig_paths', css_class='col-xs-12'),
                     css_class='row-fluid col-sm-12'
                 ),
                 Div(
@@ -314,8 +317,8 @@ class OtherParameterForm(forms.Form):
                 'Memory usage',
                 Div(
                     Div(
-                        Div('param_show_memory_usage', css_class='col-xs-6'),
-                        Div('param_show_memory_allocations', css_class='col-xs-6'),
+                        Div('param_show_memory_usage', css_class='col-xs-12'),
+                        Div('param_show_memory_allocations', css_class='col-xs-12'),
                     ),
                     css_class="row-fluid col-sm-12"
                 )
@@ -323,10 +326,10 @@ class OtherParameterForm(forms.Form):
             Fieldset(
                 'Algorithm verbosity',
                 Div(
-                    Div('param_show_extension_choice', css_class='col-xs-6'),
-                    Div('param_show_ending_context', css_class='col-xs-6'),
-                    Div('param_show_distance_summary', css_class='col-xs-6'),
-                    Div('param_show_consensus', css_class='col-xs-6'),
+                    Div('param_show_extension_choice', css_class='col-xs-12'),
+                    Div('param_show_ending_context', css_class='col-xs-12'),
+                    Div('param_show_distance_summary', css_class='col-xs-12'),
+                    Div('param_show_consensus', css_class='col-xs-12'),
                     css_class='row-fluid col-sm-12'
                 )
             )

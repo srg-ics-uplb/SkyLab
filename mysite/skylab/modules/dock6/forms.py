@@ -1,14 +1,16 @@
-from django import forms
+from crispy_forms.bootstrap import AppendedText
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML, Submit
-from crispy_forms.bootstrap import AppendedText, Tab, TabHolder
+from crispy_forms.layout import Layout, Div, Field, Fieldset
+from django import forms
+from django.core.urlresolvers import reverse
+from django.db.models import Q
+from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
+
+from skylab.models import MPI_Cluster
+from skylab.modules.base_tool import MPIModelChoiceField
 from validators import multi_dock6_other_resources_validator, dock6_in_extension_validator, \
     multi_grid_other_resources_validator
-from skylab.models import MPI_Cluster
-from django.db.models import Q
-from skylab.modules.base_tool import MPIModelChoiceField
-from django.utils.text import get_valid_filename
 
 
 class GridForm(forms.Form):
@@ -20,8 +22,10 @@ class GridForm(forms.Form):
     param_output_prefix = forms.CharField(required=False, label="Output file prefix",
                                           help_text="default: input_filename",
                                           widget=forms.TextInput(attrs={'placeholder': 'filename'}))
-    param_terse = forms.BooleanField(required=False, label="-t", help_text="Terse program output")
-    param_verbose = forms.BooleanField(required=False, label="-v", help_text="Verbose program output")
+    param_terse = forms.BooleanField(required=False, label="-t",
+                                     help_text='Terse program output')
+    param_verbose = forms.BooleanField(required=False, label="-v",
+                                       help_text="Verbose program output")
 
     def clean_param_output_prefix(self):
         output_prefix = self.cleaned_data['param_output_prefix']
@@ -39,20 +43,21 @@ class GridForm(forms.Form):
         q = q.filter(supports_dock6).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                Field('mpi_cluster', wrapper_class='col-xs-6'),
                 css_class="col-sm-12"
             ),
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_file', css_class='col-xs-6'),
-                    Div('param_other_files', css_class='col-xs-4 '),
+                    Div('param_input_file', css_class='col-xs-5'),
+                    Div('param_other_files', css_class='col-xs-5 col-xs-offset-1 '),
                     css_class='row-fluid col-sm-12'
                 ),
 
@@ -60,16 +65,16 @@ class GridForm(forms.Form):
             Fieldset(
                 'Output',
                 Div(
-                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-4'),
+                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-5'),
                     css_class='row-fluid col-sm-12'
                 )
             ),
             Fieldset(
-                'Other Parameters',
+                'Other parameters',
 
                 Div(
-                    Div('param_terse', css_class='col-xs-6'),
-                    Div('param_verbose', css_class='col-xs-6'),
+                    Div('param_terse', css_class='col-xs-12'),
+                    Div('param_verbose', css_class='col-xs-12'),
                     css_class='row-fluid col-sm-12'
                 )
             )
@@ -84,7 +89,7 @@ class DockForm(forms.Form):
                                        help_text="(.pdb), (.sph), (.mol2), (.nrg), (.bmp)",
                                        validators=[multi_dock6_other_resources_validator])
     param_output_prefix = forms.CharField(required=False, label="Output file prefix",
-                                          help_text="default: input_filename",
+                                          help_text="Optional",
                                           widget=forms.TextInput(attrs={'placeholder': 'filename'}))
 
     def clean_param_output_prefix(self):
@@ -103,26 +108,27 @@ class DockForm(forms.Form):
         q = q.filter(supports_dock6).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                Field('mpi_cluster', wrapper_class='col-xs-6'),
                 css_class="col-sm-12"
             ),
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_file', css_class='col-xs-6'),
-                    Div('param_other_files', css_class='col-xs-4 '),
+                    Div('param_input_file', css_class='col-xs-5'),
+                    Div('param_other_files', css_class='col-xs-5 col-xs-offset-1'),
                     css_class='row-fluid col-sm-12'
                 ),
             ),
             Fieldset(
                 'Output',
                 Div(
-                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-4'),
+                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-5'),
                     css_class='row-fluid col-sm-12'
                 )
             ),

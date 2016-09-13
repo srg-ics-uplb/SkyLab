@@ -5,29 +5,22 @@
 
 {% block content %}
     <div class='row'>
-        <div class='col-sm-10 col-sm-offset-2'>
-            <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+        <div class='col-sm-10 col-sm-offset-1'>
+
 
             <form id="vina-form" action="" method="post" enctype="multipart/form-data">
 
-                <div class="panel panel-primary">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Use Vina</h3>
-                    </div>
-                    <div class="panel-body">
-                        {% crispy vina_form %}
-                    </div>
-                </div>
+
+                <h1 class="text-center">Vina</h1>
+
+
+                {% crispy vina_form %}
+                <hr>
+                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
             </form>
 
 
         </div>
     </div>
 
-{% endblock %}
-{% block js %}
-    <script type="text/javascript">
-        {# append submit button in tab holder    #}
-        $("#form-tab-holder").append('<li><input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block"></li>');
-    </script>
 {% endblock %}

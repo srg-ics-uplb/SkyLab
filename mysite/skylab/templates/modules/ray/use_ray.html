@@ -5,46 +5,43 @@
 
 {% block content %}
 <div class='row'>
-    <div class='col-sm-10 col-sm-offset-2'>
-        {#	<p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>#}
+    <div class='col-sm-10 col-sm-offset-1'>
+
 
         <form id="ray-form" action="" method="post" enctype="multipart/form-data">
+            <h1 class="text-center">Ray</h1>
+            {#            <hr>#}
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
+                <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
+            </ul>
 
-            {#        <div class="panel panel-primary">#}
-            {#            <div class="panel-heading">#}
-            {#                <h3 class="panel-title">Use Ray</h3>#}
-            {#            </div>#}
-            {#            <div class="panel-body">#}
-                <ul class="nav nav-tabs">
-                    <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
-                    <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
-                    <li><input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block"></li>
+            <div class="tab-content">
+                <div id="tab1" class="tab-pane fade in active">
+                    {% crispy select_mpi_form %}
+                    {{ input_formset.management_form }}
 
-
-                </ul>
-
-                <div class="tab-content">
-                    <div id="tab1" class="tab-pane fade in active">
-                        {% crispy select_mpi_form %}
-                        {{ input_formset.management_form }}
-
-                        <legend>Inputs</legend>
-                        <div id="input-formset-container">
-                            {% for form in input_formset.forms %}
-                                {% crispy form %}
-                            {% endfor %}
-                            <hr>
-                        </div>
-
+                    <legend>Input</legend>
+                    <div id="input-formset-container">
+                        {% for form in input_formset.forms %}
+                            {% crispy form %}
+                        {% endfor %}
+                        <hr>
                     </div>
-                    <div id="tab2" class="tab-pane fade col-sm-12">
-                        {% crispy other_parameter_form %}
-                    </div>
-
-                    {#                    <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">#}
+                    <hr>
 
 
                 </div>
+                <div id="tab2" class="tab-pane fade col-sm-12">
+                    {% crispy other_parameter_form %}
+                    <hr>
+
+                </div>
+
+                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
+
+
+            </div>
 
             {#            </div>#}
             {#        </div>#}
@@ -76,6 +73,38 @@
         });
 
         {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
+        parameter = $('select[name=form-0-parameter]').val();
+        inp_file1_div_id = '#div_id_form-0-input_file1';
+        inp_file2_div_id = '#div_id_form-0-input_file2';
+
+        input_file1_label = 'id_form-0-input_file1';
+        input_file2_label = 'id_form-0-input_file2';
+        $(inp_file1_div_id).removeClass('hidden');
+        $(inp_file2_div_id).removeClass('hidden');
+
+        if (parameter == '') {
+            $(inp_file2_div_id).hide();
+            $(inp_file1_div_id).hide();
+            $(inp_file2_div_id).hide();
+        }
+        else {
+            $(inp_file1_div_id).show();
+            if (parameter === "-p") {
+                $(inp_file2_div_id).show();
+
+                $("label[for=" + input_file1_label + "]").text("Left sequence file");
+                $("label[for=" + input_file2_label + "]").text("Right sequence file");
+
+            }
+            else {
+                $(inp_file2_div_id).hide();
+                if (parameter === "-i") {
+                    $("label[for=" + input_file1_label + "]").text("Interleaved sequence file");
+                } else if (parameter === "-s") {
+                    $("label[for=" + input_file1_label + "]").text("Sequence file");
+                }
+            }
+        }
 
         $('.row').on('change', "select", function () {
             if (match = $(this).attr('name').match(/form-(\d+)-parameter/)) {

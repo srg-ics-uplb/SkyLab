@@ -17,6 +17,15 @@ class GamessExecutable(P2CToolGeneric):
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d" % self.id
 
+        # clear scr folder
+        remote_path = "/mirror/scr/"
+        sftp = self.shell._open_sftp_client()
+        remote_files = sftp.listdir(path=remote_path)
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            sftp.remove(remote_filepath)  # delete after transfer
+        sftp.close()
+
         Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
         super(GamessExecutable, self).__init__(self, **kwargs)
 
@@ -83,9 +92,9 @@ class GamessExecutable(P2CToolGeneric):
                 local_file.close()
             # todo: insert code for sending file
             sftp.remove(remote_filepath)  # delete after transfer
-
-        sftp.rmdir("/mirror/tool_activity_%d" % self.id)
         sftp.close()
+
+        self.shell.run(["rm", "-r", self.working_dir])
 
         task = Task.objects.get(pk=self.id)
         if task.tasklog_set.latest('timestamp').status_code != 400:

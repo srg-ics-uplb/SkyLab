@@ -1,13 +1,16 @@
-from django import forms
+from crispy_forms.bootstrap import Tab, TabHolder
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML, Submit
-from crispy_forms.bootstrap import AppendedText, Tab, TabHolder
-from multiupload.fields import MultiFileField
-from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
-from skylab.models import MPI_Cluster
-from django.db.models import Q
+from crispy_forms.layout import Layout, Div, Field, Fieldset
+from django import forms
+from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.db.models import Q
+from multiupload.fields import MultiFileField
+
+from skylab.models import MPI_Cluster
 from skylab.modules.base_tool import MPIModelChoiceField
+from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
+
 
 # for value type reference:  https://github.com/ryancoleman/autodock-vina/blob/master/src/main/main.cpp
 # see line 459 onwards
@@ -89,7 +92,8 @@ class VinaForm(forms.Form):
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -98,7 +102,7 @@ class VinaForm(forms.Form):
             TabHolder(
                 Tab('Basic Parameters',
                     Div(
-                        Field('mpi_cluster', wrapper_class='col-xs-5'),
+                        Field('mpi_cluster', wrapper_class='col-xs-6'),
                         css_class="col-sm-12"
                     ),
                     Fieldset(
@@ -146,20 +150,20 @@ class VinaForm(forms.Form):
                         'Miscellaneous',
                         Div(
                             Div(
-                                Field('param_seed', wrapper_class="col-xs-8"),
-                                css_class='col-xs-6'
+                                Field('param_seed', wrapper_class="col-xs-6"),
+                                css_class='col-xs-12'
                             ),
                             Div(
-                                Field('param_exhaustiveness', wrapper_class="col-xs-8"),
-                                css_class='col-xs-6'
+                                Field('param_exhaustiveness', wrapper_class="col-xs-6"),
+                                css_class='col-xs-12'
                             ),
                             Div(
-                                Field('param_num_modes', wrapper_class="col-xs-8"),
-                                css_class='col-xs-6'
+                                Field('param_num_modes', wrapper_class="col-xs-6"),
+                                css_class='col-xs-12'
                             ),
                             Div(
-                                Field('param_energy_range', wrapper_class="col-xs-8"),
-                                css_class='col-xs-6'
+                                Field('param_energy_range', wrapper_class="col-xs-6"),
+                                css_class='col-xs-12'
                             ),
                             css_class='row-fluid col-sm-12'
                         )
@@ -212,7 +216,7 @@ class VinaForm(forms.Form):
                     raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
 
 class VinaSplitForm(forms.Form):
-    param_input = forms.FileField(label="File to split (.pdbqt)", help_text="Vina docking result",
+    param_input = forms.FileField(label="Input file (.pdbqt)", help_text="Vina docking result",
                                   validators=[pdbqt_file_extension_validator])
     param_ligand_prefix = forms.CharField(label="Prefix for ligands", help_text="Optional", required=False)
     param_flex_prefix = forms.CharField(label="Prefix for side chains", help_text="Optional", required=False)
@@ -229,7 +233,8 @@ class VinaSplitForm(forms.Form):
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         help_text="Getting an empty list? Try <a href='../create_mpi_cluster'>creating an MPI Cluster</a> first.")
+                                                         help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
+                                                             reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -243,8 +248,8 @@ class VinaSplitForm(forms.Form):
                 css_class="row-fluid col-sm-12"
                 ),
             Div(
-                Field('param_ligand_prefix', wrapper_class='col-xs-4'),
-                Field('param_flex_prefix', wrapper_class='col-xs-4 col-xs-offset-1'),
+                Field('param_ligand_prefix', wrapper_class='col-xs-5'),
+                Field('param_flex_prefix', wrapper_class='col-xs-5 col-xs-offset-2'),
                 css_class='col-sm-12'
             )
         )
