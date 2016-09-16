@@ -8,6 +8,7 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 """
 
 import os
+import pprint
 
 from django.core.wsgi import get_wsgi_application
 
@@ -102,9 +103,12 @@ class ConsumerThread(threading.Thread):
         init_thread.start()
         # self.setDaemon(True)
 
-    def print_to_console(self, msg):
+    def print_to_console(self, msg, prprint=False):
         localtime = time.asctime(time.localtime(time.time()))
-        print ("Consumer Thread {0} ({1}): {2}".format(self.mpi_pk, localtime, msg))
+        if prprint:
+            print("Consumer Thread {0} ({1}): {2}".format(self.mpi_pk, localtime, pprint.pformat(msg)))
+        else:
+            print("Consumer Thread {0} ({1}): {2}".format(self.mpi_pk, localtime, msg))
 
     def send_mpi_message(self,routing_key, body):
         connection = pika.BlockingConnection(pika.ConnectionParameters(
@@ -169,23 +173,28 @@ class ConsumerThread(threading.Thread):
             self.print_to_console("Connecting to MPI Cluster")
             if create:
                 self.update_p2c()
-
-                # zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "check"], use_pty=True)
-                # zip_shell.stdin_write(cluster_password + "\n")
-                # self.print_to_console(zip_shell.wait_for_result().output)
-
-                self.print_to_console("Updating apt-get")
-                zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "update"], use_pty=True)
-                zip_shell.stdin_write(cluster_password + "\n")
-                self.print_to_console(zip_shell.wait_for_result().output)
-
-                self.print_to_console("Installing zip")
-                zip_shell = self.cluster_shell.spawn(["sudo", "apt-get", "install", "zip"], use_pty=True)
-                zip_shell.stdin_write(cluster_password + "\n")
-                zip_shell.stdin_write("Y\n")
-                self.print_to_console(zip_shell.wait_for_result().output)
-
                 self.activate_tool(self.supported_tools)
+                while True:
+                    try:
+                        self.print_to_console("Updating apt-get")
+                        command = "sudo apt-get update"
+                        zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                        zip_shell.stdin_write(cluster_password + "\n")
+                        self.print_to_console(zip_shell.wait_for_result().output)
+
+                        self.print_to_console("Installing zip")
+                        command = "sudo apt-get install zip -y"
+                        zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                        zip_shell.stdin_write(cluster_password + "\n")
+                        # zip_shell.stdin_write("Y\n")
+                        self.print_to_console(zip_shell.wait_for_result().output)
+                        break
+                    except spur.RunProcessError as err:
+                        if err.return_code == -1:
+                            self.print_to_console(
+                                "No response from server. Retrying command ({0})".format(command))
+
+
 
         except spur.ssh.ConnectionError as err:
             self.print_to_console("Error: Failed to connect to MPI cluster.")
@@ -195,13 +204,26 @@ class ConsumerThread(threading.Thread):
 
     def activate_tool(self,tool_name):
         self.print_to_console("Activating %s" % tool_name)
+        while True:
+            try:
+                command = "p2c-tools activate {0}".format(tool_name)
+                tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                tool_activator.stdin_write(cluster_password + "\n")
+                tool_activator.wait_for_result()
+                self.print_to_console("{0} is now activated.".format(tool_name))
+                self.print_to_console(tool_activator.wait_for_result().output)
+                MPI_Cluster.objects.filter(pk=self.mpi_pk).update(supported_tools=tool_name)
+                break
+            except spur.RunProcessError as err:
+                # if err.return_code == -1:
+                self.print_to_console("No response from server. Retrying command ({0})".format(command))
+                self.print_to_console(err.args)
+                # else:
+                #     break
+            except spur.ssh.ConnectionError as err:
+                self.print_to_console("Connection Error to MPI Cluster")
+                self.print_to_console(err.args)
 
-        tool_activator = self.cluster_shell.spawn(["p2c-tools","activate",tool_name], use_pty=True)
-        tool_activator.stdin_write(cluster_password + "\n")
-        tool_activator.wait_for_result()
-        self.print_to_console("{0} is now activated.".format(tool_name))
-        # self.print_to_console(tool_activator.wait_for_result().output)
-        MPI_Cluster.objects.filter(pk=self.mpi_pk).update(supported_tools=tool_name)
 
     def update_p2c(self):
         self.cluster_shell.run(["sh","-c","rm p2c-tools*"])

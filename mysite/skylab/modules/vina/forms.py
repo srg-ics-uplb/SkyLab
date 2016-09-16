@@ -241,15 +241,32 @@ class VinaSplitForm(forms.Form):
 
         self.helper.layout = Layout(
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-5'),
+                'mpi_cluster',
                 css_class="col-sm-12"
             ),
-            Div(Div('param_input', css_class="col-xs-6"),
-                css_class="row-fluid col-sm-12"
-                ),
-            Div(
-                Field('param_ligand_prefix', wrapper_class='col-xs-5'),
-                Field('param_flex_prefix', wrapper_class='col-xs-5 col-xs-offset-2'),
-                css_class='col-sm-12'
+
+            Fieldset(
+                'Input',
+                Div(
+                    'param_input',
+                    'param_ligand_prefix',
+                    'param_flex_prefix',
+                    css_class='col-xs-12'
+                )
+                # Div(
+                #     Div('param_input', css_class="col-xs-6"),
+                #     css_class="row-fluid col-sm-12"
+                #     ),
+                # Div(
+                #     Field('param_ligand_prefix', wrapper_class='col-xs-5'),
+                #     # Field('param_flex_prefix', wrapper_class='col-xs-5 col-xs-offset-2'),
+                #     css_class='col-sm-12'
+                # ),
+                # Div(
+                #
+                #     Field('param_flex_prefix', wrapper_class='col-xs-5'),
+                #     css_class='col-sm-12'
+                # )
             )
+
         )

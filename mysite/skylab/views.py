@@ -102,7 +102,7 @@ class CreateMPIView(LoginRequiredMixin, CreateView):
 	form_class = Create_MPI_Cluster_Form
 
 	# TODO: change success url (-> my mpi cluster view)
-	success_url = 'create_mpi_cluster'
+	success_url = 'create-mpi-cluster'
 
 	def get_form_kwargs(self):
 		# pass "user" keyword argument with the current user to your form

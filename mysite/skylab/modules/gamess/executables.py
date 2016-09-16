@@ -94,7 +94,9 @@ class GamessExecutable(P2CToolGeneric):
             sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
+        self.print_msg(self.shell.run(["ls"]).output)
         self.shell.run(["rm", "-r", self.working_dir])
+        self.print_msg(self.shell.run(["ls"]).output)
 
         task = Task.objects.get(pk=self.id)
         if task.tasklog_set.latest('timestamp').status_code != 400:
@@ -102,7 +104,7 @@ class GamessExecutable(P2CToolGeneric):
         else:
             task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
 
-        self.print_msg("Output files sent")
+        self.print_msg("Done. Output files sent")
 
     # raise not implemented error
     def print_msg(self, msg):

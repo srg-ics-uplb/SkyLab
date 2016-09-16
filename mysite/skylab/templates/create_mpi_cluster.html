@@ -4,8 +4,11 @@
 {% block content %}
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>
-            <p>Howdy{% if user.is_authenticated %} {{ user.username }}{% endif %}!</p>
+            <h1 class="text-center">Create MPI Cluster</h1>
+            <hr>
             {% crispy form %}
+            <hr>
+
         </div>
     </div>
 

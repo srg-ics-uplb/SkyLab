@@ -2,7 +2,7 @@ import json
 
 import pika
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Submit, ButtonHolder, HTML
+from crispy_forms.layout import Layout, HTML
 from django import forms
 
 from skylab.models import MPI_Cluster
@@ -62,14 +62,12 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		self.helper.form_action = ''
 		self.helper.layout = Layout(
 
-			Fieldset(
-				'Create MPI Cluster',
-				'cluster_name',
-				'cluster_size',
-				'supported_tools',
-				'shared_to_public',
-			),
-			Submit('submit', 'Create MPI Cluster')
+            'cluster_name',
+            'cluster_size',
+            'supported_tools',
+            'shared_to_public',
+            HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
+
 
 		)
 

@@ -16,22 +16,28 @@ def get_available_tools():  # TODO: get file __path__
             not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
     return dirs
 
+
 @python_2_unicode_compatible
 class MPI_Cluster(models.Model):
     MAX_MPI_CLUSTER_SIZE = 10
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
 
-    cluster_name_validator = RegexValidator(r'^[a-zA-Z]+[0-9a-zA-Z\-]*$', 'Must start with a letter. Only alphanumeric characters, - are allowed.')
-    cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator], help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
+    cluster_name_validator = RegexValidator(r'^[a-zA-Z]+[0-9a-zA-Z\-]*$',
+                                            'Must start with a letter. Only alphanumeric characters, - are allowed.')
+    cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator],
+                                    help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
 
-    CLUSTER_SIZE_CHOICES = zip(range(1, MAX_MPI_CLUSTER_SIZE+1), range(1, MAX_MPI_CLUSTER_SIZE+1))
-    cluster_size = models.SmallIntegerField(default=1, choices=CLUSTER_SIZE_CHOICES, validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)], help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
+    CLUSTER_SIZE_CHOICES = zip(range(1, MAX_MPI_CLUSTER_SIZE + 1), range(1, MAX_MPI_CLUSTER_SIZE + 1))
+    cluster_size = models.SmallIntegerField(default=1, choices=CLUSTER_SIZE_CHOICES,
+                                            validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)],
+                                            help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
 
     tool_list = get_available_tools()
     # print tool_list
-    supported_tools = models.CharField(choices=tool_list, max_length=200, help_text='A cluster only supports one tool in this version')
-    creator= models.ForeignKey(User, on_delete=models.CASCADE)
+    supported_tools = models.CharField(choices=tool_list, max_length=200,
+                                       help_text='A cluster only supports one tool in this version')
+    creator = models.ForeignKey(User, on_delete=models.CASCADE)
     shared_to_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
@@ -44,9 +50,11 @@ class MPI_Cluster(models.Model):
     def __str__(self):
         return self.cluster_name
 
+
 def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     return '{0}/{1}'.format(instance.upload_path, filename)
+
 
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):
@@ -57,6 +65,7 @@ class SkyLabFile(models.Model):
 
     def __str__(self):
         return self.filename
+
 
 @python_2_unicode_compatible
 class Task(models.Model):
@@ -77,7 +86,8 @@ class Task(models.Model):
     def __str__(self):
         return self.tool_name
 
-    def get_default_status_msg(self, status_code):
+    @staticmethod
+    def get_default_status_msg(status_code):
         status_msgs = {
             000: "Unknown",
             100: "Initializing",
@@ -120,63 +130,35 @@ class Task(models.Model):
 
     def get_output_files_urls(self):
         output_files_urls_dict = []
-        for file in self.output_files.all():
+        for f in self.output_files.all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
                                                           kwargs={'task_id': self.id, 'type': 'output',
-                                                                  'filename': file.filename}),
-                                           'filename': file.filename})
+                                                                  'filename': f.filename}),
+                                           'filename': f.filename})
 
         return output_files_urls_dict
 
     def get_dict_jsmol_files_uris(self, request):
         jsmol_files_absolute_uris = []
         output_files = self.output_files.filter(render_with_jsmol=True)
-        for file in output_files:
+        for f in output_files:
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "type": "output", "filename": file.filename})),
-                 "filename": file.filename}
+                                                                   "type": "output", "filename": f.filename})),
+                 "filename": f.filename}
             )
 
         input_files = self.input_files.filter(render_with_jsmol=True)
-        for file in input_files:
+        for f in input_files:
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "type": "input", "filename": file.filename})),
-                 "filename": file.filename}
+                                                                   "type": "input", "filename": f.filename})),
+                 "filename": f.filename}
             )
 
         return jsmol_files_absolute_uris
-
-        # @property
-        # def has_jsmol_file(self):
-        #     if self.output_files.filter(render_with_jsmol=True) or self.input_files.filter(render_with_jsmol=True):
-        #         return True
-        #     return False
-
-# @python_2_unicode_compatible
-# class Toolset(models.Model):
-#     toolset_name = models.CharField(max_length=50)
-#     description = models.CharField(max_length=300)
-#
-#     def __str__(self):
-#         return self.toolset_name
-#
-# @python_2_unicode_compatible
-# class Tool(models.Model):
-#     tool_name = models.CharField(max_length=50)
-#     view_name = models.CharField(max_length=50)
-#     executable_name = models.CharField(max_length=50)
-#     toolset = models.ForeignKey(Toolset, on_delete=models.CASCADE)
-#     description = models.CharField(max_length=300)
-#     source_url = models.URLField(max_length=100)
-#     local_url = models.URLField(max_length=100)
-#
-#     def __str__(self):
-#         return self.tool_name
-
 
 
 @python_2_unicode_compatible
@@ -201,3 +183,29 @@ class MPILog(models.Model):
     @property
     def __str__(self):
         return "mpi cluster-{0}_log_{1}".format(self.mpi_cluster.id, self.timestamp.ctime())
+
+
+# @python_2_unicode_compatible
+# class Toolset(models.Model):
+#     toolset_name = models.CharField(max_length=50)
+#     description = models.CharField(max_length=300)
+#
+#     def __str__(self):
+#         return self.toolset_name
+#
+# @python_2_unicode_compatible
+# class Tool(models.Model):
+#     tool_name = models.CharField(max_length=50)
+#     view_name = models.CharField(max_length=50)
+#     executable_name = models.CharField(max_length=50)
+#     toolset = models.ForeignKey(Toolset, on_delete=models.CASCADE)
+#     description = models.CharField(max_length=300)
+#     source_url = models.URLField(max_length=100)
+#     local_url = models.URLField(max_length=100)
+#
+#     def __str__(self):
+#         return self.tool_name
+
+
+
+

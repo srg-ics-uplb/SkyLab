@@ -11,7 +11,7 @@
 
 {% block content %}
     <div class='row'>
-        <div id="task-detail-div">
+        <div id="task-detail-div" class="col-xs-6 col-xs-offset-3">
             <h1>Task {{ object.id }}</h1>
 
             <span class="text-muted">{{ object.tool_name }}@{{ object.mpi_cluster }}</span>
@@ -178,7 +178,7 @@
             })
         };
         retrieveCurrentStatus();
-        var statusRefresher = setInterval(retrieveCurrentStatus, 000);
+        var statusRefresher = setInterval(retrieveCurrentStatus, 5000);
 
 
     </script>
@@ -212,7 +212,8 @@
             var loadFile = 'load "' + $("#jsmol_file_list").find("option:first").val() + '"';
             Jmol.script(jmolApplet0, loadFile);
             var task_detail_div = $('#task-detail-div');
-            task_detail_div.addClass("col-xs-6");
+            {#            task_detail_div.addClass("col-xs-6");#}
+            task_detail_div.removeClass("col-xs-offset-3");
             var jsmol_container_div = $('#jsmol-container-div');
             jsmol_container_div.show();
             $('html, body').animate({

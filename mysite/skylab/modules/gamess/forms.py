@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Fieldset, Field, Div
+from crispy_forms.layout import Layout, Fieldset, Field, Div, HTML
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -52,5 +52,6 @@ class GamessForm(forms.Form):
                 ),
 
             ),
+            HTML('<hr><input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 
         )
