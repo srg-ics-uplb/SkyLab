@@ -8,7 +8,7 @@ import os
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task, SkyLabFile, MPI_Cluster
+from skylab.models import Task, SkyLabFile, MPICluster
 from skylab.modules.base_tool import send_mpi_message
 from skylab.modules.gamess.forms import GamessForm
 
@@ -27,7 +27,7 @@ class GamessView(LoginRequiredMixin, FormView):
         return "task/{0}".format(self.kwargs['id'])
 
     def form_valid(self, form):
-        cluster = MPI_Cluster.objects.get(pk=self.request.POST['mpi_cluster'])
+        cluster = MPICluster.objects.get(pk=self.request.POST['mpi_cluster'])
         print(cluster)
         filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
         exec_string = "rungms {0} 01 1 2>&1 | tee {0}.log".format(filename)

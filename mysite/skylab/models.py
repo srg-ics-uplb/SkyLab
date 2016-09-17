@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
 import os
+import re
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -17,27 +19,32 @@ def get_available_tools():  # TODO: get file __path__
     return dirs
 
 
+def get_sentinel_user():
+    return User.objects.get_or_create(username='deleted_user')[0]
+
 @python_2_unicode_compatible
-class MPI_Cluster(models.Model):
-    MAX_MPI_CLUSTER_SIZE = 10
+class MPICluster(models.Model):
+    MAX_MPI_CLUSTER_SIZE = settings.MAX_NODES_PER_CLUSTER
+    # TODO: current can be lower than set MAX
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
 
-    cluster_name_validator = RegexValidator(r'^[a-zA-Z]+[0-9a-zA-Z\-]*$',
-                                            'Must start with a letter. Only alphanumeric characters, - are allowed.')
+    cluster_name_validator = RegexValidator(r'^\w+$',
+                                            'Must start with a letter. Only alphanumeric characters, _ are allowed.')
     cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator],
                                     help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
 
     CLUSTER_SIZE_CHOICES = zip(range(1, MAX_MPI_CLUSTER_SIZE + 1), range(1, MAX_MPI_CLUSTER_SIZE + 1))
-    cluster_size = models.SmallIntegerField(default=1, choices=CLUSTER_SIZE_CHOICES,
+    cluster_size = models.SmallIntegerField(default=1, blank=True, choices=CLUSTER_SIZE_CHOICES,
                                             validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)],
                                             help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
 
-    tool_list = get_available_tools()
+    # tool_list = get_available_tools()CharField
     # print tool_list
-    supported_tools = models.CharField(choices=tool_list, max_length=200,
-                                       help_text='A cluster only supports one tool in this version')
-    creator = models.ForeignKey(User, on_delete=models.CASCADE)
+    # supported_tools = models.CharField(choices=tool_list, max_length=200,
+    #                                    help_text='A cluster only supports one tool in this version')
+    creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
+    allowed_users = models.ForeignKey(User, on_delete=models.CASCADE, default=creator, related_name="accessible_mpi")
     shared_to_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
@@ -56,29 +63,67 @@ def get_upload_path(instance, filename):
     return '{0}/{1}'.format(instance.upload_path, filename)
 
 
+def get_default_package_name(display_name):
+    pattern = re.compile('[\W]+')
+    pattern.sub('', display_name).lower()
+
+
 @python_2_unicode_compatible
-class SkyLabFile(models.Model):
-    upload_path = models.CharField(max_length=200)
-    file = models.FileField(upload_to=get_upload_path, blank=True)
-    filename = models.CharField(max_length=200)
-    render_with_jsmol = models.BooleanField(default=False)
+class ToolSet(models.Model):
+    display_name = models.CharField(max_length=50, unique=True)
+    package_name = models.CharField(max_length=50, default=None, unique=True)
+    description = models.CharField(max_length=300, blank=True)
+    source_url = models.URLField(blank=True)
 
     def __str__(self):
-        return self.filename
+        return self.display_name
+
+    def save(self, *args, **kwargs):
+        if self.package_name is None:
+            pattern = re.compile('[\W]+')
+            self.package_name = pattern.sub('', self.package_name).lower()
+
+        super(ToolSet, self).save(*args, **kwargs)
+
+
+def get_default_tool_view_name(display_name):
+    return display_name + "View"
+
+
+def get_default_tool_executable_name(display_name):
+    return display_name + "Executable"
+
+@python_2_unicode_compatible
+class Tool(models.Model):
+    display_name = models.CharField(max_length=50,
+                                    unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
+    executable = models.CharField(max_length=100, unique=True, blank=True)  # modules.toolset.Executable
+    toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.display_name
+
+
+def get_sentinel_tool():
+    return Tool.objects.get_or_create(display_name="deleted tool")[0]
+
+
+def get_sentinel_mpi():
+    return MPICluster.objects.get_or_create(cluster_name="deleted cluster")[0]
 
 
 @python_2_unicode_compatible
 class Task(models.Model):
+    type = models.PositiveSmallIntegerField()  # 1=mpi_create, 2=tool, 3=mpi_delete
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
-    tool_name = models.CharField(max_length=50)
-    executable_name = models.CharField(max_length=50)
+    tool = models.ForeignKey(Tool, on_delete=models.SET(get_sentinel_tool))
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.SET_NULL, null=True)
+
+    mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.SET(get_sentinel_mpi), null=True)
     # status_msg = models.CharField(default="Task Created", max_length=200)
     # status_code = models.SmallIntegerField(default=0)
-    input_files = models.ManyToManyField(SkyLabFile, related_name="input_files", blank=True)
-    output_files = models.ManyToManyField(SkyLabFile, related_name="output_files", blank=True)
+
 
     # updated = models.DateTimeField(auto_now=True, auto_now_add=False)
     # timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
@@ -109,6 +154,14 @@ class Task(models.Model):
         status_code = kwargs.get('status_code', 000)
         status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, tool_activity=self)
+
+    @property
+    def output_files(self):
+        return self.files.filter(type=2)
+
+    @property
+    def input_files(self):
+        return self.files.filter(type=1)
 
     # workaround for accessing all logs in template
     @property
@@ -160,29 +213,30 @@ class Task(models.Model):
 
         return jsmol_files_absolute_uris
 
+@python_2_unicode_compatible
+class SkyLabFile(models.Model):
+    type = models.PositiveSmallIntegerField()  # 1=input, 2=output
+    upload_path = models.CharField(max_length=200)
+    file = models.FileField(upload_to=get_upload_path, blank=True)
+    filename = models.CharField(max_length=200)
+    render_with_jsmol = models.BooleanField(default=False)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
+
+    def __str__(self):
+        return self.filename
+
 
 @python_2_unicode_compatible
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
     status_msg = models.CharField(max_length=200)
     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-    tool_activity = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True)
 
     @property
     def __str__(self):
-        return "task-{0}_log_{1}".format(self.tool_activity.id, self.timestamp.ctime())
+        return "task-{0}_log_{1}".format(self.task_id, self.timestamp.ctime())
 
-
-@python_2_unicode_compatible
-class MPILog(models.Model):
-    status_code = models.PositiveSmallIntegerField()
-    status_msg = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-    mpi_cluster = models.ForeignKey(MPI_Cluster, on_delete=models.CASCADE, blank=True)
-
-    @property
-    def __str__(self):
-        return "mpi cluster-{0}_log_{1}".format(self.mpi_cluster.id, self.timestamp.ctime())
 
 
 # @python_2_unicode_compatible

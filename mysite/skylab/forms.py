@@ -5,7 +5,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, HTML
 from django import forms
 
-from skylab.models import MPI_Cluster
+from skylab.models import MPICluster
 
 
 # class MyRegistrationForm(RegistrationForm):
@@ -46,8 +46,8 @@ def send_mpi_message(routing_key, body):
 
 class Create_MPI_Cluster_Form(forms.ModelForm):
 	class Meta:
-		model = MPI_Cluster
-		fields = ['cluster_name', 'cluster_size', 'supported_tools', 'shared_to_public']
+		model = MPICluster
+		fields = ['cluster_name', 'cluster_size', 'shared_to_public']  # 'supported_tools'
 
 		# widgets = {'cluster_size' : forms.NumberInput()}
 
@@ -64,7 +64,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 
             'cluster_name',
             'cluster_size',
-            'supported_tools',
+			# 'supported_tools',
             'shared_to_public',
             HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 
@@ -80,7 +80,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 			"pk"			:	result.id,
 			"cluster_name"	:	result.cluster_name,
 			"cluster_size"	:	result.cluster_size,
-			"tools"			:	result.supported_tools
+			#"tools"			:	result.supported_tools
 		}
 		message = json.dumps(data)
 		print message

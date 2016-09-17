@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.models import MPI_Cluster
+from skylab.models import MPICluster
 from skylab.modules.base_tool import MPIModelChoiceField
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
@@ -26,12 +26,12 @@ class SelectMPIFilesForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.get('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
-        # self.fields['mpi_cluster'].queryset = MPI_Cluster.objects.filter(creator=self.user)
+        # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
         supports_ray = Q(supported_tools="ray")
         # is_ready = Q(status=1)
-        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_ray).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",

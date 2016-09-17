@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
-from skylab.models import MPI_Cluster
+from skylab.models import MPICluster
 from skylab.modules.base_tool import MPIModelChoiceField
 from validators import pdbqt_file_extension_validator, dpf_file_extension_validator, gpf_file_extension_validator, \
     multi_grid_map_file_validator
@@ -47,7 +47,7 @@ class AutodockForm(forms.Form):
         cluster_is_public = Q(shared_to_public=True)
         supports_autodock = Q(supported_tools="autodock")
         # is_ready = Q(status=1)
-        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
@@ -145,7 +145,7 @@ class AutogridForm(forms.Form):
         cluster_is_public = Q(shared_to_public=True)
         supports_autodock = Q(supported_tools="autodock")
         # is_ready = Q(status=1)
-        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",

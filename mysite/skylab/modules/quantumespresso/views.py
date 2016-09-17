@@ -8,7 +8,7 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
-from skylab.models import MPI_Cluster, Task
+from skylab.models import MPICluster, Task
 from skylab.modules.base_tool import create_input_skylab_file
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 
@@ -35,8 +35,8 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
             # cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
-            cluster_name = MPI_Cluster.objects.get(pk=31)
-            cluster_size = MPI_Cluster.objects.get(cluster_name=cluster_name).cluster_size
+            cluster_name = MPICluster.objects.get(pk=31)
+            cluster_size = MPICluster.objects.get(cluster_name=cluster_name).cluster_size
 
             # -n cluster_size
 

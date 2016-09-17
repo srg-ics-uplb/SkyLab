@@ -184,6 +184,8 @@ SENDFILE_URL = '/media'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
+MAX_NODES_PER_CLUSTER = 5
+MAX_TOTAL_INSTANCES = 25  # current limit of vcluster : 32
 
 CLUSTER_PASSWORD = "mpiuser"
 

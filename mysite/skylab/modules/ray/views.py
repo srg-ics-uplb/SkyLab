@@ -5,7 +5,7 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
-from skylab.models import MPI_Cluster, Task
+from skylab.models import MPICluster, Task
 from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
@@ -34,7 +34,7 @@ class RayView(LoginRequiredMixin, TemplateView):
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
             cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
-            cluster_size = MPI_Cluster.objects.get(cluster_name=cluster_name).cluster_size
+            cluster_size = MPICluster.objects.get(cluster_name=cluster_name).cluster_size
 
             # -n cluster_size
             exec_string = "mpiexec -n %s " % cluster_size

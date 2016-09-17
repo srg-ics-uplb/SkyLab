@@ -7,7 +7,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.models import MPI_Cluster
+from skylab.models import MPICluster
 from skylab.modules.base_tool import MPIModelChoiceField
 from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
 
@@ -88,7 +88,7 @@ class VinaForm(forms.Form):
         cluster_is_public = Q(shared_to_public=True)
         supports_vina = Q(supported_tools="vina")
         # is_ready = Q(status=1)
-        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
@@ -229,7 +229,7 @@ class VinaSplitForm(forms.Form):
         cluster_is_public = Q(shared_to_public=True)
         supports_vina = Q(supported_tools="vina")
         # is_ready = Q(status=1)
-        q = MPI_Cluster.objects.filter(current_user_as_creator | cluster_is_public)
+        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_vina).exclude(status=4)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
