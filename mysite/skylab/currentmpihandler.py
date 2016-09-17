@@ -12,12 +12,12 @@ from django.conf import settings
 
 from skylab.models import MPICluster
 
-frontend_ip = "10.0.3.101"
-frontend_username = "user"
-frontend_password = "excellence"
+frontend_ip = settings.FRONTEND_IP
+frontend_username = settings.FRONTEND_USERNAME
+frontend_password = settings.FRONTEND_PASSWORD
 
-cluster_username = "mpiuser"
-cluster_password = "mpiuser"
+cluster_username = settings.CLUSTER_USERNAME
+cluster_password = settings.CLUSTER_PASSWORD
 
 
 class ConsumerThreadManager(threading.Thread):

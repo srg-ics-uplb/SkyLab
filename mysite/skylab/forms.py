@@ -85,7 +85,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		message = json.dumps(data)
 		print message
 		# find a way to know if thread is already running
-		send_mpi_message("skylab.mpi.create", message)
+		# send_mpi_message("skylab.mpi.create", message)
 		# time.sleep(10)
 		return result
 

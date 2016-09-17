@@ -187,6 +187,13 @@ SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
 MAX_NODES_PER_CLUSTER = 5
 MAX_TOTAL_INSTANCES = 25  # current limit of vcluster : 32
 
+FRONTEND_IP = "10.0.3.101"
+FRONTEND_USERNAME = "user"
+FRONTEND_PASSWORD = "excellence"
+
+CLUSTER_USERNAME = "mpiuser"
+CLUSTER_PASSWORD = "mpiuser"
+
 CLUSTER_PASSWORD = "mpiuser"
 
 SITE_ID = 1

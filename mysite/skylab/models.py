@@ -44,7 +44,8 @@ class MPICluster(models.Model):
     # supported_tools = models.CharField(choices=tool_list, max_length=200,
     #                                    help_text='A cluster only supports one tool in this version')
     creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
-    allowed_users = models.ForeignKey(User, on_delete=models.CASCADE, default=creator, related_name="accessible_mpi")
+    allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
+                                      related_name="accessible_mpi")
     shared_to_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
@@ -104,8 +105,6 @@ class Tool(models.Model):
         return self.display_name
 
 
-def get_sentinel_tool():
-    return Tool.objects.get_or_create(display_name="deleted tool")[0]
 
 
 def get_sentinel_mpi():
@@ -117,7 +116,7 @@ class Task(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=mpi_create, 2=tool, 3=mpi_delete
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
-    tool = models.ForeignKey(Tool, on_delete=models.SET(get_sentinel_tool))
+    tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.SET(get_sentinel_mpi), null=True)
