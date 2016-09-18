@@ -45,7 +45,7 @@ class AutodockForm(forms.Form):
 
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_autodock = Q(supported_tools="autodock")
+        supports_autodock = Q(toolset__display_name="AutoDock4")
         # is_ready = Q(status=1)
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters
@@ -143,7 +143,7 @@ class AutogridForm(forms.Form):
 
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_autodock = Q(supported_tools="autodock")
+        supports_autodock = Q(toolset__display_name="AutoDock4")
         # is_ready = Q(status=1)
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters

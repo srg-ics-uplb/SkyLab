@@ -9,13 +9,13 @@ from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class AutodockExecutable(P2CToolGeneric):
+class AutoDockExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(AutodockExecutable, self).__init__(self, **kwargs)
+        super(AutoDockExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
@@ -105,13 +105,13 @@ class AutodockExecutable(P2CToolGeneric):
         pass
 
 
-class AutogridExecutable(P2CToolGeneric):
+class AutoGridExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(AutogridExecutable, self).__init__(self, **kwargs)
+        super(AutoGridExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])

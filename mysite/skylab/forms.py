@@ -47,7 +47,7 @@ def send_mpi_message(routing_key, body):
 class Create_MPI_Cluster_Form(forms.ModelForm):
 	class Meta:
 		model = MPICluster
-		fields = ['cluster_name', 'cluster_size', 'shared_to_public']  # 'supported_tools'
+		fields = ['cluster_name', 'cluster_size', 'activated_toolset', 'shared_to_public']  # 'supported_tools'
 
 		# widgets = {'cluster_size' : forms.NumberInput()}
 
@@ -64,7 +64,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 
             'cluster_name',
             'cluster_size',
-			# 'supported_tools',
+			'activated_toolset',
             'shared_to_public',
             HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 
@@ -75,6 +75,8 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 		result = super(Create_MPI_Cluster_Form, self).save(commit=False)
 		result.creator = self.user
 		result.save()
+		for t in result.activated_toolset.all():
+			print t.display_name
 		data = {
 			"actions"		:	"create_cluster",
 			"pk"			:	result.id,

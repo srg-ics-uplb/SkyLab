@@ -5,7 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
 from skylab.models import Task
-from skylab.modules.autodock.forms import AutodockForm, AutogridForm
+from skylab.modules.autodock4.forms import AutodockForm, AutogridForm
 from skylab.modules.base_tool import create_input_skylab_file
 from skylab.modules.base_tool import send_mpi_message
 

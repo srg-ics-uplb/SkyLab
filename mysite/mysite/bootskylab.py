@@ -1,8 +1,12 @@
-import Queue
+import Queue  # queue for python 3
 import threading
 import time
 
 from skylab.models import MPICluster
+
+
+def populate_tools():
+    pass
 
 
 class MPIThreadManager(threading.Thread):
@@ -36,6 +40,7 @@ class MPIThread(threading.Thread):
         pass
         # while not self.stop_request.isSet():
         #   try: pop queue except empty
+        #  TODO: make priority queue highest= tool task, lowest = delete cluster
 
     def connect_to_cluster(self, initialize=False):
         pass

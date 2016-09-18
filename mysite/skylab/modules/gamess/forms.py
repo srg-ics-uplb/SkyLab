@@ -23,8 +23,9 @@ class GamessForm(forms.Form):
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_gamess = Q(supported_tools="gamess")
+        supports_gamess = Q(activated_toolset__display_name="Gamess")
         # is_ready = Q(status=1)
+        # MPICluster.objects.filter()
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
         q = q.filter(supports_gamess).exclude(status=4)
 

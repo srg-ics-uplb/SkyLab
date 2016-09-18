@@ -10,15 +10,20 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-from skylab.currentmpihandler import ConsumerThreadManager
+from skylab.models import MPICluster
+from skylab.modules.autodock4.install import insert_to_db
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
+insert_to_db()
+# MPICluster.objects.filter(activated_toolset__display_name="Autodo")
+x = MPICluster.objects.filter(activated_toolset__display_name="AutoDock4")[:1]
+if x:
+    print x[0].cluster_name
 
 
-
-ConsumerThreadManager().start()
+# ConsumerThreadManager().start()
 
 # x = MPICluster.objects.get(pk=55)
 # curr_tool = json.loads(x.supported_tools)

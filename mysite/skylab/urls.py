@@ -1,7 +1,7 @@
 from django.conf.urls import include, url
 from django.contrib.auth.views import logout
 
-from skylab.modules.autodock.views import AutodockView, AutogridView
+from skylab.modules.autodock4.views import AutodockView, AutogridView
 from skylab.modules.dock6.views import DockFormView, GridFormView
 from skylab.modules.gamess.views import GamessView
 from skylab.modules.quantumespresso.views import QuantumEspressoView

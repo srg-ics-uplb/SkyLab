@@ -43,6 +43,7 @@ class MPICluster(models.Model):
     # print tool_list
     # supported_tools = models.CharField(choices=tool_list, max_length=200,
     #                                    help_text='A cluster only supports one tool in this version')
+    activated_toolset = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate")
     creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
     allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
                                       related_name="accessible_mpi")
@@ -72,7 +73,7 @@ def get_default_package_name(display_name):
 @python_2_unicode_compatible
 class ToolSet(models.Model):
     display_name = models.CharField(max_length=50, unique=True)
-    package_name = models.CharField(max_length=50, default=None, unique=True)
+    package_name = models.CharField(max_length=50, default=None, unique=True, blank=True)
     description = models.CharField(max_length=300, blank=True)
     source_url = models.URLField(blank=True)
 
@@ -98,13 +99,18 @@ def get_default_tool_executable_name(display_name):
 class Tool(models.Model):
     display_name = models.CharField(max_length=50,
                                     unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
-    executable = models.CharField(max_length=100, unique=True, blank=True)  # modules.toolset.Executable
+    executable_name = models.CharField(max_length=100, unique=True, blank=True)  # modules.toolset.Executable
+    description = models.CharField(max_length=300, blank=True)
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.display_name
 
+    def save(self, *args, **kwargs):
+        if self.executable_name is None:
+            self.executable_name = self.display_name.replace(" ", "") + "Executable"
 
+        super(Tool, self).save(*args, **kwargs)
 
 
 def get_sentinel_mpi():
