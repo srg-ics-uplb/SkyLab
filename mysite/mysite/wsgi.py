@@ -23,6 +23,9 @@ if x:
     print x[0].cluster_name
 
 
+
+
+
 # ConsumerThreadManager().start()
 
 # x = MPICluster.objects.get(pk=55)

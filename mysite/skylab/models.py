@@ -99,18 +99,20 @@ def get_default_tool_executable_name(display_name):
 class Tool(models.Model):
     display_name = models.CharField(max_length=50,
                                     unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
-    executable_name = models.CharField(max_length=100, unique=True, blank=True)  # modules.toolset.Executable
+    executable_name = models.CharField(max_length=50, blank=True)  # Executable
+    view_name = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=300, blank=True)
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.display_name
 
-    def save(self, *args, **kwargs):
-        if self.executable_name is None:
-            self.executable_name = self.display_name.replace(" ", "") + "Executable"
-
-        super(Tool, self).save(*args, **kwargs)
+        # def save(self, *args, **kwargs):
+        #     if self.executable_name is None:
+        #         self.executable_name = self.display_name.replace(" ", "") + "Executable"
+        #     if self.view_name is None:
+        #         self.view_name = self.display_name.replace(" ", "") + "View"
+        #     super(Tool, self).save(*args, **kwargs)
 
 
 def get_sentinel_mpi():
