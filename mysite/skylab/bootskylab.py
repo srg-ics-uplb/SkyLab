@@ -1,7 +1,10 @@
 from __future__ import print_function
 
 import Queue  # queue for python 3
+import json
 import logging
+import logging.config
+import os
 import threading
 
 from skylab.models import MPICluster
@@ -14,8 +17,9 @@ def populate_tools():
 class MPIThreadManager(object):
     def __init__(self):
         self.threadHash = {}
-
+        self.logger = logging.getLogger(__name__)
         clusters = MPICluster.objects.exclude(status=5)
+        self.logger.info("Creating MPIThreads")
         for cluster in clusters:
 
             if cluster.id not in self.threadHash:
@@ -24,6 +28,7 @@ class MPIThreadManager(object):
 
                 self.threadHash[cluster.id] = t
                 t.start()
+
 
         super(MPIThreadManager, self).__init__()
 
@@ -41,40 +46,28 @@ class MPIThreadManager(object):
         pass
 
 
-def get_mpi_thread_logger():
-    logger = logging.getLogger(__name__)
-    logger.setLevel(logging.DEBUG)
+def setup_logging(
+        path=os.path.dirname(os.path.abspath(__file__)) + '/logs/skylab_log_config.json',
+        default_level=logging.INFO,
 
-    handler = logging.FileHandler('skylab/logs/MPIThreads_info.log', mode='a+')
-    handler.setLevel(logging.INFO)
+):
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            config = json.load(f)
+        logging.config.dictConfig(config)
+    else:
+        logging.basicConfig(level=default_level)
 
-    # create a logging format
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
-    handler = logging.FileHandler('skylab/logs/MPIThreads_debug.log', mode='a+')
-    handler.setLevel(logging.DEBUG)
-    # create a logging format
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-
-    handler = logging.FileHandler('skylab/logs/MPIThreads_err.log', mode='a+')
-    handler.setLevel(logging.ERROR)
-    # create a logging format
-    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
-    return logger
-
+setup_logging()
 
 class MPIThread(threading.Thread):
     def __init__(self, mpi_cluster):
         self._stop = threading.Event()
         self.task_queue = Queue.PriorityQueue()
         self.mpi_cluster = mpi_cluster
-        self.logger = get_mpi_thread_logger()
+        self.logger = logging.getLogger(__name__)
+
 
         self.logger.info("Created thread for MPI #{0}({1})".format(self.mpi_cluster.id, self.mpi_cluster.cluster_name))
         # add the handlers to the logger
@@ -86,7 +79,7 @@ class MPIThread(threading.Thread):
 
     def run(self):
         while not self._stop.isSet():
-            print("@MPIThread # {0}".format(self.mpi_cluster.id))
+
             self.logger.debug('MPIThread # {0} Waiting 5 seconds, before processing again'.format(self.mpi_cluster.id))
             event_is_set = self._stop.wait(5)
             self.logger.debug('MPIThread # {0} stop event set: {1}'.format(self.mpi_cluster.id, event_is_set))
