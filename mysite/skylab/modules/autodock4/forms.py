@@ -8,7 +8,7 @@ from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
 from skylab.models import MPICluster
-from skylab.modules.base_tool import MPIModelChoiceField
+from skylab.modules.basetool import MPIModelChoiceField
 from validators import pdbqt_file_extension_validator, dpf_file_extension_validator, gpf_file_extension_validator, \
     multi_grid_map_file_validator
 
@@ -48,7 +48,7 @@ class AutodockForm(forms.Form):
         supports_autodock = Q(toolset__display_name="AutoDock4")
         # is_ready = Q(status=1)
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters
+        q = q.filter(supports_autodock).exclude(status=5)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
@@ -146,7 +146,7 @@ class AutogridForm(forms.Form):
         supports_autodock = Q(toolset__display_name="AutoDock4")
         # is_ready = Q(status=1)
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_autodock).exclude(status=4)  # exclude unusable clusters
+        q = q.filter(supports_autodock).exclude(status=5)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(

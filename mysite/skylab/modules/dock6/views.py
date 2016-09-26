@@ -8,18 +8,18 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
 from skylab.models import Task
-from skylab.modules.base_tool import create_input_skylab_file
-from skylab.modules.base_tool import send_mpi_message
-from skylab.modules.dock6.forms import DockForm, GridForm
+from skylab.modules.basetool import create_input_skylab_file
+from skylab.modules.basetool import send_mpi_message
+from skylab.modules.dock6.forms import Dock6Form, GridForm
 
 
-class DockFormView(LoginRequiredMixin, FormView):
+class Dock6FormView(LoginRequiredMixin, FormView):
     template_name = "modules/dock6/use_dock6.html"
-    form_class = DockForm
+    form_class = Dock6Form
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(DockFormView, self).get_form_kwargs()
+        kwargs = super(Dock6FormView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -66,7 +66,7 @@ class DockFormView(LoginRequiredMixin, FormView):
         send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
         # mpi_cluster.status = "Task Queued"
 
-        return super(DockFormView, self).form_valid(form)
+        return super(Dock6FormView, self).form_valid(form)
 
 
 class GridFormView(LoginRequiredMixin, FormView):

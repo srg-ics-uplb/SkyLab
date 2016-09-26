@@ -6,7 +6,7 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
 from skylab.models import MPICluster, Task
-from skylab.modules.base_tool import send_mpi_message, create_input_skylab_file
+from skylab.modules.basetool import send_mpi_message, create_input_skylab_file
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
 

@@ -6,12 +6,12 @@ import shutil
 from django.conf import settings
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.base_tool import P2CToolGeneric
+from skylab.modules.basetool import P2CToolGeneric
 
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class GamessExecutable(P2CToolGeneric):
+class GAMESSExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
@@ -27,7 +27,7 @@ class GamessExecutable(P2CToolGeneric):
         sftp.close()
 
         Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
-        super(GamessExecutable, self).__init__(self, **kwargs)
+        super(GAMESSExecutable, self).__init__(self, **kwargs)
 
         pass
 

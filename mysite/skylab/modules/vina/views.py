@@ -12,8 +12,8 @@ from django.utils.text import get_valid_filename
 from django.views.generic import TemplateView, FormView
 
 from skylab.models import Task
-from skylab.modules.base_tool import create_input_skylab_file
-from skylab.modules.base_tool import send_mpi_message
+from skylab.modules.basetool import create_input_skylab_file
+from skylab.modules.basetool import send_mpi_message
 from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 
 

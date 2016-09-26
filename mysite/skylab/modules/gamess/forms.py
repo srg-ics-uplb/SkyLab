@@ -6,7 +6,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 
 from skylab.models import MPICluster
-from skylab.modules.base_tool import MPIModelChoiceField
+from skylab.modules.basetool import MPIModelChoiceField
 
 
 def validate_gamess_input_extension(value):
@@ -23,11 +23,11 @@ class GamessForm(forms.Form):
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
         cluster_is_public = Q(shared_to_public=True)
-        supports_gamess = Q(activated_toolset__display_name="Gamess")
+        supports_gamess = Q(activated_toolset__display_name="GAMESS")
         # is_ready = Q(status=1)
         # MPICluster.objects.filter()
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_gamess).exclude(status=4)
+        q = q.filter(supports_gamess).exclude(status=5)
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(

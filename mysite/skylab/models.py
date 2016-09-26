@@ -74,7 +74,7 @@ def get_default_package_name(display_name):
 class ToolSet(models.Model):
     display_name = models.CharField(max_length=50, unique=True)
     package_name = models.CharField(max_length=50, default=None, unique=True, blank=True)
-    description = models.CharField(max_length=300, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
 
     def __str__(self):
@@ -101,7 +101,7 @@ class Tool(models.Model):
                                     unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
     view_name = models.CharField(max_length=50, blank=True)
-    description = models.CharField(max_length=300, blank=True)
+    description = models.CharField(max_length=300, null=True, blank=True)
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -121,7 +121,7 @@ def get_sentinel_mpi():
 
 @python_2_unicode_compatible
 class Task(models.Model):
-    type = models.PositiveSmallIntegerField()  # 1=mpi_create, 2=tool, 3=mpi_delete
+    type = models.PositiveSmallIntegerField(default=2)  # 1=mpi_create, 2=tool, 3=mpi_delete
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
@@ -160,7 +160,7 @@ class Task(models.Model):
 
         status_code = kwargs.get('status_code', 000)
         status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
-        TaskLog.objects.create(status_code=status_code, status_msg=status_msg, tool_activity=self)
+        TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
 
     @property
     def output_files(self):

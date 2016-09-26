@@ -1,10 +1,10 @@
 from skylab.models import ToolSet
 from skylab.modules.basetool import add_tools_to_toolset
 
-def insert_to_db():
-    toolset_name = 'AutoDock 4'
-    package_name = __name__.replace('.install', '')
 
+def insert_to_db():
+    toolset_name = 'Dock 6'
+    package_name = __name__.replace('.install', '')
     toolset_description = 'AutoDock is a suite of automated docking tools. It is designed to predict how small molecules, ' \
                           'such as substrates or drug candidates, bind to a receptor of known 3D structure.'
     toolset_source_url = 'http://autodock.scripps.edu/'
@@ -14,14 +14,14 @@ def insert_to_db():
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
-        {'display_name': 'AutoGrid 4',
-         # 'executable_name': 'AutoGrid4Executable',
-         # 'view_name':'AutoGridView',
+        {'display_name': 'Dock 6',
+         # 'executable_name': 'Dock6Executable',
+         # 'view_name':'Dock6View',
          'description': 'Pre-calculates grids to be used by AutoDock',
          },
-        {'display_name': 'AutoDock 4',
-         # 'executable_name': 'AutoDock4Executable',
-         # 'view_name':'AutoDockView',
+        {'display_name': 'Grid',
+         # 'executable_name': 'GridExecutable',
+         # 'view_name':'GridView',
          'description': 'Performs the docking of the ligand to a set of grids describing the target protein',
          },
     ]

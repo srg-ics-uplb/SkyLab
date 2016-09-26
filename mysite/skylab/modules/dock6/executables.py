@@ -4,7 +4,7 @@ import shutil
 from django.conf import settings
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
+from skylab.modules.basetool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
 

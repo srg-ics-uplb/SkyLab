@@ -9,18 +9,23 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+from django.db.models.signals import post_save
 
-from skylab.models import MPICluster
-from skylab.modules.autodock4.install import insert_to_db
+from skylab.bootskylab import MPIThreadManager
+from skylab.models import MPICluster, Task
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
-insert_to_db()
+# install_toolsets()
+# insert_to_db()
 # MPICluster.objects.filter(activated_toolset__display_name="Autodo")
-x = MPICluster.objects.filter(activated_toolset__display_name="AutoDock4")[:1]
-if x:
-    print x[0].cluster_name
+
+manager = MPIThreadManager()
+post_save.connect(receiver=manager.receive_mpi_cluster_from_post_save_signal, sender=MPICluster,
+                  dispatch_uid="receive_mpi_from_post_save_signal")
+post_save.connect(receiver=manager.receive_task_from_post_save_signal, sender=Task,
+                  dispatch_uid="receive_task_from_post_save_signal")
 
 
 

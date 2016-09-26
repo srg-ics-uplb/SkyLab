@@ -4,18 +4,18 @@ import shutil
 from django.conf import settings
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
+from skylab.modules.basetool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class AutoDockExecutable(P2CToolGeneric):
+class AutoDock4Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(AutoDockExecutable, self).__init__(self, **kwargs)
+        super(AutoDock4Executable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
@@ -105,13 +105,13 @@ class AutoDockExecutable(P2CToolGeneric):
         pass
 
 
-class AutoGridExecutable(P2CToolGeneric):
+class AutoGrid4Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
         self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(AutoGridExecutable, self).__init__(self, **kwargs)
+        super(AutoGrid4Executable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])

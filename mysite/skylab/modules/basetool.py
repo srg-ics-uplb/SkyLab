@@ -1,11 +1,34 @@
 import os.path
+import pkgutil
 from abc import abstractmethod
 
 import pika
 from django import forms
 
-from skylab.models import SkyLabFile
+import skylab.modules
+from skylab.models import SkyLabFile, Tool
 
+
+def install_toolsets():
+    package = skylab.modules
+    prefix = package.__name__ + "."
+    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
+        if ispkg:  # for packages
+            submod_prefix = modname + "."
+            pkg = importer.find_module(modname).load_module(modname)
+            for submodimporter, submodname, submodispkg in pkgutil.iter_modules(pkg.__path__, submod_prefix):
+                if submodname.endswith(".install"):
+                    mod = submodimporter.find_module(submodname).load_module(submodname)
+                    mod.insert_to_db()
+
+
+def add_tools_to_toolset(tools, toolset):
+    for t in tools:
+        Tool.objects.get_or_create(display_name=t.get("display_name"),
+                                   executable_name=t.get("executable_name",
+                                                         t["display_name"].replace(' ', '') + 'Executable'),
+                                   description=t.get("description", None), toolset=toolset,
+                                   view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
 
 class MPIModelChoiceField(forms.ModelChoiceField):
 	def label_from_instance(self, obj):

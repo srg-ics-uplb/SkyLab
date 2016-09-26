@@ -6,8 +6,8 @@ from django.views.generic import FormView
 
 from skylab.models import Task
 from skylab.modules.autodock4.forms import AutodockForm, AutogridForm
-from skylab.modules.base_tool import create_input_skylab_file
-from skylab.modules.base_tool import send_mpi_message
+from skylab.modules.basetool import create_input_skylab_file
+from skylab.modules.basetool import send_mpi_message
 
 
 class AutodockView(LoginRequiredMixin, FormView):

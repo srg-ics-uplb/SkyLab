@@ -9,18 +9,18 @@ from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
 from skylab.models import MPICluster, Task
-from skylab.modules.base_tool import create_input_skylab_file
+from skylab.modules.basetool import create_input_skylab_file
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 
 
-class QuantumEspressoView(LoginRequiredMixin, TemplateView):
+class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
     template_name = "modules/quantum espresso/use_quantum_espresso.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
 
     def get_context_data(self, **kwargs):
-        context = super(QuantumEspressoView, self).get_context_data(**kwargs)
+        context = super(QuantumESPRESSOView, self).get_context_data(**kwargs)
         context['select_mpi_form'] = SelectMPIFilesForm()
         context['input_formset'] = self.input_forms
 

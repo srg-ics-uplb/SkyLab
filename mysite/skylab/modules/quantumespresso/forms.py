@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 
 from skylab.models import MPICluster
-from skylab.modules.base_tool import MPIModelChoiceField
+from skylab.modules.basetool import MPIModelChoiceField
 from validators import in_file_extension_validator
 
 
@@ -39,7 +39,7 @@ class SelectMPIFilesForm(forms.Form):
         supports_qe = Q(supported_tools="quantum espresso")
         # is_ready = Q(status=1)
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_qe).exclude(status=4)  # exclude unusable clusters
+        q = q.filter(supports_qe).exclude(status=5)  # exclude unusable clusters
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(required=False, queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(

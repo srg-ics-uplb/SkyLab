@@ -5,12 +5,12 @@ import shutil
 from django.conf import settings
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.base_tool import P2CToolGeneric, mkdir_p
+from skylab.modules.basetool import P2CToolGeneric, mkdir_p
 
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class QuantumEspressoExecutable(P2CToolGeneric):
+class QuantumESPRESSOExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
@@ -19,7 +19,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         self.tmp_dir = self.working_dir + "/tempdir"
 
         Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
-        super(QuantumEspressoExecutable, self).__init__(self, **kwargs)
+        super(QuantumESPRESSOExecutable, self).__init__(self, **kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir tool_activity_{0}".format(self.id)])
