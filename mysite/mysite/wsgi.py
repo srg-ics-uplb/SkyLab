@@ -11,7 +11,7 @@ import os
 from django.core.wsgi import get_wsgi_application
 from django.db.models.signals import post_save
 
-from skylab.bootskylab import MPIThreadManager
+from skylab.bootskylab import MPIThreadManager, setup_logging
 from skylab.models import MPICluster, Task
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
@@ -21,7 +21,10 @@ application = get_wsgi_application()
 # insert_to_db()
 # MPICluster.objects.filter(activated_toolset__display_name="Autodo")
 
+setup_logging()  # setup logger, handlers
 manager = MPIThreadManager()
+
+#connect receiver to signals
 post_save.connect(receiver=manager.receive_mpi_cluster_from_post_save_signal, sender=MPICluster,
                   dispatch_uid="receive_mpi_from_post_save_signal")
 post_save.connect(receiver=manager.receive_task_from_post_save_signal, sender=Task,

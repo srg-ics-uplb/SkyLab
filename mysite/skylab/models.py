@@ -136,7 +136,7 @@ class Task(models.Model):
     # timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
 
     def __str__(self):
-        return self.tool_name
+        return str(self.id)
 
     @staticmethod
     def get_default_status_msg(status_code):

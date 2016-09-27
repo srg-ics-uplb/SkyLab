@@ -1,13 +1,14 @@
 from __future__ import print_function
 
 import Queue  # queue for python 3
+import importlib
 import json
 import logging
 import logging.config
 import os
 import threading
 
-from skylab.models import MPICluster
+from skylab.models import MPICluster, Task
 
 
 def populate_tools():
@@ -58,24 +59,36 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
-
-setup_logging()
-
 class MPIThread(threading.Thread):
+    # TODO: implement connect and create to cluster functions
     def __init__(self, mpi_cluster):
-        self._stop = threading.Event()
+        # current implementation. task_queue only has a single consumer.
+        # This design can be improved and cater multiple consumers for this queue
         self.task_queue = Queue.PriorityQueue()
+
+        self._stop = threading.Event()
         self.mpi_cluster = mpi_cluster
         self.logger = logging.getLogger(__name__)
+        self.log_prefix = 'MPI [id:{0},name:{1}] : '.format(self.mpi_cluster.id, self.mpi_cluster.cluster_name)
 
-
-        self.logger.info("Created thread for MPI #{0}({1})".format(self.mpi_cluster.id, self.mpi_cluster.cluster_name))
+        self.logger.info(self.log_prefix + 'Spawned MPI Thread')
         # add the handlers to the logger
 
-        # TODO: populate task_queue with tasks
 
+        self.logger.info(self.log_prefix + "Populating task queue")
+
+        # get tasks that are not finished yet
+        tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(tasklog__status_code=200).exclude(
+            tasklog__status_code=400)
+        for task in tasks:
+            self.logger.debug(self.log_prefix + 'Queueing task [id:{0},type:{1}]'.format(task.id, task.type))
+            # print(self.log_prefix+'Queueing task [id:{0},type:{1}]'.format(task.id, task.type))
+            self.add_task_to_queue(task)
 
         super(MPIThread, self).__init__()
+
+    def add_task_to_queue(self, task):
+        self.task_queue.put((task.type, task))
 
     def run(self):
         while not self._stop.isSet():
@@ -89,3 +102,13 @@ class MPIThread(threading.Thread):
             else:
                 self.logger.info('MPIThread # {0} Processing ...'.format(self.mpi_cluster.id))
                 # Todo: process queue
+                print(__name__)
+                current_task = self.task_queue.get()[1]
+
+                mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
+                print(mod)
+                # TODO: handle mpi destroy
+                # cls = getattr(mod, "Dummy")
+                # cls()
+                # executable_obj = cls(shell=self.cluster_shell, task=current_task)
+                # executable_obj.run_tool()
