@@ -138,30 +138,32 @@ class MPIThread(threading.Thread):
         self.frontend_shell = self.manager.get_frontend_shell()
         if self.mpi_cluster.status == 0:  # create
             self.create_mpi_cluster()
+        else:
+            self.mpi_cluster.change_status(1)
 
         self.connect_to_cluster()
 
         # activate toolsets supported that are not yet activated
         # for toolset in self.mpi_cluster.supported_toolsets.all():
-        #     if toolset not in self.mpi_cluster.activated_toolsets.all():
+        #     if toolset not in self.mpi_cluster.toolsets.all():
         #         self.activate_toolset(toolset)
-        # changed tasks with type 1 are created instead for tool activation
+
+        # TODO: changed tasks with type 1 are created instead for tool activation
+        # created related tasks on mpi creation
+        # activated toolsets are initially blank
 
         if self.mpi_cluster.status == 0:  # create
-            pass
-            # TODO: self.install_dependencies()
+            self.install_dependencies()
             # else:
             #     # set status to 1 (Connecting...)
-            #     self.mpi_cluster.change_status(1)
+            self.mpi_cluster.change_status(1)
 
-
-            # pass
+        self.mpi_cluster.change_status(2)  # cluster available
 
     def connect_to_cluster(self):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
                                            password=settings.CLUSTER_PASSWORD,
                                            missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
-
         while True:
             try:
                 self.logger.info(self.log_prefix + "Connecting to cluster...")
@@ -177,6 +179,33 @@ class MPIThread(threading.Thread):
             finally:
                 time.sleep(5)
         self.logger.info(self.log_prefix + "Connected to cluster...")
+
+    def install_dependencies(self):
+        while True:
+            self.logger.debug(self.log_prefix + "Updating apt-get")
+            command = "sudo apt-get update"
+            try:
+                zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                zip_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+                self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
+
+                self.logger.debug(self.log_prefix + "Installing zip")
+                command = "sudo apt-get install zip -y"
+                zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                zip_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+                # zip_shell.stdin_write("Y\n")
+                self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
+                break
+
+            except spur.RunProcessError:
+                # run process error with return code -1 (no value returned) is returned during unresponsive connection
+                self.logger.error(self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                                  exc_info=True)
+
+            except spur.ssh.ConnectionError:
+                self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+            finally:
+                time.sleep(5)
 
     def activate_toolset(self, toolset):
         self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
@@ -194,11 +223,11 @@ class MPIThread(threading.Thread):
                 self.mpi_cluster.activated_toolsets.add(toolset)
                 # MPICluster.objects.filter(pk=self.mpi_pk).update(supported_tools=toolset)
                 break
-            except spur.RunProcessError as err:
+            except spur.RunProcessError:
                 self.logger.error(self.log_prefix + "No response from server. Retrying command ({0})".format(command),
                                   exc_info=True)
 
-            except spur.ssh.ConnectionError as err:
+            except spur.ssh.ConnectionError:
                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
             finally:
                 time.sleep(5)
@@ -244,16 +273,22 @@ class MPIThread(threading.Thread):
 
                 # Todo: process queue
                 # print(__name__)
+
                 current_task = self.task_queue.get()[1]
                 self.logger.info('MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
 
-                # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
-                # print(mod)
-                # TODO: handle mpi destroy
-                # cls = getattr(mod, "Dummy")
-                # cls()
-                # executable_obj = cls(shell=self.cluster_shell, task=current_task)
-                # executable_obj.run_tool()
+                if current_task.type == 1:
+                    pass
+                    #
+                else:
+                    pass
+                    # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
+                    # print(mod)
+                    # TODO: handle mpi destroy
+                    # cls = getattr(mod, "Dummy")
+                    # cls()
+                    # executable_obj = cls(shell=self.cluster_shell, task=current_task)
+                    # executable_obj.run_tool()
 
     def add_task_to_queue(self, task):
         self.task_queue.put((task.type, task))

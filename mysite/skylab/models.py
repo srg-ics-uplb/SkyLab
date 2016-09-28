@@ -41,10 +41,9 @@ class MPICluster(models.Model):
 
     # tool_list = get_available_tools()CharField
     # print tool_list
-    # supported_tools = models.CharField(choices=tool_list, max_length=200,
-    #                                    help_text='A cluster only supports one tool in this version')
-    activated_toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
-                                                related_name="activated_toolsets")
+    queued_for_deletion = models.BooleanField(default=False)
+    toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
+                                      through='ToolActivation')
     creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
     allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
                                       related_name="accessible_mpi")
@@ -63,6 +62,12 @@ class MPICluster(models.Model):
     def change_status(self, status):
         self.status = status
         self.save()
+
+
+class ToolActivation(models.Model):
+    mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE)
+    toolset = models.ForeignKey("ToolSet", on_delete=models.CASCADE)
+    activated = models.BooleanField(default=False)
 
 
 def get_upload_path(instance, filename):
@@ -127,7 +132,7 @@ def get_sentinel_mpi():
 
 @python_2_unicode_compatible
 class Task(models.Model):
-    type = models.PositiveSmallIntegerField(default=2)  # 1=mpi_create, 2=tool, 3=mpi_delete
+    type = models.PositiveSmallIntegerField(default=2)  # 1=p2c tool activate, 2=tool, 3=mpi_delete
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
