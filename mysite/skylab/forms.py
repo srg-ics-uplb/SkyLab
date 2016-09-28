@@ -47,7 +47,7 @@ def send_mpi_message(routing_key, body):
 class Create_MPI_Cluster_Form(forms.ModelForm):
 	class Meta:
 		model = MPICluster
-		fields = ['cluster_name', 'cluster_size', 'activated_toolset', 'shared_to_public']  # 'supported_tools'
+		fields = ['cluster_name', 'cluster_size', "supported_toolsets", 'shared_to_public']  # 'supported_tools'
 
 		# widgets = {'cluster_size' : forms.NumberInput()}
 
@@ -64,7 +64,7 @@ class Create_MPI_Cluster_Form(forms.ModelForm):
 
             'cluster_name',
             'cluster_size',
-			'activated_toolset',
+			'supported_toolsets',
             'shared_to_public',
             HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 

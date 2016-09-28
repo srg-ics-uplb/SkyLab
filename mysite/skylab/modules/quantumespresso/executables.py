@@ -118,5 +118,5 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         else:
             pass
 
-    def changeStatus(self, status):
+    def change_status(self, status):
         pass

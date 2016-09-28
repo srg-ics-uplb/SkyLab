@@ -110,5 +110,5 @@ class P2CToolGeneric(object):
 		pass
 
 	@abstractmethod
-	def changeStatus(self, status):
+	def change_status(self, status):
 		pass

@@ -1,5 +1,7 @@
-from django import forms
 import os.path
+
+from django import forms
+
 
 def ray_file_extension_validator(file):
     # using .conf is also not supported because it does not fit with the use-case abstraction
@@ -24,7 +26,7 @@ def ray_file_extension_validator(file):
 
 
 def odd_number_validator(value):
-    if (value % 2 == 0):
+    if value % 2 == 0:
         raise forms.ValidationError(u'Value must be odd', code='ray_kmer_even_input')
 
 

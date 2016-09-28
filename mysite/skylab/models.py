@@ -43,7 +43,8 @@ class MPICluster(models.Model):
     # print tool_list
     # supported_tools = models.CharField(choices=tool_list, max_length=200,
     #                                    help_text='A cluster only supports one tool in this version')
-    activated_toolset = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate")
+    activated_toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
+                                                related_name="activated_toolsets")
     creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
     allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
                                       related_name="accessible_mpi")
@@ -59,6 +60,10 @@ class MPICluster(models.Model):
     def __str__(self):
         return self.cluster_name
 
+    def change_status(self, status):
+        self.status = status
+        self.save()
+
 
 def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
@@ -73,6 +78,7 @@ def get_default_package_name(display_name):
 @python_2_unicode_compatible
 class ToolSet(models.Model):
     display_name = models.CharField(max_length=50, unique=True)
+    p2ctool_name = models.CharField(max_length=50, unique=True)
     package_name = models.CharField(max_length=50, default=None, unique=True, blank=True)
     description = models.CharField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)

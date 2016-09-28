@@ -101,7 +101,7 @@ class AutoDock4Executable(P2CToolGeneric):
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
-    def changeStatus(self, status):
+    def change_status(self, status):
         pass
 
 
@@ -193,5 +193,5 @@ class AutoGrid4Executable(P2CToolGeneric):
             tool_activity.save()
             local_file.close()
 
-    def changeStatus(self, status):
+    def change_status(self, status):
         pass

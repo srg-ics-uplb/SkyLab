@@ -12,7 +12,7 @@
 {% block content %}
     <div class='row'>
         <div id="task-detail-div" class="col-xs-6 col-xs-offset-3">
-            <h1>Task {{ object.id }}</h1>
+            <h1 class="text-center">Task {{ object.id }}</h1>
 
             <span class="text-muted">{{ object.tool.display_name }} @ {{ object.mpi_cluster }}</span>
             <span id="task-status">{{ object.status }}</span>

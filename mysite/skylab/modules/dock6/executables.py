@@ -100,7 +100,7 @@ class Dock6Executable(P2CToolGeneric):
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
-    def changeStatus(self, status):
+    def change_status(self, status):
         pass
 
 
@@ -198,5 +198,5 @@ class GridExecutable(P2CToolGeneric):
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")
         self.print_msg("Output files sent")
 
-    def changeStatus(self, status):
+    def change_status(self, status):
         pass
