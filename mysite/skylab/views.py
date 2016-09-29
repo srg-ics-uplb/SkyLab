@@ -14,7 +14,7 @@ from django_ajax.decorators import ajax
 from sendfile import sendfile
 
 from forms import CreateMPIForm
-from skylab.models import Task
+from skylab.models import Task, MPICluster, ToolActivation
 
 
 def has_read_permission(request, task_id):
@@ -111,9 +111,13 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 	# 	return kwargs
 
 	def form_valid(self, form):
-		print "MPI create form valid"
-		# TODO: create MPI object
-		# create ToolActivation (activated=False) object for each toolset selected
+		mpi_cluster = MPICluster.objects.create(creator=self.request.user,
+												cluster_name=form.cleaned_data['cluster_name'],
+												cluster_size=form.cleaned_data['cluster_size'],
+												is_public=form.cleaned_data['is_public'])
+
+		for t in form.cleaned_data['toolsets']:
+			ToolActivation.objects.create(toolset=t, mpi_cluster=mpi_cluster, activated=False)
 
 		return super(CreateMPIView, self).form_valid(form)
 

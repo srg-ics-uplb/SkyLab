@@ -114,6 +114,7 @@ class MPIThread(threading.Thread):
         self.task_queue = Queue.PriorityQueue()
 
         self._stop = threading.Event()
+        self._connected = threading.Event()
         self.manager = manager
         self.mpi_cluster = mpi_cluster
         self.frontend_shell = None
@@ -129,41 +130,34 @@ class MPIThread(threading.Thread):
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(tasklog__status_code=200).exclude(
             tasklog__status_code=400)
         for task in tasks:
-            print(self.log_prefix + 'Queueing task [id:{0},type:{1}]'.format(task.id, task.type))
-            self.add_task_to_queue(2, task)
+            print(self.log_prefix + 'Queueing task [id:{0},priority:{1}]'.format(task.id, task.type))
+            self.add_task_to_queue(task.priority, task)
 
         unactivated_toolsets = self.mpi_cluster.toolsets.filter(toolactivation__activated=False)
         for toolset in unactivated_toolsets:
             self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
 
+        init_thread = threading.Thread(target=self.connect_or_create())
+        init_thread.start()  # sets event _connection on finish
+
         super(MPIThread, self).__init__()
 
     # TODO: implement connect and create to cluster functions
     def connect_or_create(self):
-        self.frontend_shell = self.manager.get_frontend_shell()
+        self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
         if self.mpi_cluster.status == 0:  # create
             self.create_mpi_cluster()
         else:
             self.mpi_cluster.change_status(1)
 
-        self.connect_to_cluster()
-
-        # activate toolsets supported that are not yet activated
-        # for toolset in self.mpi_cluster.supported_toolsets.all():
-        #     if toolset not in self.mpi_cluster.toolsets.all():
-        #         self.activate_toolset(toolset)
-
-        # TODO: changed tasks with type 1 are created instead for tool activation
-        # created related tasks on mpi creation
-        # activated toolsets are initially blank
+        self.connect_to_cluster()  #get working cluster shell
 
         if self.mpi_cluster.status == 0:  # create
-            self.install_dependencies()
-            # else:
-            #     # set status to 1 (Connecting...)
+            self.install_dependencies()  #zip
             self.mpi_cluster.change_status(1)
 
         self.mpi_cluster.change_status(2)  # cluster available
+        self._connected.set()
 
     def connect_to_cluster(self):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
@@ -214,7 +208,8 @@ class MPIThread(threading.Thread):
 
     def activate_toolset(self, toolset_id):
         # check if toolset is already activated
-        if not ToolActivation.objects.get(toolset=toolset_id, mpi_cluster=self.mpi_cluster.id).activated:
+        tool_activation_instance = ToolActivation.objects.get(toolset=toolset_id, mpi_cluster=self.mpi_cluster.id)
+        if not tool_activation_instance.activated:
             toolset = ToolSet.objects.get(pk=toolset_id)
 
             self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
@@ -227,10 +222,9 @@ class MPIThread(threading.Thread):
                     self.logger.info(self.log_prefix + "{0} is now activated.".format(toolset.display_name))
                     self.logger.debug(self.log_prefix + tool_activator.wait_for_result().output)
 
-                    # TODO: refactor
-
-                    self.mpi_cluster.activated_toolsets.add(toolset)
-                    # MPICluster.objects.filter(pk=self.mpi_pk).update(supported_tools=toolset)
+                    # set activated to true after installation
+                    tool_activation_instance.activated = True
+                    tool_activation_instance.save()
                     break
                 except spur.RunProcessError:
                     self.logger.error(
@@ -243,18 +237,31 @@ class MPIThread(threading.Thread):
                     time.sleep(5)
 
     def create_mpi_cluster(self):
+        # TODO: test if works
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
 
-        self.logger.debug(self.log_prefix + "Execute vcluster-stop {0} {1}".format(self.mpi_cluster.cluster_name,
-                                                                                   self.mpi_cluster.cluster_size))
-        self.frontend_shell.run(["./vcluster-stop", self.mpi_cluster.cluster_name, str(self.mpi_cluster.cluster_size)],
-                                cwd="vcluster")  # to remove duplicates in case server restart while creating
+        while True:
+            command = "./vcluster-stop {0} {1}".format(self.mpi_cluster.cluster_name, self.mpi_cluster.cluster_size)
+            try:
+                self.logger.debug(self.log_prefix + "Execute " + command)
+                self.frontend_shell.run(["sh", "-c", command], cwd="vcluster")
+                # self.frontend_shell.run(["./vcluster-stop", self.mpi_cluster.cluster_name, str(self.mpi_cluster.cluster_size)],
+                #                         cwd="vcluster")  # to remove duplicates in case server restart while creating
 
-        self.logger.debug(self.log_prefix + "Execute vcluster-start {0} {1}".format(self.mpi_cluster.cluster_name,
-                                                                                    self.mpi_cluster.cluster_size))
-        result_cluster_ip = self.frontend_shell.run(
-            ["./vcluster-start", self.mpi_cluster.cluster_name, str(self.mpi_cluster.cluster_size)],
-            cwd="vcluster")
+                command = "./vcluster-start {0} {1}".format(self.mpi_cluster.cluster_name,
+                                                            self.mpi_cluster.cluster_size)
+                self.logger.debug(self.log_prefix + "Execute " + command)
+                result_cluster_ip = self.frontend_shell.run(["sh", "-c", command], cwd="vcluster")
+                break
+            except spur.RunProcessError:
+                self.logger.error(
+                    self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                    exc_info=True)
+
+            except spur.ssh.ConnectionError:
+                self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+            finally:
+                time.sleep(5)
 
         self.logger.debug(self.log_prefix + result_cluster_ip.output)
         p = re.compile("(?P<username>\S+)@(?P<floating_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
@@ -270,7 +277,9 @@ class MPIThread(threading.Thread):
         self.logger.debug(self.log_prefix + 'Obtained cluster ip: {0}'.format(cluster_ip))
 
     def run(self):
-        # initialization.wait() block waiting for initialization event to be set
+        # block waiting for connected event to be set
+        self._connected.wait()
+
         while not self._stop.isSet():
 
             self.logger.debug('MPIThread # {0} Waiting 5 seconds, before processing again'.format(self.mpi_cluster.id))
@@ -280,29 +289,58 @@ class MPIThread(threading.Thread):
             if event_is_set:
                 self.logger.info('MPIThread # {0} Terminating ...'.format(self.mpi_cluster.id))
             else:
+                try:
+                    queue_obj = self.task_queue.get()
 
-                # Todo: process queue
-                # print(__name__)
+                    if queue_obj[0] == 1:  # p2c-tools activate are always priority # 1
+                        self.logger.debug(self.log_prefix + "Running " + queue_obj[1])
+                        exec (queue_obj[1])
 
-                queue_obj = self.task_queue.get()
+                    elif isinstance(queue_obj[1], Task):
+                        current_task = queue_obj[1]
+                        self.logger.info(
+                            'MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
 
-                if queue_obj[0] == 1:
-                    exec queue_obj[1]
-                    #
-                else:
-                    current_task = queue_obj[1]
-                    self.logger.info(
-                        'MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
-                    pass
-                    # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
-                    # print(mod)
-                    # TODO: handle mpi destroy
-                    # cls = getattr(mod, "Dummy")
-                    # cls()
-                    # executable_obj = cls(shell=self.cluster_shell, task=current_task)
-                    # executable_obj.run_tool()
+                        # TODO: uncomment
+                        # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
+                        # print(mod)
 
-    def add_task_to_queue(self, type, task):
-        self.task_queue.put((type, task))
-        task.change_status(status_code=101, status_msg="Task queued")
-        self.logger.debug(self.log_prefix + 'Queued task [id:{0},type:{1}]'.format(task.id, task.type))
+                        # cls = getattr(mod, current_task.tool.executable_name)
+                        # cls()
+                        # executable_obj = cls(shell=self.cluster_shell, task=current_task)
+                        # executable_obj.run_tool()
+
+                    self.task_queue.task_done()
+                except Queue.Empty:
+                    if self.mpi_cluster.queued_for_deletion:  # if queue is empty and cluster is queued for deletion
+                        self._stop.set()
+                        self.logger.info(self.log_prefix + "Deleting MPI Cluster")
+
+                        while True:
+                            command = "./vcluster-stop {0} {1}".format(self.mpi_cluster.cluster_name,
+                                                                       self.mpi_cluster.cluster_size)
+                            try:
+                                self.logger.debug(self.log_prefix + "Execute " + command)
+                                self.frontend_shell.run(["sh", "-c", command], cwd="vcluster")
+                                # self.frontend_shell.run(["./vcluster-stop", self.mpi_cluster.cluster_name,
+                                # str(self.mpi_cluster.cluster_size)],
+                                #                         cwd="vcluster")  # to remove duplicates in case server restart while creating
+                                break
+                            except spur.RunProcessError:
+                                self.logger.error(
+                                    self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                                    exc_info=True)
+
+                            except spur.ssh.ConnectionError:
+                                self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+                            finally:
+                                time.sleep(5)
+
+                        self.mpi_cluster.toolsets.clear()  # clear toolsets, toolactivation
+                        self.mpi_cluster.change_status(5)
+
+    def add_task_to_queue(self, priority, task):
+        self.task_queue.put((priority, task))
+        if isinstance(task, Task):
+            task.change_status(status_code=101, status_msg="Task queued")
+            self.logger.debug(self.log_prefix + 'Queued task [id:{0},priority:{1}]'.format(task.id, priority))

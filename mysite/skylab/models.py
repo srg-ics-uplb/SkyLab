@@ -122,7 +122,7 @@ def get_sentinel_mpi():
 
 @python_2_unicode_compatible
 class Task(models.Model):
-    type = models.PositiveSmallIntegerField(default=2)  # 1=p2c tool activate, 2=tool, 3=mpi_delete
+    priority = models.PositiveSmallIntegerField(default=3)  # 1=(reserved) p2c tool activate, 2=high, 3=normal
     command_list = models.CharField(max_length=500, blank=True)
     additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
@@ -193,7 +193,7 @@ class Task(models.Model):
         output_files_urls_dict = []
         for f in self.output_files.all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
-                                                          kwargs={'task_id': self.id, 'type': 'output',
+                                                          kwargs={'task_id': self.id, 'priority': 'output',
                                                                   'filename': f.filename}),
                                            'filename': f.filename})
 
@@ -206,7 +206,7 @@ class Task(models.Model):
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "type": "output", "filename": f.filename})),
+                                                                   "priority": "output", "filename": f.filename})),
                  "filename": f.filename}
             )
 
@@ -215,7 +215,7 @@ class Task(models.Model):
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "type": "input", "filename": f.filename})),
+                                                                   "priority": "input", "filename": f.filename})),
                  "filename": f.filename}
             )
 

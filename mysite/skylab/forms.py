@@ -30,7 +30,7 @@ from skylab.validators import cluster_name_unique_validator
 # 	channel = connection.channel()
 #
 # 	channel.exchange_declare(exchange='topic_logs',
-# 							 type='topic')
+# 							 priority='topic')
 #
 # 	# routing_key = 'skylab.msg'
 #
@@ -59,10 +59,11 @@ class CreateMPIForm(forms.Form):
 	cluster_name = forms.CharField(label="Cluster name", max_length=50,
 								   validators=[cluster_name_validator, cluster_name_unique_validator],
 								   help_text='This is required to be unique. e.g. chem_205_gamess_12_12345')
-	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=get_current_max_nodes())
+	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=get_current_max_nodes(), initial=1)
 	toolsets = forms.ModelMultipleChoiceField(label="Toolsets", queryset=ToolSet.objects.all(),
-											  help_text="Select toolsets to be activated")
-	is_public = forms.BooleanField(label="Share to public")
+											  help_text="Select toolsets to be activated",
+											  widget=forms.CheckboxSelectMultiple())
+	is_public = forms.BooleanField(required=False, label="Share to public")
 
 	def __init__(self, *args, **kwargs):
 		super(CreateMPIForm, self).__init__(*args, **kwargs)
@@ -78,7 +79,7 @@ class CreateMPIForm(forms.Form):
 			'cluster_size',
 			'toolsets',
 			'is_public',
-			HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
+			HTML('<input name="submit" value="Execute" priority="submit" class="btn btn-primary btn-block">')
 
 		)
 
@@ -104,7 +105,7 @@ class CreateMPIForm(forms.Form):
 # 			'cluster_size',
 # 			'supported_toolsets',
 # 			'is_public',
-# 			HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
+# 			HTML('<input name="submit" value="Execute" priority="submit" class="btn btn-primary btn-block">')
 #
 # 		)
 #
