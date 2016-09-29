@@ -13,7 +13,7 @@ import spur
 from django.conf import settings
 from django.db.models.signals import post_save
 
-from skylab.models import MPICluster, Task
+from skylab.models import MPICluster, Task, ToolSet, ToolActivation
 
 def populate_tools():
     pass
@@ -86,17 +86,18 @@ class MPIThreadManager(object):
         self._connected_to_frontend.wait()
         return self.frontend_shell
 
+    def receive_task_from_post_save_signal(self, sender, instance, created, **kwargs):
+        if created:
+            logging.info('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
+            # print('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
 
-    def receive_task_from_post_save_signal(self, sender, instance, **kwargs):
-        logging.info('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
-        # print('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
+            # append to queue
+            self.threadHash[instance.mpi_cluster_id].add_task_to_queue(2, instance)
 
-        # append to queue
-        self.threadHash[instance.mpi_cluster_id].add_task_to_queue(instance)
+    def receive_mpi_cluster_from_post_save_signal(self, sender, instance, created, **kwargs):
+        if created:
+            print("Received MPICluster #{0},{1}".format(instance.id, instance.cluster_name))
 
-    def receive_mpi_cluster_from_post_save_signal(self, sender, instance, **kwargs):
-        print("Received MPICluster #{0},{1}".format(instance.id, instance.cluster_name))
-        pass
 
 
 class MPIThread(threading.Thread):
@@ -129,7 +130,11 @@ class MPIThread(threading.Thread):
             tasklog__status_code=400)
         for task in tasks:
             print(self.log_prefix + 'Queueing task [id:{0},type:{1}]'.format(task.id, task.type))
-            self.add_task_to_queue(task)
+            self.add_task_to_queue(2, task)
+
+        unactivated_toolsets = self.mpi_cluster.toolsets.filter(toolactivation__activated=False)
+        for toolset in unactivated_toolsets:
+            self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
 
         super(MPIThread, self).__init__()
 
@@ -207,30 +212,35 @@ class MPIThread(threading.Thread):
             finally:
                 time.sleep(5)
 
-    def activate_toolset(self, toolset):
-        self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
-        while True:
-            command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
-            try:
-                tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
-                tool_activator.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-                tool_activator.wait_for_result()
-                self.logger.info(self.log_prefix + "{0} is now activated.".format(toolset.display_name))
-                self.logger.debug(self.log_prefix + tool_activator.wait_for_result().output)
+    def activate_toolset(self, toolset_id):
+        # check if toolset is already activated
+        if not ToolActivation.objects.get(toolset=toolset_id, mpi_cluster=self.mpi_cluster.id).activated:
+            toolset = ToolSet.objects.get(pk=toolset_id)
 
-                # TODO: refactor
+            self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
+            while True:
+                command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
+                try:
+                    tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                    tool_activator.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+                    tool_activator.wait_for_result()
+                    self.logger.info(self.log_prefix + "{0} is now activated.".format(toolset.display_name))
+                    self.logger.debug(self.log_prefix + tool_activator.wait_for_result().output)
 
-                self.mpi_cluster.activated_toolsets.add(toolset)
-                # MPICluster.objects.filter(pk=self.mpi_pk).update(supported_tools=toolset)
-                break
-            except spur.RunProcessError:
-                self.logger.error(self.log_prefix + "No response from server. Retrying command ({0})".format(command),
-                                  exc_info=True)
+                    # TODO: refactor
 
-            except spur.ssh.ConnectionError:
-                self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
-            finally:
-                time.sleep(5)
+                    self.mpi_cluster.activated_toolsets.add(toolset)
+                    # MPICluster.objects.filter(pk=self.mpi_pk).update(supported_tools=toolset)
+                    break
+                except spur.RunProcessError:
+                    self.logger.error(
+                        self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                        exc_info=True)
+
+                except spur.ssh.ConnectionError:
+                    self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+                finally:
+                    time.sleep(5)
 
     def create_mpi_cluster(self):
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
@@ -274,13 +284,15 @@ class MPIThread(threading.Thread):
                 # Todo: process queue
                 # print(__name__)
 
-                current_task = self.task_queue.get()[1]
-                self.logger.info('MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
+                queue_obj = self.task_queue.get()
 
-                if current_task.type == 1:
-                    pass
+                if queue_obj[0] == 1:
+                    exec queue_obj[1]
                     #
                 else:
+                    current_task = queue_obj[1]
+                    self.logger.info(
+                        'MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
                     pass
                     # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
                     # print(mod)
@@ -290,7 +302,7 @@ class MPIThread(threading.Thread):
                     # executable_obj = cls(shell=self.cluster_shell, task=current_task)
                     # executable_obj.run_tool()
 
-    def add_task_to_queue(self, task):
-        self.task_queue.put((task.type, task))
+    def add_task_to_queue(self, type, task):
+        self.task_queue.put((type, task))
         task.change_status(status_code=101, status_msg="Task queued")
         self.logger.debug(self.log_prefix + 'Queued task [id:{0},type:{1}]'.format(task.id, task.type))

@@ -22,12 +22,12 @@ class GamessForm(forms.Form):
         super(GamessForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_gamess = Q(activated_toolset__display_name="GAMESS")
+        cluster_is_public = Q(is_public=True)
+        # supports_gamess = Q(activated_toolset__display_name="GAMESS")
         # is_ready = Q(status=1)
         # MPICluster.objects.filter()
         q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_gamess).exclude(status=5)
+        q = q.exclude(status=5)
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(

@@ -6,8 +6,6 @@ import re
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
-from django.core.validators import MinValueValidator, MaxValueValidator
-from django.core.validators import RegexValidator
 from django.db import models
 from django.utils.encoding import python_2_unicode_compatible
 
@@ -28,16 +26,8 @@ class MPICluster(models.Model):
     # TODO: current can be lower than set MAX
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
-
-    cluster_name_validator = RegexValidator(r'^\w+$',
-                                            'Must start with a letter. Only alphanumeric characters, _ are allowed.')
-    cluster_name = models.CharField(max_length=50, unique=True, validators=[cluster_name_validator],
-                                    help_text='This is required to be unique. e.g. chem-205-gamess-12-12345')
-
-    CLUSTER_SIZE_CHOICES = zip(range(1, MAX_MPI_CLUSTER_SIZE + 1), range(1, MAX_MPI_CLUSTER_SIZE + 1))
-    cluster_size = models.SmallIntegerField(default=1, blank=True, choices=CLUSTER_SIZE_CHOICES,
-                                            validators=[MinValueValidator(1), MaxValueValidator(MAX_MPI_CLUSTER_SIZE)],
-                                            help_text="This specifies the number of nodes in your cluster. Max = %d" % MAX_MPI_CLUSTER_SIZE)
+    cluster_name = models.CharField(max_length=50, unique=True)
+    cluster_size = models.SmallIntegerField(default=1)
 
     # tool_list = get_available_tools()CharField
     # print tool_list
@@ -47,7 +37,7 @@ class MPICluster(models.Model):
     creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
     allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
                                       related_name="accessible_mpi")
-    shared_to_public = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
     updated = models.DateTimeField(auto_now=True, auto_now_add=False)

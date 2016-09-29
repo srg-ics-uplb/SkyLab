@@ -9,11 +9,11 @@ from django.http import HttpResponse
 from django.http import HttpResponseForbidden, Http404
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
-from django.views.generic.edit import CreateView
+from django.views.generic.edit import FormView
 from django_ajax.decorators import ajax
 from sendfile import sendfile
 
-from forms import Create_MPI_Cluster_Form
+from forms import CreateMPIForm
 from skylab.models import Task
 
 
@@ -97,18 +97,39 @@ class HomeView(TemplateView):
 	template_name = "home.html"
 
 
-class CreateMPIView(LoginRequiredMixin, CreateView):
+class CreateMPIView(LoginRequiredMixin, FormView):
 	template_name = 'create_mpi_cluster.html'
-	form_class = Create_MPI_Cluster_Form
+	form_class = CreateMPIForm
 
 	# TODO: change success url (-> my mpi cluster view)
 	success_url = 'create-mpi-cluster'
 
-	def get_form_kwargs(self):
-		# pass "user" keyword argument with the current user to your form
-		kwargs = super(CreateMPIView, self).get_form_kwargs()
-		kwargs['user'] = self.request.user
-		return kwargs
+	# def get_form_kwargs(self):
+	# 	# pass "user" keyword argument with the current user to your form
+	# 	kwargs = super(CreateMPIView, self).get_form_kwargs()
+	# 	kwargs['user'] = self.request.user
+	# 	return kwargs
+
+	def form_valid(self, form):
+		print "MPI create form valid"
+		# TODO: create MPI object
+		# create ToolActivation (activated=False) object for each toolset selected
+
+		return super(CreateMPIView, self).form_valid(form)
+
+
+# class CreateMPIView(LoginRequiredMixin, CreateView):
+# 	template_name = 'create_mpi_cluster.html'
+# 	form_class = Create_MPI_Cluster_Form
+#
+# 	# TODO: change success url (-> my mpi cluster view)
+# 	success_url = 'create-mpi-cluster'
+#
+# 	def get_form_kwargs(self):
+# 		# pass "user" keyword argument with the current user to your form
+# 		kwargs = super(CreateMPIView, self).get_form_kwargs()
+# 		kwargs['user'] = self.request.user
+# 		return kwargs
 
 
 class ToolActivityDetail(LoginRequiredMixin, DetailView):

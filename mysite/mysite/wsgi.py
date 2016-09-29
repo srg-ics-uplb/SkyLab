@@ -11,11 +11,12 @@ import os
 from django.core.wsgi import get_wsgi_application
 
 from skylab.bootskylab import MPIThreadManager, setup_logging
+from skylab.modules.basetool import install_toolsets
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
-# install_toolsets()
+install_toolsets()
 # insert_to_db()
 # MPICluster.objects.filter(activated_toolset__display_name="Autodo")
 
