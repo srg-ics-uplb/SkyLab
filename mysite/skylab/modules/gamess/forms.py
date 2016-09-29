@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 
-from skylab.models import MPICluster
+from skylab.models import MPICluster, ToolSet
 from skylab.modules.basetool import MPIModelChoiceField
 
 
@@ -21,15 +21,17 @@ class GamessForm(forms.Form):
         self.user = kwargs.pop('user')
         super(GamessForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        current_user_as_creator = Q(creator=self.user)
+        user_allowed = Q(creator=self.user)
         cluster_is_public = Q(is_public=True)
         # supports_gamess = Q(activated_toolset__display_name="GAMESS")
         # is_ready = Q(status=1)
-        # MPICluster.objects.filter()
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.exclude(status=5)
+        # MPICluster.objects.filter
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=ToolSet.objects.get(p2ctool_name="gamess"),
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 

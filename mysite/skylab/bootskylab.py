@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import Queue  # queue for python 3
+import importlib
 import json
 import logging
 import logging.config
@@ -47,7 +48,7 @@ class MPIThreadManager(object):
 
             if cluster.id not in self.threadHash:
                 print(cluster.cluster_name)
-                t = MPIThread(cluster, self.frontend_shell)
+                t = MPIThread(cluster, self)
 
                 self.threadHash[cluster.id] = t
                 t.start()
@@ -56,6 +57,11 @@ class MPIThreadManager(object):
                           dispatch_uid="receive_mpi_from_post_save_signal")
         post_save.connect(receiver=self.receive_task_from_post_save_signal, sender=Task,
                           dispatch_uid="receive_task_from_post_save_signal")
+
+        # this may lead to duplicates on mpi create,
+        # activate_toolset checks if the toolset is activated before execution
+        post_save.connect(receiver=self.receive_toolactivation_from_post_save_signal, sender=ToolActivation,
+                          dispatch_uid="receive_toolactivation_from_post_save_signal")
 
         super(MPIThreadManager, self).__init__()
 
@@ -86,6 +92,15 @@ class MPIThreadManager(object):
         self._connected_to_frontend.wait()
         return self.frontend_shell
 
+    def receive_toolactivation_from_post_save_signal(self, sender, instance, created, **kwargs):
+        if created:
+            logging.info(
+                'Received ToolActivation #{0} ({1}) for MPI #{2}'.format(instance.id, instance.toolset.display_name,
+                                                                         instance.mpi_cluster_id))
+            print('Received ToolActivation #{0} ({1}) for MPI #{2}'.format(instance.id, instance.toolset.display_name,
+                                                                           instance.mpi_cluster_id))
+            # self.threadHash[instance.mpi_cluster_id].add_task_to_queue(1, "self.activate_tool({0})".format(instance.toolset_id))
+
     def receive_task_from_post_save_signal(self, sender, instance, created, **kwargs):
         if created:
             logging.info('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
@@ -97,6 +112,9 @@ class MPIThreadManager(object):
     def receive_mpi_cluster_from_post_save_signal(self, sender, instance, created, **kwargs):
         if created:
             print("Received MPICluster #{0},{1}".format(instance.id, instance.cluster_name))
+            t = MPIThread(instance, self)
+            self.threadHash[instance.id] = t
+            t.start()
 
 
 
@@ -137,13 +155,14 @@ class MPIThread(threading.Thread):
         for toolset in unactivated_toolsets:
             self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
 
-        init_thread = threading.Thread(target=self.connect_or_create())
+        init_thread = threading.Thread(target=self.connect_or_create)
         init_thread.start()  # sets event _connection on finish
 
         super(MPIThread, self).__init__()
 
     # TODO: implement connect and create to cluster functions
     def connect_or_create(self):
+
         self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
         if self.mpi_cluster.status == 0:  # create
             self.create_mpi_cluster()
@@ -181,19 +200,36 @@ class MPIThread(threading.Thread):
 
     def install_dependencies(self):
         while True:
-            self.logger.debug(self.log_prefix + "Updating apt-get")
-            command = "sudo apt-get update"
+            self.logger.debug(self.log_prefix + "Updating p2c-tools")
+            command = "rm p2c-tools*"
             try:
-                zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
-                zip_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-                self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
+                # update p2c-tools
+                self.cluster_shell.run(["sh", "-c", command])
+                print("Updating p2c-tools")
+                self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
+                self.cluster_shell.run(["chmod", "755", "p2c-tools"])
+                p2c_updater = self.cluster_shell.spawn(["./p2c-tools"], use_pty=True)
+                p2c_updater.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+                print(p2c_updater.wait_for_result().output)
+                print(self.cluster_shell.run(["p2c-tools"]).output)
+                self.logger.debug(self.log_prefix + "Updated p2c-tools")
 
+                # sudo apt-get update
+                self.logger.debug(self.log_prefix + "Updating apt-get")
+                command = "sudo apt-get update"
+                apt_get_update_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                apt_get_update_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+                self.logger.debug(self.log_prefix + apt_get_update_shell.wait_for_result().output)
+                self.logger.debug(self.log_prefix + "Updated apt-get")
+
+                # install zip
                 self.logger.debug(self.log_prefix + "Installing zip")
                 command = "sudo apt-get install zip -y"
                 zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
                 zip_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
                 # zip_shell.stdin_write("Y\n")
                 self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
+                self.logger.debug(self.log_prefix + "Installed zip")
                 break
 
             except spur.RunProcessError:
@@ -221,6 +257,7 @@ class MPIThread(threading.Thread):
                     tool_activator.wait_for_result()
                     self.logger.info(self.log_prefix + "{0} is now activated.".format(toolset.display_name))
                     self.logger.debug(self.log_prefix + tool_activator.wait_for_result().output)
+                    print(self.log_prefix + tool_activator.wait_for_result().output)
 
                     # set activated to true after installation
                     tool_activation_instance.activated = True
@@ -263,6 +300,7 @@ class MPIThread(threading.Thread):
             finally:
                 time.sleep(5)
 
+        print(self.log_prefix + result_cluster_ip.output)
         self.logger.debug(self.log_prefix + result_cluster_ip.output)
         p = re.compile("(?P<username>\S+)@(?P<floating_ip>\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
         m = p.search(result_cluster_ip.output)
@@ -278,6 +316,7 @@ class MPIThread(threading.Thread):
 
     def run(self):
         # block waiting for connected event to be set
+        print("Waiting for connection")
         self._connected.wait()
 
         while not self._stop.isSet():
@@ -290,6 +329,7 @@ class MPIThread(threading.Thread):
                 self.logger.info('MPIThread # {0} Terminating ...'.format(self.mpi_cluster.id))
             else:
                 try:
+                    print("Getting queue object")
                     queue_obj = self.task_queue.get()
 
                     if queue_obj[0] == 1:  # p2c-tools activate are always priority # 1
@@ -302,13 +342,13 @@ class MPIThread(threading.Thread):
                             'MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
 
                         # TODO: uncomment
-                        # mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
-                        # print(mod)
+                        mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
+                        print(mod)
 
-                        # cls = getattr(mod, current_task.tool.executable_name)
+                        cls = getattr(mod, current_task.tool.executable_name)
                         # cls()
-                        # executable_obj = cls(shell=self.cluster_shell, task=current_task)
-                        # executable_obj.run_tool()
+                        executable_obj = cls(shell=self.cluster_shell, task=current_task)
+                        executable_obj.run_tool()
 
                     self.task_queue.task_done()
                 except Queue.Empty:

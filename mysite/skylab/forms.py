@@ -79,7 +79,7 @@ class CreateMPIForm(forms.Form):
 			'cluster_size',
 			'toolsets',
 			'is_public',
-			HTML('<input name="submit" value="Execute" priority="submit" class="btn btn-primary btn-block">')
+			HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 
 		)
 

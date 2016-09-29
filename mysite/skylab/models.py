@@ -34,9 +34,8 @@ class MPICluster(models.Model):
     queued_for_deletion = models.BooleanField(default=False)
     toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
                                       through='ToolActivation')
-    creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="created_mpi")
-    allowed_users = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), null=True,
-                                      related_name="accessible_mpi")
+    creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="creator")
+    allowed_users = models.ManyToManyField(User, related_name="allowed_users")
     is_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 

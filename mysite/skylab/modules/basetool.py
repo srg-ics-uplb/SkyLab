@@ -6,33 +6,51 @@ import pika
 from django import forms
 
 import skylab.modules
-from skylab.models import SkyLabFile, Tool
+from skylab.models import SkyLabFile, Tool, ToolActivation
 
 
 def install_toolsets():
-    package = skylab.modules
-    prefix = package.__name__ + "."
-    for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
-        if ispkg:  # for packages
-            submod_prefix = modname + "."
-            pkg = importer.find_module(modname).load_module(modname)
-            for submodimporter, submodname, submodispkg in pkgutil.iter_modules(pkg.__path__, submod_prefix):
-                if submodname.endswith(".install"):
-                    mod = submodimporter.find_module(submodname).load_module(submodname)
-                    mod.insert_to_db()
+	package = skylab.modules
+	prefix = package.__name__ + "."
+	for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
+		if ispkg:  # for packages
+			submod_prefix = modname + "."
+			pkg = importer.find_module(modname).load_module(modname)
+			for submodimporter, submodname, submodispkg in pkgutil.iter_modules(pkg.__path__, submod_prefix):
+				if submodname.endswith(".install"):
+					mod = submodimporter.find_module(submodname).load_module(submodname)
+					mod.insert_to_db()
 
 
 def add_tools_to_toolset(tools, toolset):
-    for t in tools:
-        Tool.objects.get_or_create(display_name=t.get("display_name"),
-                                   executable_name=t.get("executable_name",
-                                                         t["display_name"].replace(' ', '') + 'Executable'),
-                                   description=t.get("description", None), toolset=toolset,
-                                   view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
+	for t in tools:
+		Tool.objects.get_or_create(display_name=t.get("display_name"),
+								   executable_name=t.get("executable_name",
+														 t["display_name"].replace(' ', '') + 'Executable'),
+								   description=t.get("description", None), toolset=toolset,
+								   view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
+
 
 class MPIModelChoiceField(forms.ModelChoiceField):
+	def __init__(self, *args, **kwargs):
+		self.toolset = kwargs.pop("toolset", None)
+		super(MPIModelChoiceField, self).__init__(*args, **kwargs)
+
 	def label_from_instance(self, obj):
-		return "%s (nodes : %d)" % (obj.cluster_name, obj.cluster_size)
+		if self.toolset is not None:
+			status = ""
+			try:
+				tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
+				if tool_activation.activated:
+					status = "Installed"
+				else:
+					status = "Queued for installation"
+			except ToolActivation.DoesNotExist:
+				status = "Not installed"
+			return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
+																self.toolset.display_name, status)
+
+		return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)
 
 
 def create_input_skylab_file(tool_activity, directory, file):
@@ -98,12 +116,14 @@ class P2CToolGeneric(object):
 	@abstractmethod
 	def handle_input_files(self, *args, **kwargs):
 		pass
-		# raise not implemented error
+
+	# raise not implemented error
 
 	@abstractmethod
 	def run_tool(self, *args, **kwargs):
 		pass
-		#raise not
+
+	# raise not
 
 	@abstractmethod
 	def handle_output_files(self, *args, **kwargs):
