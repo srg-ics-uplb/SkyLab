@@ -116,7 +116,7 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 												cluster_size=form.cleaned_data['cluster_size'],
 												is_public=form.cleaned_data['is_public'])
 
-		mpi_cluster.allowed_users.add(self.user)
+		mpi_cluster.allowed_users.add(self.request.user)
 		mpi_cluster.save()
 
 

@@ -165,7 +165,7 @@ class Task(models.Model):
 
     @property
     def task_dirname(self):
-        return "task_" + self.id
+        return 'task_{0}'.format(self.id)
 
     @property
     def output_files(self):
@@ -229,7 +229,7 @@ class Task(models.Model):
 class SkyLabFile(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=input, 2=output
     upload_path = models.CharField(max_length=200)
-    file = models.FileField(upload_to=get_upload_path)
+    file = models.FileField(upload_to=get_upload_path, blank=True)
     filename = models.CharField(max_length=200)
     render_with_jsmol = models.BooleanField(default=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
@@ -245,6 +245,8 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
     """Deletes file from filesystem
     when corresponding `SkyLabFile` object is deleted.
     """
+    print instance.file.path
+    print instance
     if instance.file:
         if os.path.isfile(instance.file.path):
             os.remove(instance.file.path)
@@ -263,10 +265,11 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
     except SkyLabFile.DoesNotExist:
         return False
 
-    new_file = instance.file
-    if not old_file == new_file:
-        if os.path.isfile(old_file.path):
-            os.remove(old_file.path)
+    if old_file:
+        new_file = instance.file
+        if not old_file == new_file:
+            if os.path.isfile(old_file.path):
+                os.remove(old_file.path)
 
 
 @python_2_unicode_compatible

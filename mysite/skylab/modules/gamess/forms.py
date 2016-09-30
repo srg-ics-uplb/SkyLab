@@ -23,7 +23,7 @@ class GamessForm(forms.Form):
         self.user = kwargs.pop('user')
         super(GamessForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        user_allowed = Q(creator=self.user)
+        user_allowed = Q(allowed_users=self.user)
         cluster_is_public = Q(is_public=True)
         # supports_gamess = Q(activated_toolset__display_name="GAMESS")
         # is_ready = Q(status=1)

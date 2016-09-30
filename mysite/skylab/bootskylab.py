@@ -343,9 +343,10 @@ class MPIThread(threading.Thread):
                         exec (queue_obj[1])
 
                     elif isinstance(queue_obj[1], Task):
-                        current_task = queue_obj[1].refresh_from_db()  # refresh instance
+                        current_task = queue_obj[1]
+                        current_task.refresh_from_db()  # refresh instance
                         task_log_prefix = '[Task {0}] : '.format(current_task.id)
-                        self.logger.info(self.log_prefix + 'Processing task id:' + current_task.id)
+                        self.logger.info('{0}Processing task id:{1}'.format(self.log_prefix, current_task.id))
 
                         # clean task output skylabfile, with a signal receiver deleting the actual files
                         self.logger.debug(self.log_prefix)

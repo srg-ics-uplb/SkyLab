@@ -2,6 +2,7 @@ import json
 import os
 import re
 import shutil
+import sys
 
 from django.conf import settings
 
@@ -68,16 +69,21 @@ class GAMESSExecutable(P2CToolGeneric):
             # print server_path
 
             # with statement automatically closes the file
-            with self.shell.open("/mirror/%s/%s.log" % (self.task.task_dirname, filename), "rb") as remote_file:
-                with open(server_path, "wb") as local_file:  # transfer to media/task_%d/output
-                    shutil.copyfileobj(remote_file, local_file)
+            try:
+                with self.shell.open("/mirror/%s/%s.log" % (self.task.task_dirname, filename), "rb") as remote_file:
+                    with open(server_path, "wb") as local_file:  # transfer to media/task_%d/output
+                        shutil.copyfileobj(remote_file, local_file)
 
-            with open(server_path, "rb") as local_file:  # attach transferred file to database
-                new_file = SkyLabFile.objects.create(type=2, upload_path="task_%d/output" % self.task.id,
-                                                     filename="%s.log" % filename, render_with_jsmol=True,
-                                                     task=self.task)
-                new_file.file.name = local_dir
-                new_file.save()
+                with open(server_path, "rb") as local_file:  # attach transferred file to database
+                    new_file = SkyLabFile.objects.create(type=2, upload_path="task_%d/output" % self.task.id,
+                                                         filename="%s.log" % filename, render_with_jsmol=True,
+                                                         task=self.task)
+                    new_file.file.name = local_dir
+                    new_file.save()
+            except IOError:
+                # since handle output files will still be called even if an error happened
+                # if there is an error in execution, there probably would be missing matching output files for each input
+                print ("Cannot read " + filename + ".log in remote cluster", sys.exc_info())
 
         local_dir = "%s/output/" % self.task.task_dirname
         server_path = os.path.join(media_root, local_dir)
@@ -124,37 +130,44 @@ class GAMESSExecutable(P2CToolGeneric):
         self.handle_input_files()
 
         export_path = "/mirror/gamess"
-
-        exec_string = json.loads(self.task.command_list)[0]
-
         self.task.change_status(status_msg="Executing tool script", status_code=152)
 
-        self.print_msg("Running %s" % exec_string)
-        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
-                                    cwd=self.working_dir)
-        # exec_shell = self.shell.run(["sh", "-c", exec_string],
-        #                             cwd=self.working_dir, use_pty=True, update_env={"PATH": "$PATH:%s" % export_path})
-        p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
-        m = p.search(exec_shell.output)
-        print (exec_shell.output)
-        if m is not None:
-            self.print_msg(m.group("exit_status"))
+        command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
+        shmax_fixer = self.shell.spawn(["sh", "-c", command], use_pty=True)
+        shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+        shmax_fixer.wait_for_result()
 
-            p = re.compile("ERROR,\s(?P<error_msg>.+)")
+        command_list = json.loads(self.task.command_list)
+        error = False
+        for exec_string in command_list:
+            self.print_msg("Running %s" % exec_string)
+            exec_shell = self.shell.run(
+                ["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
+                cwd=self.working_dir)
+            # exec_shell = self.shell.run(["sh", "-c", exec_string],
+            #                             cwd=self.working_dir, use_pty=True, update_env={"PATH": "$PATH:%s" % export_path})
+            p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
             m = p.search(exec_shell.output)
-            if m is not None:  # todo: more advanced catching
-                print ("Error: %s" % m.group("error_msg"))
-            # 2>&1 | tee nh3.hess.log;
+            # print (exec_shell.output)
+            if m is not None:
+                self.print_msg(m.group("exit_status"))
+
+                p = re.compile("ERROR,\s(?P<error_msg>.+)")
+                error = p.search(exec_shell.output)
+                if error is not None:  # todo: more advanced catching
+                    print ("Error: %s" % error.group("error_msg"))
+                    error = True
             else:
-                self.print_msg("Finished command execution")
+                error = True
 
-                self.task.change_status(status_msg="Tool execution successful",
-                                                           status_code=153)
-
-
-        else:
+        if error:
             self.task.change_status(
                 status_msg="Task execution error! See .log file for more information", status_code=400)
+        else:
+            self.print_msg("Finished command execution")
+
+            self.task.change_status(status_msg="Tool execution successful",
+                                    status_code=153)
 
         self.handle_output_files()
 

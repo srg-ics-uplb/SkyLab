@@ -2,12 +2,13 @@ from __future__ import print_function
 from __future__ import print_function
 from __future__ import print_function
 
+import json
 import os
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task, SkyLabFile, MPICluster, Tool
+from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.gamess.forms import GamessForm
 
 
@@ -25,7 +26,7 @@ class GAMESSView(LoginRequiredMixin, FormView):
         return "task/{0}".format(self.kwargs['id'])
 
     def form_valid(self, form):
-        cluster = MPICluster.objects.get(pk=form.cleaned_data['mpi_cluster'])
+        cluster = form.cleaned_data['mpi_cluster']
         task = Task.objects.create(
             mpi_cluster=cluster, tool=Tool.objects.get(display_name="GAMESS"), user=self.request.user,
             command_list=""
@@ -36,9 +37,12 @@ class GAMESSView(LoginRequiredMixin, FormView):
                                       file=f,
                                       filename=f.name, task=task)
 
-            filename_with_ext = os.path.splitext(f.name)[0]
-            command_list.append("rungms {0} 01 1 2>&1 | tee {0}.log".format(filename_with_ext))
+            filename_without_ext = os.path.splitext(f.name)[0]
+            command_list.append("rungms {0} 01 1 2>&1 | tee {0}.log".format(filename_without_ext))
 
+        task.refresh_from_db()
+        task.command_list = json.dumps(command_list)
+        task.save()
         task.change_status(status_code=100, status_msg="Task initialized")
         # Create log file stating task is initialized
 
