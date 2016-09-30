@@ -192,7 +192,7 @@ class Task(models.Model):
         output_files_urls_dict = []
         for f in self.output_files.all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
-                                                          kwargs={'task_id': self.id, 'priority': 'output',
+                                                          kwargs={'task_id': self.id, 'type': 'output',
                                                                   'filename': f.filename}),
                                            'filename': f.filename})
 
@@ -205,7 +205,7 @@ class Task(models.Model):
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "priority": "output", "filename": f.filename})),
+                                                                   "type": "output", "filename": f.filename})),
                  "filename": f.filename}
             )
 
@@ -214,7 +214,7 @@ class Task(models.Model):
             jsmol_files_absolute_uris.append(
                 {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
                                                            kwargs={"task_id": self.id,
-                                                                   "priority": "input", "filename": f.filename})),
+                                                                   "type": "input", "filename": f.filename})),
                  "filename": f.filename}
             )
 

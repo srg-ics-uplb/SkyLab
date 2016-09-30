@@ -52,7 +52,7 @@ class GamessForm(forms.Form):
                     'inp_file',
                     css_class="col-md-12"
                 ),
-                HTML('<input name="submit" value="Execute" priority="submit" class="btn btn-primary btn-block">'),
+                HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">'),
                 css_class="row"
             )
 

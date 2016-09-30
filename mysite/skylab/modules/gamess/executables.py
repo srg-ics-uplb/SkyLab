@@ -35,9 +35,9 @@ class GAMESSExecutable(P2CToolGeneric):
         self.task.change_status(status_msg="Uploading input files", status_code=151)
         remote_dir = "tool_activity_%d" % self.task.id
 
-        x = self.shell.run(["sh", "-c", "mkdir %s" % remote_dir])
+        x = self.shell.run(["sh", "-c", "if [ -d {0} ]; then rm -rf {0}/*; else mkdir {0}; fi".format(remote_dir)])
         print (x.output)
-        f = SkyLabFile.objects.get(input_files__pk=self.task.id)
+        f = SkyLabFile.objects.get(task=self.task.id, type=1)
         self.filename = os.path.splitext(f.filename)[0]
         # for f in files:
         with self.shell.open("/mirror/%s/" % remote_dir + f.filename, "wb") as remote_file:
@@ -51,7 +51,10 @@ class GAMESSExecutable(P2CToolGeneric):
         media_root = getattr(settings, "MEDIA_ROOT")
 
         remote_dir = "tool_activity_%d" % self.task.id
-        os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
+        try:
+            os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
+        except OSError:
+            pass
         local_dir = "%s/output/%s.log" % (remote_dir, self.filename)
         server_path = os.path.join(media_root, local_dir)
         # print "/mirror/%s/%s.log" % (remote_dir, self.filename)
@@ -65,7 +68,7 @@ class GAMESSExecutable(P2CToolGeneric):
         with open(server_path, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, upload_path="tool_activity_%d/output" % self.task.id,
                                                  filename="%s.log" % self.filename, render_with_jsmol=True,
-                                                 task=self.task.id)
+                                                 task=self.task)
             new_file.file.name = local_dir
             new_file.save()
 
@@ -82,7 +85,7 @@ class GAMESSExecutable(P2CToolGeneric):
             local_filepath = os.path.join(server_path, remote_file)
             sftp.get(remote_filepath, local_filepath)
             with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task.id,
+                new_file = SkyLabFile.objects.create(type=2, task=self.task,
                                                      upload_path="tool_activity_%d/output" % self.task.id,
                                                      filename=remote_file)
                 new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
@@ -95,9 +98,9 @@ class GAMESSExecutable(P2CToolGeneric):
         #self.print_msg(self.shell.run(["ls"]).output)
 
         if self.task.tasklog_set.latest('timestamp').status_code != 400:
-            self.task.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
+            self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
-            self.task.task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
+            self.task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
 
         self.print_msg("Done. Output files sent")
 

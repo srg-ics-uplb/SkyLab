@@ -42,9 +42,9 @@ def serve_private_file(request, task_id, type, filename):
 		task = Task.objects.get(pk=task_id)
 
 		if type == "input":
-			file = task.input_files.get(filename__exact=filename)
+			file = task.files.get(type=1, filename__exact=filename)
 		elif type == "output":
-			file = task.output_files.get(filename__exact=filename)
+			file = task.files.get(type=2, filename__exact=filename)
 	except ObjectDoesNotExist:
 		return Http404
 
@@ -62,9 +62,9 @@ def serve_file_for_jsmol(request, task_id, type, filename):
 		task = Task.objects.get(pk=task_id)
 
 		if type == "input":
-			file = task.input_files.get(filename__exact=filename)
+			file = task.files.get(type=1, filename__exact=filename)
 		elif type == "output":
-			file = task.output_files.get(filename__exact=filename)
+			file = task.files.get(type=2, filename__exact=filename)
 
 		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "{0}/{1}".format(file.upload_path, filename))
 		print (fullpath)

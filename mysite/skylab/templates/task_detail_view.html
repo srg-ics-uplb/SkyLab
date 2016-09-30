@@ -11,7 +11,8 @@
 
 {% block content %}
     <div class='row'>
-        <div id="task-detail-div" class="col-xs-6 col-xs-offset-3">
+        <div id="task-detail-div"
+             class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-offset-1 col-md-10 col-lg-10 col-lg-offset-1">
             <h1 class="text-center">Task {{ object.id }}</h1>
 
             <span class="text-muted">{{ object.tool.display_name }} @ {{ object.mpi_cluster }}</span>
@@ -65,7 +66,8 @@
             {#            </ul>#}
         </div>
             {#    JSmol container        #}
-        <div id="jsmol-container-div" class="col-xs-6">
+        <div id="jsmol-container-div"
+             class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0">
             <br>
             <div id="appdiv"></div>
             <div id="jsmol-options-div">
@@ -213,7 +215,9 @@
             Jmol.script(jmolApplet0, loadFile);
             var task_detail_div = $('#task-detail-div');
             {#            task_detail_div.addClass("col-xs-6");#}
-            task_detail_div.removeClass("col-xs-offset-3");
+            task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");
+            task_detail_div.addClass("col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0");
+
             var jsmol_container_div = $('#jsmol-container-div');
             jsmol_container_div.show();
             $('html, body').animate({
@@ -236,8 +240,8 @@
 
 
         var Info = {
-            width: 550,
-            height: 450,
+            width: "100%",
+            height: "80%",
             debug: false,
             color: "0x468499",
             addSelectionOptions: false,

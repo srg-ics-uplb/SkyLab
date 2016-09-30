@@ -148,7 +148,7 @@ class MPIThread(threading.Thread):
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(tasklog__status_code=200).exclude(
             tasklog__status_code=400)
         for task in tasks:
-            print(self.log_prefix + 'Queueing task [id:{0},priority:{1}]'.format(task.id, task.type))
+            print(self.log_prefix + 'Queueing task [id:{0},priority:{1}]'.format(task.id, task.priority))
             self.add_task_to_queue(task.priority, task)
 
         unactivated_toolsets = self.mpi_cluster.toolsets.filter(toolactivation__activated=False)
@@ -200,10 +200,15 @@ class MPIThread(threading.Thread):
 
     def install_dependencies(self):
         while True:
-            self.logger.debug(self.log_prefix + "Updating p2c-tools")
-            command = "rm p2c-tools*"
+            command = "sudo ifconfig eth0 mtu 1440"
+            ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+            ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+            self.logger.debug(self.log_prefix + 'Set mtu to 1440')
+
             try:
                 # update p2c-tools
+                self.logger.debug(self.log_prefix + "Updating p2c-tools")
+                command = "rm p2c-tools*"
                 self.cluster_shell.run(["sh", "-c", command])
                 print("Updating p2c-tools")
                 self.cluster_shell.run(["wget", "10.0.3.10/downloads/p2c/p2c-tools"])
