@@ -14,7 +14,7 @@ import spur
 from django.conf import settings
 from django.db.models.signals import post_save
 
-from skylab.models import MPICluster, Task, ToolSet, ToolActivation
+from skylab.models import MPICluster, Task, ToolSet, ToolActivation, SkyLabFile
 
 def populate_tools():
     pass
@@ -265,6 +265,7 @@ class MPIThread(threading.Thread):
                     print(self.log_prefix + tool_activator.wait_for_result().output)
 
                     # set activated to true after installation
+                    tool_activation_instance.refresh_from_db()
                     tool_activation_instance.activated = True
                     tool_activation_instance.save()
                     break
@@ -314,7 +315,7 @@ class MPIThread(threading.Thread):
         cluster_ip = m.group('floating_ip')
         # print "%s@%s" % (self.cluster_username, self.cluster_ip)
         # self.print_to_console("Cluster ip: %s" % self.cluster_ip)
-
+        self.mpi_cluster.refresh_from_db()
         self.mpi_cluster.cluster_ip = cluster_ip
         self.mpi_cluster.save()
         self.logger.debug(self.log_prefix + 'Obtained cluster ip: {0}'.format(cluster_ip))
@@ -326,12 +327,12 @@ class MPIThread(threading.Thread):
 
         while not self._stop.isSet():
 
-            self.logger.debug('MPIThread # {0} Waiting 5 seconds, before processing again'.format(self.mpi_cluster.id))
+            self.logger.debug(self.log_prefix + 'Waiting 5 seconds, before processing again')
             event_is_set = self._stop.wait(5)
-            self.logger.debug('MPIThread # {0} stop event set: {1}'.format(self.mpi_cluster.id, event_is_set))
+
 
             if event_is_set:
-                self.logger.info('MPIThread # {0} Terminating ...'.format(self.mpi_cluster.id))
+                self.logger.info(self.log_prefix + 'Terminating ...')
             else:
                 try:
                     print("Getting queue object")
@@ -342,11 +343,13 @@ class MPIThread(threading.Thread):
                         exec (queue_obj[1])
 
                     elif isinstance(queue_obj[1], Task):
-                        current_task = queue_obj[1]
-                        self.logger.info(
-                            'MPIThread # {0} Processing task id:{1}'.format(self.mpi_cluster.id, current_task.id))
+                        current_task = queue_obj[1].refresh_from_db()  # refresh instance
+                        task_log_prefix = '[Task {0}] : '.format(current_task.id)
+                        self.logger.info(self.log_prefix + 'Processing task id:' + current_task.id)
 
-                        # TODO: uncomment
+                        # clean task output skylabfile, with a signal receiver deleting the actual files
+                        self.logger.debug(self.log_prefix)
+                        SkyLabFile.objects.filter(task=current_task, type=2).delete()
                         mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
                         print(mod)
 

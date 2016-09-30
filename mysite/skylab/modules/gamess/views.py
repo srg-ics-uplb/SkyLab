@@ -2,7 +2,6 @@ from __future__ import print_function
 from __future__ import print_function
 from __future__ import print_function
 
-import json
 import os
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -26,39 +25,22 @@ class GAMESSView(LoginRequiredMixin, FormView):
         return "task/{0}".format(self.kwargs['id'])
 
     def form_valid(self, form):
-        cluster = MPICluster.objects.get(pk=self.request.POST['mpi_cluster'])
-        print(cluster)
-        filename = os.path.splitext(self.request.FILES['inp_file'].name)[0]
-        exec_string = "rungms {0} 01 1 2>&1 | tee {0}.log".format(filename)
-        # command_list = "rungms %s 01" % (filename)
+        cluster = MPICluster.objects.get(pk=form.cleaned_data['mpi_cluster'])
         task = Task.objects.create(
             mpi_cluster=cluster, tool=Tool.objects.get(display_name="GAMESS"), user=self.request.user,
-            command_list=json.dumps([exec_string])
+            command_list=""
         )
+        command_list = []
+        for f in form.cleaned_data['input_files']:
+            SkyLabFile.objects.create(type=1, upload_path="task_{0}/input".format(task.id),
+                                      file=f,
+                                      filename=f.name, task=task)
+
+            filename_with_ext = os.path.splitext(f.name)[0]
+            command_list.append("rungms {0} 01 1 2>&1 | tee {0}.log".format(filename_with_ext))
 
         task.change_status(status_code=100, status_msg="Task initialized")
         # Create log file stating task is initialized
 
         self.kwargs['id'] = task.id
-        new_file = SkyLabFile.objects.create(type=1, upload_path="tool_activity_%d/input" % task.id,
-                                             file=self.request.FILES['inp_file'],
-                                             filename=self.request.FILES['inp_file'].name, task=task)
-
-
-        print(self.request.FILES['inp_file'].name)
-
-        data = {
-            "actions": "use_tool",
-            "activity": task.id,
-            "tool": task.tool.display_name,
-        }
-        message = json.dumps(data)
-        print(message)
-        # find a way to know if thread is already running
-        # send_mpi_message("skylab.consumer.{0}".format(tool_activity.mpi_cluster.id), message)
-
-        # Create log file stating task is queued
-        # task.change_status(status_code=101, status_msg="Task queued")
-
-
         return super(GAMESSView, self).form_valid(form)

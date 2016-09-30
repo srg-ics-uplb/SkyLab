@@ -4,18 +4,20 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from multiupload.fields import MultiFileField
 
 from skylab.models import MPICluster, ToolSet
 from skylab.modules.basetool import MPIModelChoiceField
 
 
-def validate_gamess_input_extension(value):
-    if not value.name.endswith('.inp'):
-        raise ValidationError(u'Only (.inp) files are accepted')
+def validate_gamess_input_extension(files):
+    for f in files:
+        if not f.name.endswith('.inp'):
+            raise ValidationError(u'Only (.inp) files are accepted')
 
 
 class GamessForm(forms.Form):
-    inp_file = forms.FileField(validators=[validate_gamess_input_extension], label="Input file")
+    input_files = MultiFileField(validators=[validate_gamess_input_extension], label="Input file(s)")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -49,7 +51,7 @@ class GamessForm(forms.Form):
                 ),
 
                 Div(
-                    'inp_file',
+                    'input_files',
                     css_class="col-md-12"
                 ),
                 HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">'),

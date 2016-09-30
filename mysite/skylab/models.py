@@ -7,6 +7,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.db import models
+from django.dispatch import receiver
 from django.utils.encoding import python_2_unicode_compatible
 
 
@@ -49,6 +50,7 @@ class MPICluster(models.Model):
         return self.cluster_name
 
     def change_status(self, status):
+        self.refresh_from_db()
         self.status = status
         self.save()
 
@@ -157,10 +159,13 @@ class Task(models.Model):
         return status_msgs.get(status_code, "Status code %d not recognized" % status_code)
 
     def change_status(self, **kwargs):
-
         status_code = kwargs.get('status_code', 000)
         status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
+
+    @property
+    def task_dirname(self):
+        return "task_" + self.id
 
     @property
     def output_files(self):
@@ -224,7 +229,7 @@ class Task(models.Model):
 class SkyLabFile(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=input, 2=output
     upload_path = models.CharField(max_length=200)
-    file = models.FileField(upload_to=get_upload_path, blank=True)
+    file = models.FileField(upload_to=get_upload_path)
     filename = models.CharField(max_length=200)
     render_with_jsmol = models.BooleanField(default=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
@@ -233,12 +238,43 @@ class SkyLabFile(models.Model):
         return self.filename
 
 
+# Retrieved from http: // stackoverflow.com / questions / 16041232 / django - delete - filefield
+# These two auto-delete files from filesystem when they are unneeded:
+@receiver(models.signals.post_delete, sender=SkyLabFile)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """Deletes file from filesystem
+    when corresponding `SkyLabFile` object is deleted.
+    """
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)
+
+
+@receiver(models.signals.pre_save, sender=SkyLabFile)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """Deletes file from filesystem
+    when corresponding `SkyLabFile` object is changed.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = SkyLabFile.objects.get(pk=instance.pk).file
+    except SkyLabFile.DoesNotExist:
+        return False
+
+    new_file = instance.file
+    if not old_file == new_file:
+        if os.path.isfile(old_file.path):
+            os.remove(old_file.path)
+
+
 @python_2_unicode_compatible
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
     status_msg = models.CharField(max_length=200)
     timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
-    task = models.ForeignKey(Task, on_delete=models.CASCADE, blank=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
     @property
     def __str__(self):
