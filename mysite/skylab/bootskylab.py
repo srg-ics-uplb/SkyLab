@@ -118,7 +118,7 @@ class MPIThreadManager(object):
             # print('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
 
             # append to queue
-            self.threadHash[instance.mpi_cluster_id].add_task_to_queue(2, instance)
+            self.threadHash[instance.mpi_cluster_id].add_task_to_queue(instance.priority, instance)
 
     def receive_mpi_cluster_from_post_save_signal(self, sender, instance, created, **kwargs):
         if created:
@@ -400,7 +400,8 @@ class MPIThread(threading.Thread):
                         executable_obj = cls(shell=self.cluster_shell, task=current_task, logger=self.logger,
                                              log_prefix=self.log_prefix + task_log_prefix)
                         executable_obj.run_tool()
-                        #executable_obj.clear_or_create_dirs()
+                        # executable_obj.clear_or_create_dirs()
+                        # executable_obj.handle_input_files()
 
                     self.task_queue.task_done()
                 except Queue.Empty:
