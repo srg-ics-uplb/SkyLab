@@ -20,21 +20,21 @@
             {# progress bars #}
             {% if object.latest_log.status_code < 200 %}
                 {# task initializing/queued/in progress #}
-                <div class="progress progress-striped active">
+                <div id="task-view-progress-bar" class="progress progress-striped active">
                     <div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"
                          aria-valuemax="100" style="width: 100%">
 
                     </div>
                 </div>
             {% elif object.latest_log.status_code == 200 %} {# task finished successfully #}
-                <div class="progress progress-striped">
+                <div id="task-view-progress-bar" class="progress progress-striped">
                     <div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"
                          aria-valuemin="0" aria-valuemax="100" style="width:100%">
 
                     </div>
                 </div>
             {% elif object.latest_log.status_code >= 400 %}  {# error encountered #}
-                <div class="progress progress-striped">
+                <div id="task-view-progress-bar" class="progress progress-striped">
                     <div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"
                          aria-valuemin="0" aria-valuemax="100" style="width:100%">
                     </div>
@@ -169,6 +169,7 @@
                     clearInterval(statusRefresher);
 
                     if (statusCode == 200 && content.uri_dict.length > 0) { //if successful and there is at least one jsmol readable file
+                        alert(content.progress);
                         content.uri_dict.forEach(addModel);
                         {#                        {% for absolute_uri in jsmol_files_absolute_uris %}#}
                         {#                            Models.push(["{{ absolute_uri.uri }}","{{ absolute_uri.filename }}"]); // Models.push([absolute_uri, filename])#}

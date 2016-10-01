@@ -5,6 +5,7 @@ import importlib
 import json
 import logging
 import logging.config
+import math
 import os
 import re
 import threading
@@ -19,6 +20,8 @@ from skylab.models import MPICluster, Task, ToolSet, ToolActivation, SkyLabFile
 def populate_tools():
     pass
 
+
+MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
 
 def setup_logging(
         path=os.path.dirname(os.path.abspath(__file__)) + '/logs/skylab_log_config.json',
@@ -71,19 +74,27 @@ class MPIThreadManager(object):
                                                 username=settings.FRONTEND_USERNAME,
                                                 password=settings.FRONTEND_PASSWORD,
                                                 missing_host_key=spur.ssh.MissingHostKey.accept)
-            while True:
+            retries = 0
+            exit_loop = False
+            while not exit_loop:
                 try:
                     self.logger.info("Connecting to frontend...")
                     # check if connection is sucessful
                     # from : http://stackoverflow.com/questions/28288533/check-if-paramiko-ssh-connection-is-still-alive
                     channel = self.frontend_shell._get_ssh_transport().send_ignore()
                     self._connected_to_frontend.set()
-                    break
+                    exit_loop = True  # exit loop
+
                 except (spur.ssh.ConnectionError, EOFError) as e:
-                    # print ("Error connecting to frontend")
                     self.logger.error("Error connecting to frontend", exc_info=True)
+
                 finally:
-                    time.sleep(5)
+                    if not exit_loop:
+                        retries += 1
+                        wait_time = min(math.pow(2, retries), MAX_WAIT)
+                        self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                        time.sleep(wait_time)
+
             self.logger.info("Connected to frontend...")
 
         return self.frontend_shell
@@ -182,24 +193,34 @@ class MPIThread(threading.Thread):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
                                            password=settings.CLUSTER_PASSWORD,
                                            missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
-        while True:
+        retries = 0
+        exit_loop = False
+        while not exit_loop:
             try:
                 self.logger.info(self.log_prefix + "Connecting to cluster...")
                 # check if connection is sucessful
                 # from : http://stackoverflow.com/questions/28288533/check-if-paramiko-ssh-connection-is-still-alive
                 channel = self.cluster_shell._get_ssh_transport().send_ignore()
+                exit_loop = True  # exit loop
 
-                break
             except (spur.ssh.ConnectionError, EOFError) as e:
                 # print ("Error connecting to frontend")
                 self.logger.error(self.log_prefix + "Error connecting to cluster", exc_info=True)
                 self.mpi_cluster.change_status(4)
+
             finally:
-                time.sleep(5)
+                if not exit_loop:
+                    retries += 1
+                    wait_time = min(math.pow(2, retries), MAX_WAIT)
+                    self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                    time.sleep(wait_time)
+
         self.logger.info(self.log_prefix + "Connected to cluster...")
 
     def install_dependencies(self):
-        while True:
+        retries = 0
+        exit_loop = False
+        while not exit_loop:
             command = "sudo ifconfig eth0 mtu 1440"
             ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
             ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
@@ -235,17 +256,22 @@ class MPIThread(threading.Thread):
                 # zip_shell.stdin_write("Y\n")
                 self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
                 self.logger.debug(self.log_prefix + "Installed zip")
-                break
+                exit_loop = True  # exit loop
 
             except spur.RunProcessError:
                 # run process error with return code -1 (no value returned) is returned during unresponsive connection
-                self.logger.error(self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                self.logger.error(self.log_prefix + 'No response from cluster.',
                                   exc_info=True)
 
             except spur.ssh.ConnectionError:
                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+
             finally:
-                time.sleep(5)
+                if not exit_loop:
+                    retries += 1
+                    wait_time = min(math.pow(2, retries), MAX_WAIT)
+                    self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                    time.sleep(wait_time)
 
     def activate_toolset(self, toolset_id):
         # check if toolset is already activated
@@ -254,7 +280,9 @@ class MPIThread(threading.Thread):
             toolset = ToolSet.objects.get(pk=toolset_id)
 
             self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
-            while True:
+            retries = 0
+            exit_loop = False
+            while not exit_loop:
                 command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
                 try:
                     tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
@@ -268,22 +296,30 @@ class MPIThread(threading.Thread):
                     tool_activation_instance.refresh_from_db()
                     tool_activation_instance.activated = True
                     tool_activation_instance.save()
-                    break
+
+                    exit_loop = True  #exit loop
                 except spur.RunProcessError:
                     self.logger.error(
-                        self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                        self.log_prefix + "No response from server. Command: ({0})".format(command),
                         exc_info=True)
 
                 except spur.ssh.ConnectionError:
                     self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+
                 finally:
-                    time.sleep(5)
+                    if not exit_loop:
+                        retries += 1
+                        wait_time = min(math.pow(2, retries), MAX_WAIT)
+                        self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                        time.sleep(wait_time)
 
     def create_mpi_cluster(self):
         # TODO: test if works
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
 
-        while True:
+        retries = 0
+        exit_loop = False
+        while not exit_loop:
             command = "./vcluster-stop {0} {1}".format(self.mpi_cluster.cluster_name, self.mpi_cluster.cluster_size)
             try:
                 self.logger.debug(self.log_prefix + "Execute " + command)
@@ -295,16 +331,21 @@ class MPIThread(threading.Thread):
                                                             self.mpi_cluster.cluster_size)
                 self.logger.debug(self.log_prefix + "Execute " + command)
                 result_cluster_ip = self.frontend_shell.run(["sh", "-c", command], cwd="vcluster")
-                break
+
+                exit_loop = True  # exit loop
             except spur.RunProcessError:
                 self.logger.error(
-                    self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                    self.log_prefix + "No response from server. Command: ({0})".format(command),
                     exc_info=True)
 
             except spur.ssh.ConnectionError:
                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
             finally:
-                time.sleep(5)
+                if not exit_loop:
+                    retries += 1
+                    wait_time = min(math.pow(2, retries), MAX_WAIT)
+                    self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                    time.sleep(wait_time)
 
         print(self.log_prefix + result_cluster_ip.output)
         self.logger.debug(self.log_prefix + result_cluster_ip.output)
@@ -345,8 +386,8 @@ class MPIThread(threading.Thread):
                     elif isinstance(queue_obj[1], Task):
                         current_task = queue_obj[1]
                         current_task.refresh_from_db()  # refresh instance
-                        task_log_prefix = '[Task {0}] : '.format(current_task.id)
-                        self.logger.info('{0}Processing task id:{1}'.format(self.log_prefix, current_task.id))
+                        task_log_prefix = '[Task {0} ({1})] : '.format(current_task.id, current_task.tool.display_name)
+                        self.logger.info('{0}Processing {1}'.format(self.log_prefix, task_log_prefix))
 
                         # clean task output skylabfile, with a signal receiver deleting the actual files
                         self.logger.debug(self.log_prefix)
@@ -356,8 +397,10 @@ class MPIThread(threading.Thread):
 
                         cls = getattr(mod, current_task.tool.executable_name)
                         # cls()
-                        executable_obj = cls(shell=self.cluster_shell, task=current_task)
+                        executable_obj = cls(shell=self.cluster_shell, task=current_task, logger=self.logger,
+                                             log_prefix=self.log_prefix + task_log_prefix)
                         executable_obj.run_tool()
+                        #executable_obj.clear_or_create_dirs()
 
                     self.task_queue.task_done()
                 except Queue.Empty:
@@ -365,7 +408,9 @@ class MPIThread(threading.Thread):
                         self._stop.set()
                         self.logger.info(self.log_prefix + "Deleting MPI Cluster")
 
-                        while True:
+                        retries = 0
+                        exit_loop = False
+                        while not exit_loop:
                             command = "./vcluster-stop {0} {1}".format(self.mpi_cluster.cluster_name,
                                                                        self.mpi_cluster.cluster_size)
                             try:
@@ -374,16 +419,22 @@ class MPIThread(threading.Thread):
                                 # self.frontend_shell.run(["./vcluster-stop", self.mpi_cluster.cluster_name,
                                 # str(self.mpi_cluster.cluster_size)],
                                 #                         cwd="vcluster")  # to remove duplicates in case server restart while creating
-                                break
+                                exit_loop = True  # exit loop
+
                             except spur.RunProcessError:
                                 self.logger.error(
-                                    self.log_prefix + "No response from server. Retrying command ({0})".format(command),
+                                    self.log_prefix + "No response from server. Command: ({0})".format(command),
                                     exc_info=True)
 
                             except spur.ssh.ConnectionError:
                                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
+
                             finally:
-                                time.sleep(5)
+                                if not exit_loop:
+                                    retries += 1
+                                    wait_time = min(math.pow(2, retries), MAX_WAIT)
+                                    self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                                    time.sleep(wait_time)
 
                         self.mpi_cluster.toolsets.clear()  # clear toolsets, toolactivation
                         self.mpi_cluster.change_status(5)

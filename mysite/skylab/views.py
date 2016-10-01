@@ -171,13 +171,13 @@ def task_fragments_view(request, pk=None):
 			item.get("url"), item.get("filename"))
 
 		if task.latest_log.status_code < 200:
-			progress_bar = '<div class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
+			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
 			status_msg = '<span id="task-status" class="text-info pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code == 200:
-			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
 			status_msg = '<span id="task-status" class="text-success pull-right">' + task.latest_log.status_msg + '</span>'
 		elif task.latest_log.status_code >= 400:
-			progress_bar = '<div class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
 			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.latest_log.status_msg + '</span>'
 		# progress_bar
 
@@ -186,11 +186,11 @@ def task_fragments_view(request, pk=None):
 				'#task-output-files-list': task_output_file_list,
 			},
 			'fragments': {
-				'#progress': progress_bar,
+				'#task-view-progress-bar': progress_bar,
 				'#task-status': status_msg,
 			},
 			'status_code': task.latest_log.status_code,
-
+			'progress': progress_bar,
 			# 'has_jsmol_file': task.has_jsmol_file,
 			'uri_dict': task.get_dict_jsmol_files_uris(request),
 

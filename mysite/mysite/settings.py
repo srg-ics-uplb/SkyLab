@@ -203,3 +203,5 @@ LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
 
 JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
+
+TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
