@@ -161,7 +161,7 @@ def index(request):
 @ajax
 def task_fragments_view(request, pk=None):
 	if pk is not None:
-		task = Task.objects.filter(pk=pk, user=request.user.id)[0]
+		task = Task.objects.get(pk=pk, user=request.user.id)
 		# print task.id
 		# print "Status code", task.latest_log.status_code
 

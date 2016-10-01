@@ -3,7 +3,9 @@ import os
 import re
 import shutil
 import sys
+import time
 
+import spur
 from django.conf import settings
 
 from skylab.models import SkyLabFile
@@ -19,7 +21,7 @@ class GAMESSExecutable(P2CToolGeneric):
         self.working_dir = '/mirror/' + self.task.task_dirname
 
         # clear scr folder
-        remote_path = "/mirror/scr/"
+        remote_path = '/mirror/scr/'
         sftp = self.shell._open_sftp_client()
         remote_files = sftp.listdir(path=remote_path)
         for remote_file in remote_files:
@@ -29,7 +31,7 @@ class GAMESSExecutable(P2CToolGeneric):
 
         # clear or create task folder
         self.shell.run(
-            ["sh", "-c", "if [ -d {0} ]; then rm -rf {0}/*; else mkdir {0}; fi".format(self.task.task_dirname)])
+            ['sh', '-c', 'if [ -d {0} ]; then rm -rf {0}/*; else mkdir {0}; fi'.format(self.task.task_dirname)])
 
 
 
@@ -37,18 +39,18 @@ class GAMESSExecutable(P2CToolGeneric):
 
 
     def handle_input_files(self, **kwargs):
-        self.task.change_status(status_msg="Uploading input files", status_code=151)
+        self.task.change_status(status_msg='Uploading input files', status_code=151)
 
         files = SkyLabFile.objects.filter(task=self.task.id, type=1)
         for f in files:
-            with self.shell.open('/mirror/{0}/{1}'.format(self.task.task_dirname, f.filename), "wb") as remote_file:
+            with self.shell.open('/mirror/{0}/{1}'.format(self.task.task_dirname, f.filename), 'wb') as remote_file:
                 with f.file as local_file:
                     shutil.copyfileobj(local_file, remote_file)
 
 
     def handle_output_files(self, **kwargs):
-        self.task.change_status(status_msg="Retrieving output files", status_code=154)
-        self.print_msg("Sending output files to server")
+        self.task.change_status(status_msg='Retrieving output files', status_code=154)
+        self.print_msg('Sending output files to server')
         media_root = settings.MEDIA_ROOT
 
         try:
@@ -63,20 +65,21 @@ class GAMESSExecutable(P2CToolGeneric):
         files = SkyLabFile.objects.filter(task=self.task.id, type=1)
         for f in files:
             filename = os.path.splitext(f.filename)[0]
-            local_dir = "{0}/output/{1}.log".format(self.task.task_dirname, filename)
+            local_dir = '{0}/output/{1}.log'.format(self.task.task_dirname, filename)
             server_path = os.path.join(media_root, local_dir)
             # print "/mirror/%s/%s.log" % (remote_dir, self.filename)
             # print server_path
 
             # with statement automatically closes the file
             try:
-                with self.shell.open("/mirror/%s/%s.log" % (self.task.task_dirname, filename), "rb") as remote_file:
-                    with open(server_path, "wb") as local_file:  # transfer to media/task_%d/output
+                with self.shell.open('/mirror/{0:s}/{1:s}.log'.format(self.task.task_dirname, filename),
+                                     "rb") as remote_file:
+                    with open(server_path, 'wb') as local_file:  # transfer to media/task_%d/output
                         shutil.copyfileobj(remote_file, local_file)
 
                 with open(server_path, "rb") as local_file:  # attach transferred file to database
-                    new_file = SkyLabFile.objects.create(type=2, upload_path="task_%d/output" % self.task.id,
-                                                         filename="%s.log" % filename, render_with_jsmol=True,
+                    new_file = SkyLabFile.objects.create(type=2, upload_path=u'task_{0:d}/output'.format(self.task.id),
+                                                         filename=u'{0:s}.log'.format(filename), render_with_jsmol=True,
                                                          task=self.task)
                     new_file.file.name = local_dir
                     new_file.save()
@@ -85,10 +88,10 @@ class GAMESSExecutable(P2CToolGeneric):
                 # if there is an error in execution, there probably would be missing matching output files for each input
                 print ("Cannot read " + filename + ".log in remote cluster", sys.exc_info())
 
-        local_dir = "%s/output/" % self.task.task_dirname
+        local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
         server_path = os.path.join(media_root, local_dir)
         sftp = self.shell._open_sftp_client()
-        remote_path = "/mirror/scr/"
+        remote_path = '/mirror/scr/'
 
         # retrieve then delete produced scratch files
         remote_files = sftp.listdir(path=remote_path)
@@ -98,7 +101,7 @@ class GAMESSExecutable(P2CToolGeneric):
             sftp.get(remote_filepath, local_filepath)
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(type=2, task=self.task,
-                                                     upload_path="tool_activity_%d/output" % self.task.id,
+                                                     upload_path=u'tool_activity_{0:d}/output'.format(self.task.id),
                                                      filename=remote_file)
                 new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
@@ -114,59 +117,75 @@ class GAMESSExecutable(P2CToolGeneric):
         else:
             self.task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
 
-        self.print_msg("Done. Output files sent")
+        self.print_msg('Done. Output files sent')
 
         # Delete remote working directory
-        self.shell.run(["rm", "-r", self.working_dir])
+        self.shell.run(['rm', '-r', self.working_dir])
 
 
     # raise not implemented error
     def print_msg(self, msg):
-        print ("Gamess (Tool Activity %d) : %s" % (self.task.id, msg))
+        print ('Gamess (Tool Activity {0:d}) : {1:s}'.format(self.task.id, msg))
 
 
     def run_tool(self, **kwargs):
-        self.task.change_status(status_msg="Task started", status_code=150)
+        self.task.change_status(status_msg='Task started', status_code=150)
         self.handle_input_files()
 
-        export_path = "/mirror/gamess"
+        export_path = '/mirror/gamess'
         self.task.change_status(status_msg="Executing tool script", status_code=152)
 
         command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
-        shmax_fixer = self.shell.spawn(["sh", "-c", command], use_pty=True)
+        shmax_fixer = self.shell.spawn(['sh', '-c', command], use_pty=True)
         shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         shmax_fixer.wait_for_result()
 
         command_list = json.loads(self.task.command_list)
         error = False
-        for exec_string in command_list:
-            self.print_msg("Running %s" % exec_string)
-            exec_shell = self.shell.run(
-                ["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)],
-                cwd=self.working_dir)
-            # exec_shell = self.shell.run(["sh", "-c", exec_string],
-            #                             cwd=self.working_dir, use_pty=True, update_env={"PATH": "$PATH:%s" % export_path})
-            p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
-            m = p.search(exec_shell.output)
-            # print (exec_shell.output)
-            if m is not None:
-                self.print_msg(m.group("exit_status"))
+        for command in command_list:
+            while True:
+                self.print_msg(u'Running {0:s}'.format(command))
+                try:
+                    exec_shell = self.shell.run(
+                        ['sh', '-c', 'export PATH=$PATH:{0:s}; echo $PATH; {1:s};'.format(export_path, command)],
+                        cwd=self.working_dir
+                    )
+                    break
+                except spur.RunProcessError as err:
+                    if err.return_code == -1:  # no return code received
+                        self.print_msg('No response from server. Retrying command ({0})'.format(command))
+                    else:
+                        self.print_msg('RuntimeError: ' + err.stderr_output)
+                        error = True
+                        break
+                    pass
+                except spur.ssh.ConnectionError:
+                    self.print_msg('Connection error. Retrying command ({0})'.format(command))
+                finally:
+                    time.sleep(5)
 
-                p = re.compile("ERROR,\s(?P<error_msg>.+)")
-                error = p.search(exec_shell.output)
-                if error is not None:  # todo: more advanced catching
-                    print ("Error: %s" % error.group("error_msg"))
+            if not error:
+                p = re.compile("EXECUTION\sOF\sGAMESS\sTERMINATED\s(?P<exit_status>\S+)")
+                m = p.search(exec_shell.output)
+                # print (exec_shell.output)
+                if m is not None:
+                    self.print_msg(m.group('exit_status'))
+
+                    p = re.compile("ERROR,\s(?P<error_msg>.+)")
+                    error = p.search(exec_shell.output)
+                    if error is not None:  # todo: more advanced catching
+                        print (u'Error: {0:s}'.format(error.group('error_msg')))
+                        error = True
+                else:
                     error = True
-            else:
-                error = True
 
         if error:
             self.task.change_status(
-                status_msg="Task execution error! See .log file for more information", status_code=400)
+                status_msg='Task execution error! See .log file for more information', status_code=400)
         else:
-            self.print_msg("Finished command execution")
+            self.print_msg('Finished command execution')
 
-            self.task.change_status(status_msg="Tool execution successful",
+            self.task.change_status(status_msg='Tool execution successful',
                                     status_code=153)
 
         self.handle_output_files()

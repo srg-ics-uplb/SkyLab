@@ -45,7 +45,7 @@
 
             <strong>Input Files: </strong>
             <div id="task-input-files-list" class="list-group">
-                {% for file in object.input_files.all %}
+                {% for file in object.input_files %}
                     <a class="list-group-item"
                        href="{% url "skylab_file_url" task_id=object.id type="input" filename=file.filename %}">{{ file.filename }}</a>
                 {% endfor %}

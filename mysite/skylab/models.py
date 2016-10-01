@@ -195,6 +195,7 @@ class Task(models.Model):
 
     def get_output_files_urls(self):
         output_files_urls_dict = []
+
         for f in self.output_files.all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
                                                           kwargs={'task_id': self.id, 'type': 'output',
@@ -205,23 +206,24 @@ class Task(models.Model):
 
     def get_dict_jsmol_files_uris(self, request):
         jsmol_files_absolute_uris = []
-        output_files = self.output_files.filter(render_with_jsmol=True)
-        for f in output_files:
-            jsmol_files_absolute_uris.append(
-                {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
-                                                           kwargs={"task_id": self.id,
-                                                                   "type": "output", "filename": f.filename})),
-                 "filename": f.filename}
-            )
+        if self.files.filter(render_with_jsmol=True).exists():
+            output_files = self.output_files.filter(render_with_jsmol=True)
+            for f in output_files:
+                jsmol_files_absolute_uris.append(
+                    {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                                                               kwargs={"task_id": self.id,
+                                                                       "type": "output", "filename": f.filename})),
+                     "filename": f.filename}
+                )
 
-        input_files = self.input_files.filter(render_with_jsmol=True)
-        for f in input_files:
-            jsmol_files_absolute_uris.append(
-                {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
-                                                           kwargs={"task_id": self.id,
-                                                                   "type": "input", "filename": f.filename})),
-                 "filename": f.filename}
-            )
+            input_files = self.input_files.filter(render_with_jsmol=True)
+            for f in input_files:
+                jsmol_files_absolute_uris.append(
+                    {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                                                               kwargs={"task_id": self.id,
+                                                                       "type": "input", "filename": f.filename})),
+                     "filename": f.filename}
+                )
 
         return jsmol_files_absolute_uris
 
