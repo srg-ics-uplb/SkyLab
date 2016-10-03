@@ -13,62 +13,18 @@ from skylab.modules.basetool import P2CToolGeneric
 MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
 
 class GAMESSExecutable(P2CToolGeneric):
-    def __init__(self, **kwargs):
-        self.shell = kwargs.get('shell')
-        self.task = kwargs.get('task')
-        self.logger = kwargs.get('logger')
-        self.log_prefix = kwargs.get('log_prefix')
-        # self.id = kwargs.get('id')
+    # def __init__(self, **kwargs):
+    # self.shell = kwargs.get('shell')
+    # self.task = kwargs.get('task')
+    # self.logger = kwargs.get('logger')
+    # self.log_prefix = kwargs.get('log_prefix')
 
-        self.working_dir = '/mirror/' + self.task.task_dirname
-        super(GAMESSExecutable, self).__init__(self, **kwargs)
-
-    def clear_or_create_dirs(self):
-        self.logger.debug(self.log_prefix + 'Clear or create directories')
-        # ssh shell delete is faster than sftp:
-        # reference: http://superuser.com/questions/1015430/why-does-deleting-a-directory-take-so-long-on-sftp
-
-        # clear scr folder
-        self.logger.debug(self.log_prefix + 'Clear or create scratch folder')
-        clear_or_create = 'if [ -d {0} ]; then rm -rf {0}/*; else mkdir {0}; fi'
-        self.shell.run(
-            ['sh', '-c', clear_or_create.format('scr')])
-        # remote_path = '/mirror/scr/'
-        # sftp = self.shell._open_sftp_client()
-        # remote_files = sftp.listdir(path=remote_path)
-        # for remote_file in remote_files:
-        #     remote_filepath = os.path.join(remote_path, remote_file)
-        #     sftp.remove(remote_filepath)  # delete after transfer
-
-
-        self.logger.debug(self.log_prefix + 'Clear or create task folder')
-        # remote_path = self.working_dir
-        # sftp = self.shell._open_sftp_client()
-        # remote_files = sftp.listdir(path=remote_path)
-        # for remote_file in remote_files:
-        #     remote_filepath = os.path.join(remote_path, remote_file)
-        #     sftp.remove(remote_filepath)  # delete after transfer
-        # sftp.close()
-        self.shell.run(
-            ['sh', '-c', clear_or_create.format(self.task.task_dirname)])
-        self.shell.run(['sh', '-c', 'mkdir output && mkdir input'], cwd=self.working_dir)
-        try:
-            os.makedirs(os.path.join(settings.MEDIA_ROOT, self.task.task_dirname + '/output'))
-        except OSError:
-            pass
-
+    # self.working_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
+    # super(GAMESSExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
-
-        # files = SkyLabFile.objects.filter(task=self.task.id, type=1)
-        # for f in files:
-        #     with self.shell.open('/mirror/{0}/{1}'.format(self.task.task_dirname, f.filename), 'wb') as remote_file:
-        #         with f.file as local_file:
-        #             shutil.copyfileobj(local_file, remote_file)
-        #             self.logger.debug(self.log_prefix + 'Uploaded ' + f.filename)
-        # self.logger.debug(self.log_prefix + 'Finished uploading input files')
 
         files = self.task.files.filter(type=1)
         sftp = self.shell._open_sftp_client()
@@ -130,13 +86,10 @@ class GAMESSExecutable(P2CToolGeneric):
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
-
         sftp.close()
 
         # delete via ssh is faster than sftp
         self.shell.run(['sh', '-c', 'rm -rf scr/*'])
-
-        #self.print_msg(self.shell.run(["ls"]).output)
 
         if not self.task.tasklog_set.filter(status_code=400).exists():
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
@@ -148,16 +101,12 @@ class GAMESSExecutable(P2CToolGeneric):
         # Delete remote working directory
         self.shell.run(['rm', '-r', self.working_dir])
 
-    # raise not implemented error
-    def print_msg(self, msg):
-        print ('Gamess (Tool Activity {0:d}) : {1:s}'.format(self.task.id, msg))
-
-
-
-
     def run_tool(self, **kwargs):
         self.task.change_status(status_msg='Task started', status_code=150)
-        self.clear_or_create_dirs()
+
+        additional_dirs = ['/mirror/scr']
+        task_remote_subdirs = ['input', 'output']
+        self.clear_or_create_dirs(additional_dirs=additional_dirs, task_remote_subdirs=task_remote_subdirs)
         self.handle_input_files()
 
         export_path = '/mirror/gamess'
