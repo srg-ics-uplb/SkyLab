@@ -8,8 +8,7 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
-from skylab.models import MPICluster, Task
-from skylab.modules.basetool import create_input_skylab_file
+from skylab.models import MPICluster, Task, SkyLabFile
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 
 
@@ -49,7 +48,7 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
             para_image_prefix = "mpiexec -n 4"
             param_image_postfix = '-ni 2 {0}'.format(para_postfix)
 
-            tool_activity = Task.objects.create(
+            task = Task.objects.create(
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
                 # additional_info=
@@ -65,8 +64,9 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
                 if executable:  # ignore blank parameter value
 
                     input_file = form.cleaned_data["param_input_file"]
-                    filepath = create_input_skylab_file(tool_activity, 'input', input_file)
-
+                    # filepath = create_input_skylab_file(tool_activity, 'input', input_file)
+                    instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
+                    # filepath = instance.file.name
                     if executable == "pw.x":
                         pass
 
@@ -88,11 +88,11 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
                         para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
 
             additional_info['scf_output_files'] = scf_output_files
-            tool_activity.additional_info = json.dumps(additional_info)
-            tool_activity.command_list = json.dumps(command_list)
-            tool_activity.save()
+            task.additional_info = json.dumps(additional_info)
+            task.command_list = json.dumps(command_list)
+            task.save()
 
-            print(tool_activity.command_list)
+            print(task.command_list)
 
             # data = {
             #     "actions": "use_tool",
@@ -106,7 +106,7 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
             # send_mpi_message("skylab.consumer.%d" % mpi_cluster.mpi_cluster.id, message)
             # mpi_cluster.status = "Task Queued"
 
-            return redirect('../task/{0}'.format(tool_activity.id))
+            return redirect('../task/{0}'.format(task.id))
         else:
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
                 'select_mpi_form': select_mpi_form,

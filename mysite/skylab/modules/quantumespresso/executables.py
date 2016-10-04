@@ -53,7 +53,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         # TODO: change export path
         export_path = "/mirror/espresso-5.4.0/bin"
 
-        # TODO set env_vars
+        # TODO manual export env_vars not reliable
         env_vars = {"PATH": "$PATH:{0}".format(export_path), "TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir}
 
         command_list = json.loads(Task.objects.get(pk=self.id).command_list)

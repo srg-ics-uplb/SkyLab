@@ -91,7 +91,7 @@ class AutoDock4Executable(P2CToolGeneric):
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
                                                  filename=output_filename)
-            new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+            new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'), new_file.filename)
             new_file.save()
             tool_activity = Task.objects.get(pk=self.id)
             tool_activity.output_files.add(new_file)

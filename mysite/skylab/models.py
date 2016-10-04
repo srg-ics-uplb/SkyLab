@@ -77,7 +77,11 @@ class ToolActivation(models.Model):
 
 def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-    return '{0}/{1}'.format(instance.upload_path, filename)
+
+    upload_path = instance.upload_path
+
+    return 'task_{0}/{1}/{2}'.format(instance.id, upload_path, filename)
+
 
 
 def get_default_package_name(display_name):
@@ -160,13 +164,20 @@ class Task(models.Model):
 
     def save(self, *args, **kwargs):
         # Update timestamps
+        created = False
         if not self.id:
+            created = True
             self.created = timezone.now()
+            # Create log file stating task is created
+
         self.updated = timezone.now()
 
         # create toolactivation if does not exist
         ToolActivation.objects.get_or_create(mpi_cluster=self.mpi_cluster, toolset=self.tool.toolset)
         super(Task, self).save(*args, **kwargs)
+
+        if created:
+            self.change_status(status_code=100, status_msg="Task created")
 
     @staticmethod
     def get_default_status_msg(status_code):
@@ -238,7 +249,7 @@ class Task(models.Model):
             output_files = self.output_files.filter(render_with_jsmol=True)
             for f in output_files:
                 jsmol_files_absolute_uris.append(
-                    {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                    {"uri": request.build_absolute_uri(reverse('skylab_file_url',
                                                                kwargs={"task_id": self.id,
                                                                        "type": "output", "filename": f.filename})),
                      "filename": f.filename}
@@ -247,7 +258,7 @@ class Task(models.Model):
             input_files = self.input_files.filter(render_with_jsmol=True)
             for f in input_files:
                 jsmol_files_absolute_uris.append(
-                    {"uri": request.build_absolute_uri(reverse('jsmol_file_url',
+                    {"uri": request.build_absolute_uri(reverse('skylab_file_url',
                                                                kwargs={"task_id": self.id,
                                                                        "type": "input", "filename": f.filename})),
                      "filename": f.filename}
@@ -261,14 +272,19 @@ class Task(models.Model):
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=input, 2=output
-    upload_path = models.CharField(max_length=200)
+    upload_path = models.CharField(max_length=200, blank=True)
     file = models.FileField(upload_to=get_upload_path, blank=True)
-    filename = models.CharField(max_length=200)
+    # filename = models.CharField(max_length=200)
     render_with_jsmol = models.BooleanField(default=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
 
     def __str__(self):
         return self.filename
+
+    def save(self, *args, **kwargs):
+        if not self.upload_path:
+            self.upload_path = "input" if self.type == 1 else "output"
+        super(SkyLabFile, self).save(*args, **kwargs)
 
 
 # Retrieved from http: // stackoverflow.com / questions / 16041232 / django - delete - filefield

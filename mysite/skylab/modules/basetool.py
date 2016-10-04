@@ -54,6 +54,7 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 		return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)
 
 
+# TODO: refactor
 def create_input_skylab_file(tool_activity, directory, file):
 	new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/%s" % (tool_activity.id, directory),
 										 file=file,

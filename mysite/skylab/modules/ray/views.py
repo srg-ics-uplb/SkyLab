@@ -5,8 +5,8 @@ from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 
-from skylab.models import MPICluster, Task
-from skylab.modules.basetool import send_mpi_message, create_input_skylab_file
+from skylab.models import MPICluster, Task, SkyLabFile
+from skylab.modules.basetool import send_mpi_message
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
 
@@ -43,12 +43,12 @@ class RayView(LoginRequiredMixin, TemplateView):
             if select_mpi_form.cleaned_data['param_bynode']:
                 exec_string += "-bynode "
 
-            tool_activity = Task.objects.create(
+            task = Task.objects.create(
                 mpi_cluster=cluster_name, tool_name="ray", executable_name="ray", user=self.request.user,
                 exec_string=exec_string
             )
 
-            exec_string += "Ray -o tool_activity_%d/output " % tool_activity.id
+            exec_string += "Ray -o tool_activity_%d/output " % task.id
 
             # k-mer length
             if other_parameter_form.cleaned_data.get('param_kmer_length'):
@@ -63,11 +63,15 @@ class RayView(LoginRequiredMixin, TemplateView):
                 if parameter:  # ignore blank parameter value
 
                     input_file1 = form.cleaned_data['input_file1']
-                    filepath1 = create_input_skylab_file(tool_activity, 'input', input_file1)
+                    instance = SkyLabFile.objects.create(type=1, file=input_file1, task=task)
+                    # filepath1 = create_input_skylab_file(tool_activity, 'input', input_file1)
+                    filepath1 = instance.file.name
 
                 if parameter == "-p":
                     input_file2 = form.cleaned_data['input_file2']
-                    filepath2 = create_input_skylab_file(tool_activity, 'input', input_file2)
+                    instance = SkyLabFile.objects.create(type=1, file=input_file2, task=task)
+                    # filepath2 = create_input_skylab_file(tool_activity, 'input', input_file2)
+                    filepath2 = instance.file.name
 
                     exec_string += "%s %s %s " % (parameter, filepath1, filepath2)
 
@@ -78,15 +82,16 @@ class RayView(LoginRequiredMixin, TemplateView):
                 exec_string += "-run-surveyor "
 
             if other_parameter_form.cleaned_data['param_read_sample_graph']:
-                for index, file in other_parameter_form.cleaned_data['subparam_graph_files']:
-                    filepath = create_input_skylab_file(tool_activity, 'input/graph', file)
+                for index, f in other_parameter_form.cleaned_data['subparam_graph_files']:
+                    instance = SkyLabFile.objects.create(type=1, upload_path='input/graph', file=f, task=task)
+                    filepath = instance.file.name
+                    #filepath = create_input_skylab_file(tool_activity, 'input/graph', f)
                     exec_string += "-read-sample-graph graph%s %s " % (index, filepath)
 
             if other_parameter_form.cleaned_data['param_search']:
-                exec_string += "-search tool_activity_%d/input/search " % tool_activity.id
-                for file in other_parameter_form.cleaned_data['subparam_search_files']:
-                    create_input_skylab_file(tool_activity, 'input/search', file)
-
+                exec_string += "-search tool_activity_%d/input/search " % task.id
+                for f in other_parameter_form.cleaned_data['subparam_search_files']:
+                    SkyLabFile.objects.create(type=1, upload_path='input/search', file=f, task=task)
 
             if other_parameter_form.cleaned_data['param_one_color_per_file']:
                 exec_string += "-one-color-per-file "
@@ -96,17 +101,24 @@ class RayView(LoginRequiredMixin, TemplateView):
                 tree_of_life_edges_file = other_parameter_form.cleaned_data['subparam_tree_of_life_edges_file']
                 taxon_names_file = other_parameter_form.cleaned_data['subparam_taxon_names_file']
 
-                genome_filepath = create_input_skylab_file(tool_activity, 'input/taxonomy', genome_to_taxon_file)
-                tree_filepath = create_input_skylab_file(tool_activity, 'input/taxonomy', tree_of_life_edges_file)
-                taxon_filepath = create_input_skylab_file(tool_activity, 'input/taxonomy', taxon_names_file)
+                instance = SkyLabFile.objects.create(type=1, upload_path='input/taxonomy', file=genome_to_taxon_file,
+                                                     task=task)
+                genome_filepath = instance.file.name
+                instance = SkyLabFile.objects.create(type=1, upload_path='input/taxonomy', file=tree_of_life_edges_file,
+                                                     task=task)
+                tree_filepath = instance.file.name
+                instance = SkyLabFile.objects.create(type=1, upload_path='input/taxonomy', file=taxon_names_file,
+                                                     task=task)
+                taxon_filepath = instance.file.name
 
                 exec_string += "-with-taxonomy %s %s %s " % (genome_filepath, tree_filepath, taxon_filepath)
 
             if other_parameter_form.cleaned_data['param_gene_ontology']:
                 annotations_file = other_parameter_form.cleaned_data['subparam_annotations_file']
-                create_input_skylab_file(tool_activity, 'input/gene_ontology', annotations_file)
+
+                SkyLabFile.objects.create(type=1, upload_path='input/gene_ontology', file=annotations_file, task=task)
                 exec_string += "-gene-ontology tool_activity_%d/input/OntologyTerms.txt %s " % (
-                tool_activity.id, annotations_file.name)
+                    task.id, annotations_file.name)
 
             # Other Output options
             if other_parameter_form.cleaned_data['param_enable_neighbourhoods']:
@@ -153,24 +165,24 @@ class RayView(LoginRequiredMixin, TemplateView):
             if other_parameter_form.cleaned_data['param_show_consensus']:
                 exec_string += "-show-consensus "
 
-            tool_activity.exec_string = exec_string
-            tool_activity.save()
+            task.exec_string = exec_string
+            task.save()
 
             print (exec_string)
 
             data = {
                 "actions": "use_tool",
-                "activity": tool_activity.id,
-                "tool": tool_activity.tool_name,
+                "activity": task.id,
+                "tool": task.tool_name,
                 "param_executable": "ray",
             }
             message = json.dumps(data)
             print (message)
             # find a way to know if thread is already running
-            send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-            tool_activity.status = "Task Queued"
+            send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
+            task.status = "Task Queued"
 
-            return redirect("../task/%d" % tool_activity.id)
+            return redirect("../task/%d" % task.id)
         else:
             return render(request, 'modules/ray/use_ray.html', {
                 'select_mpi_form': select_mpi_form,

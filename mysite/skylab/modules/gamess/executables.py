@@ -13,15 +13,6 @@ from skylab.modules.basetool import P2CToolGeneric
 MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
 
 class GAMESSExecutable(P2CToolGeneric):
-    # def __init__(self, **kwargs):
-    # self.shell = kwargs.get('shell')
-    # self.task = kwargs.get('task')
-    # self.logger = kwargs.get('logger')
-    # self.log_prefix = kwargs.get('log_prefix')
-
-    # self.working_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
-    # super(GAMESSExecutable, self).__init__(**kwargs)
-
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
@@ -31,7 +22,6 @@ class GAMESSExecutable(P2CToolGeneric):
         sftp.chdir(self.working_dir + '/input')
 
         for f in files:
-            # mkdir_p(sftp, f.upload_path)
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
@@ -80,9 +70,9 @@ class GAMESSExecutable(P2CToolGeneric):
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(type=2, task=self.task,
-                                                     upload_path=u'{0}/output'.format(self.task.task_dirname),
+                                                     # upload_path=u'{0}/output'.format(self.task.task_dirname),
                                                      filename=remote_file)
-                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'), new_file.filename)
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
@@ -117,28 +107,23 @@ class GAMESSExecutable(P2CToolGeneric):
         # shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         # shmax_fixer.wait_for_result()
 
-        command_list = []
+        command_list = json.loads(self.task.command_list)
         error = False
 
+        export_path = "/mirror/gamess"
+        env_command = "export PATH=$PATH:{0};".format(export_path)
+
         files = self.task.files.filter(type=1)
-        for f in files:
-            filename_without_ext = os.path.splitext(f.filename)[0]
-
-            command = "rungms {0} 01 1 2>&1 | tee ../output/{0}.log".format(filename_without_ext)
-            command_list.append(command)
-
+        for command in command_list:
             retries = 0
             exit_loop = False
-            export_path = '/mirror/gamess'
-            env_vars = {"PATH": "$PATH:" + export_path}
 
             while not exit_loop:
                 self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
-                #self.task.change_status(status_msg=u'Running {0:s}'.format(command), status_code=152)
                 try:
                     exec_shell = self.shell.run(
-                        ['sh', '-c', command],
-                        cwd=self.working_dir + '/input', update_env=env_vars
+                        ['sh', '-c', env_command + command],
+                        cwd=self.working_dir + '/input'
                     )
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
@@ -174,15 +159,10 @@ class GAMESSExecutable(P2CToolGeneric):
                         print (u'Error: {0:s}'.format(error.group('error_msg')))
                         error = True
 
-
                 else:
                     error = True
                     # output_filename = filename_without_ext + '.log'
                     # self.retrieve_matching_task_path('output/' + output_filename)
-
-        self.task.refresh_from_db()
-        self.task.command_list = json.dumps(command_list)
-        self.task.save()
 
         if error:
             self.task.change_status(

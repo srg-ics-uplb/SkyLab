@@ -7,8 +7,7 @@ import os.path
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task
-from skylab.modules.basetool import create_input_skylab_file
+from skylab.models import Task, SkyLabFile
 from skylab.modules.basetool import send_mpi_message
 from skylab.modules.dock6.forms import Dock6Form, GridForm
 
@@ -30,40 +29,41 @@ class Dock6FormView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
 
         exec_string = "mpirun -np 4 dock6.mpi "
-        tool_activity = Task.objects.create(
+        task = Task.objects.create(
             mpi_cluster=cluster, tool_name="dock6", executable_name="dock6", user=self.request.user,
             exec_string=exec_string
         )
-        self.kwargs['id'] = tool_activity.id
+        self.kwargs['id'] = task.id
 
         cluster = form.cleaned_data['mpi_cluster']
 
         input_file = form.cleaned_data['param_input_file']
-        create_input_skylab_file(tool_activity, 'input', input_file)
+        SkyLabFile.objects.create(type=1, file=input_file, task=task)
+
         exec_string += "-i %s " % input_file.name
 
-        for file in form.cleaned_data['param_other_files']:
-            create_input_skylab_file(tool_activity, 'input', file)
+        for f in form.cleaned_data['param_other_files']:
+            SkyLabFile.objects.create(type=1, file=f, task=task)
 
         if form.cleaned_data.get('param_output_prefix'):
             exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
         else:
             exec_string += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
 
-        tool_activity.exec_string = exec_string
-        tool_activity.save()
+        task.exec_string = exec_string
+        task.save()
 
         # todo: access toolname and param_executable name from database
         data = {
             "actions": "use_tool",
-            "activity": tool_activity.id,
-            "tool": tool_activity.tool_name,
+            "activity": task.id,
+            "tool": task.tool_name,
             "param_executable": "dock6",
         }
         message = json.dumps(data)
         print(message)
         # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
+        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
         # mpi_cluster.status = "Task Queued"
 
         return super(Dock6FormView, self).form_valid(form)
@@ -86,18 +86,20 @@ class GridFormView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
 
         exec_string = "grid "
-        tool_activity = Task.objects.create(
+        task = Task.objects.create(
             mpi_cluster=cluster, tool_name="dock6", executable_name="grid", user=self.request.user,
             exec_string=exec_string
         )
-        self.kwargs['id'] = tool_activity.id
+        self.kwargs['id'] = task.id
 
         input_file = form.cleaned_data['param_input_file']
-        create_input_skylab_file(tool_activity, 'input', input_file)
+        SkyLabFile.objects.create(type=1, file=input_file, task=task)
+
         exec_string += "-i %s " % input_file.name
 
-        for file in form.cleaned_data['param_other_files']:
-            create_input_skylab_file(tool_activity, 'input', file)
+        for f in form.cleaned_data['param_other_files']:
+            SkyLabFile.objects.create(type=1, file=f, task=task)
+
 
         if form.cleaned_data.get('param_output_prefix'):
             exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
@@ -110,20 +112,20 @@ class GridFormView(LoginRequiredMixin, FormView):
         if form.cleaned_data['param_verbose']:
             exec_string += "-v "
 
-        tool_activity.exec_string = exec_string
-        tool_activity.save()
+        task.exec_string = exec_string
+        task.save()
 
         # todo: access toolname and param_executable name from database
         data = {
             "actions": "use_tool",
-            "activity": tool_activity.id,
-            "tool": tool_activity.tool_name,
+            "activity": task.id,
+            "tool": task.tool_name,
             "param_executable": "grid",
         }
         message = json.dumps(data)
         print(message)
         # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-        tool_activity.status = "Task Queued"
+        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
+        task.status = "Task Queued"
 
         return super(GridFormView, self).form_valid(form)

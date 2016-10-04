@@ -1,12 +1,10 @@
-import os
-
 import pika
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import Http404
 from django.http import HttpResponse
-from django.http import HttpResponseForbidden, Http404
 from django.views.generic import DetailView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
@@ -14,7 +12,7 @@ from django_ajax.decorators import ajax
 from sendfile import sendfile
 
 from forms import CreateMPIForm
-from skylab.models import Task, MPICluster, ToolActivation
+from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile
 
 
 def has_read_permission(request, task_id):
@@ -37,41 +35,24 @@ def has_read_permission(request, task_id):
 # 		return HttpResponse(response.replace('\n', '<br>'))
 
 @login_required
-def serve_private_file(request, task_id, type, filename):
+def serve_skylabfile(request, task_id, type, filename):
 	try:
-		task = Task.objects.get(pk=task_id)
+		file = SkyLabFile.objects.get(type=1, task=task_id, filename__exact=filename)
 
 		if type == "input":
-			file = task.files.get(type=1, filename__exact=filename)
+			file = SkyLabFile.objects.get(type=1, task=task_id, filename__exact=filename)
 		elif type == "output":
-			file = task.files.get(type=2, filename__exact=filename)
+			file = SkyLabFile.objects.get(type=2, task=task_id, filename__exact=filename)
 	except ObjectDoesNotExist:
 		return Http404
 
-	if has_read_permission(request, task_id):
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT,
-								"{0}/{1}".format(file.upload_path, filename))
-		print (fullpath)
-		return sendfile(request, fullpath, attachment=True)
-	else:  # if user fails test return 403
-		return HttpResponseForbidden()
+	return sendfile(request, file.file.url, attachment=True)
 
 
-def serve_file_for_jsmol(request, task_id, type, filename):
-	try:
-		task = Task.objects.get(pk=task_id)
-
-		if type == "input":
-			file = task.files.get(type=1, filename__exact=filename)
-		elif type == "output":
-			file = task.files.get(type=2, filename__exact=filename)
-
-		fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, "{0}/{1}".format(file.upload_path, filename))
-		print (fullpath)
-		return sendfile(request, fullpath, attachment=True)
-
-	except ObjectDoesNotExist:
-		return Http404
+# if has_read_permission(request, task_id):
+# 	return sendfile(request, file.file.url, attachment=True)
+# else:  # if user fails test return 403
+# 	return HttpResponseForbidden()
 
 def send_mpi_message(routing_key, body):
 	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))

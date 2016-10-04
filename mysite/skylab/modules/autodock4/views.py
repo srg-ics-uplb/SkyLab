@@ -4,9 +4,8 @@ import os.path
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task
+from skylab.models import Task, SkyLabFile
 from skylab.modules.autodock4.forms import AutodockForm, AutogridForm
-from skylab.modules.basetool import create_input_skylab_file
 from skylab.modules.basetool import send_mpi_message
 
 
@@ -28,18 +27,20 @@ class AutodockView(LoginRequiredMixin, FormView):
 
 
         exec_string = "autodock4 "
-        tool_activity = Task.objects.create(
+        task = Task.objects.create(
             mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
             exec_string=exec_string
         )
-        self.kwargs['id'] = tool_activity.id
+        self.kwargs['id'] = task.id
 
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
+        SkyLabFile.objects.bulk_create([
+            SkyLabFile(type=1, file=form.cleaned_data['param_receptor_file'], task=task),
+            SkyLabFile(type=1, file=form.cleaned_data['param_ligand_file'], task=task),
+            SkyLabFile(type=1, file=form.cleaned_data['param_dpf_file'], task=task),
+        ])
 
         for grid_file in form.cleaned_data['param_grid_files']:
-            create_input_skylab_file(tool_activity, 'input', grid_file)
+            SkyLabFile.objects.create(type=1, file=grid_file, task=task)
 
         exec_string += "-p %s " % form.cleaned_data['param_dpf_file'].name
 
@@ -62,20 +63,20 @@ class AutodockView(LoginRequiredMixin, FormView):
 
         exec_string += ";"
 
-        tool_activity.exec_string = exec_string
-        tool_activity.save()
+        task.exec_string = exec_string
+        task.save()
 
         data = {
             "actions": "use_tool",
-            "activity": tool_activity.id,
-            "tool": tool_activity.tool_name,
+            "activity": task.id,
+            "tool": task.tool_name,
             "param_executable": "autodock",
         }
         message = json.dumps(data)
         print (message)
         # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-        tool_activity.status = "Task Queued"
+        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
+        task.status = "Task Queued"
 
         return super(AutodockView, self).form_valid(form)
 
@@ -98,15 +99,18 @@ class AutogridView(LoginRequiredMixin, FormView):
         receptor_file = form.cleaned_data['param_receptor_file']
 
         exec_string = "autogrid4 "
-        tool_activity = Task.objects.create(
+        task = Task.objects.create(
             mpi_cluster=cluster, tool_name="autodock", executable_name="autodock", user=self.request.user,
             exec_string=exec_string
         )
-        self.kwargs['id'] = tool_activity.id
+        self.kwargs['id'] = task.id
 
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_gpf_file'])
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_receptor_file'])
-        create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_ligand_file'])
+        SkyLabFile.objects.bulk_create([
+            SkyLabFile(type=1, file=form.cleaned_data['param_gpf_file'], task=task),
+            SkyLabFile(type=1, file=form.cleaned_data['param_receptor_file'], task=task),
+            SkyLabFile(type=1, file=form.cleaned_data['param_ligand_file'], task=task)
+        ])
+
 
         exec_string += "-p %s " % form.cleaned_data['param_gpf_file'].name
 
@@ -120,8 +124,7 @@ class AutogridView(LoginRequiredMixin, FormView):
         exec_string += "; "
 
         if form.cleaned_data['param_use_with_autodock']:
-            create_input_skylab_file(tool_activity, 'input', form.cleaned_data['param_dpf_file'])
-
+            SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dpf_file'], task=task)
             exec_string += "autodock4 -p %s " % form.cleaned_data['param_dpf_file'].name
 
             if form.cleaned_data.get('param_dlg_filename'):
@@ -143,20 +146,20 @@ class AutogridView(LoginRequiredMixin, FormView):
 
             exec_string += ";"
 
-            tool_activity.exec_string = exec_string
-            tool_activity.save()
+            task.exec_string = exec_string
+            task.save()
 
             data = {
                 "actions": "use_tool",
-                "activity": tool_activity.id,
-                "tool": tool_activity.tool_name,
+                "activity": task.id,
+                "tool": task.tool_name,
                 "param_executable": "autogrid",
             }
             message = json.dumps(data)
             print (message)
             # find a way to know if thread is already running
-            send_mpi_message("skylab.consumer.%d" % tool_activity.mpi_cluster.id, message)
-            tool_activity.status = "Task Queued"
+            send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
+            task.status = "Task Queued"
 
 
 
