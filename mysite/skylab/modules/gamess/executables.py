@@ -109,7 +109,7 @@ class GAMESSExecutable(P2CToolGeneric):
         self.clear_or_create_dirs(additional_dirs=additional_dirs, task_remote_subdirs=task_remote_subdirs)
         self.handle_input_files()
 
-        export_path = '/mirror/gamess'
+
         self.task.change_status(status_msg="Executing tool script", status_code=152)
 
         # command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
@@ -129,13 +129,16 @@ class GAMESSExecutable(P2CToolGeneric):
 
             retries = 0
             exit_loop = False
+            export_path = '/mirror/gamess'
+            env_vars = {"PATH": "$PATH:" + export_path}
+
             while not exit_loop:
                 self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
                 #self.task.change_status(status_msg=u'Running {0:s}'.format(command), status_code=152)
                 try:
                     exec_shell = self.shell.run(
-                        ['sh', '-c', 'export PATH=$PATH:{0:s}; echo $PATH; {1:s};'.format(export_path, command)],
-                        cwd=self.working_dir + '/input'
+                        ['sh', '-c', command],
+                        cwd=self.working_dir + '/input', update_env=env_vars
                     )
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop

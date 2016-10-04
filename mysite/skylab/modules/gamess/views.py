@@ -5,7 +5,7 @@ from __future__ import print_function
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task, SkyLabFile, Tool, ToolActivation
+from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.gamess.forms import GamessForm
 
 
@@ -44,7 +44,7 @@ class GAMESSView(LoginRequiredMixin, FormView):
         task.change_status(status_code=100, status_msg="Task initialized")
         # Create log file stating task is initialized
 
-        # queue activation of toolset if not exists
-        ToolActivation.objects.get_or_create(mpi_cluster=cluster, toolset=tool.toolset)
+
+
         self.kwargs['id'] = task.id
         return super(GAMESSView, self).form_valid(form)

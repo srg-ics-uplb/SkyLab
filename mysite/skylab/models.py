@@ -6,9 +6,12 @@ import re
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
+from django.core.validators import MaxValueValidator
 from django.db import models
 from django.dispatch import receiver
+from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
+
 
 
 def get_available_tools():  # TODO: get file __path__
@@ -28,7 +31,7 @@ class MPICluster(models.Model):
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
     cluster_name = models.CharField(max_length=50, unique=True)
-    cluster_size = models.SmallIntegerField(default=1)
+    cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
     # tool_list = get_available_tools()CharField
     # print tool_list
@@ -40,8 +43,8 @@ class MPICluster(models.Model):
     is_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
 
-    updated = models.DateTimeField(auto_now=True, auto_now_add=False)
-    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    updated = models.DateTimeField()
+    created = models.DateTimeField()
 
     def get_absolute_url(self):
         return reverse('mpi-detail', kwargs={'pk': self.pk})
@@ -54,11 +57,22 @@ class MPICluster(models.Model):
         self.status = status
         self.save()
 
+    def save(self, *args, **kwargs):
+        # Update timestamps
+        if not self.id:
+            self.created = timezone.now()
+        self.updated = timezone.now()
+        super(MPICluster, self).save(*args, **kwargs)
+
 
 class ToolActivation(models.Model):
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE)
     toolset = models.ForeignKey("ToolSet", on_delete=models.CASCADE)
     activated = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        self.mpi_cluster.updated = timezone.now()
+        super(ToolActivation, self).save(*args, **kwargs)
 
 
 def get_upload_path(instance, filename):
@@ -78,14 +92,21 @@ class ToolSet(models.Model):
     package_name = models.CharField(max_length=50, default=None, unique=True, blank=True)
     description = models.CharField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
+    created = models.DateTimeField()
 
     def __str__(self):
         return self.display_name
+
+    class Meta:
+        unique_together = ('display_name', 'p2ctool_name', 'package_name')
 
     def save(self, *args, **kwargs):
         if self.package_name is None:
             pattern = re.compile('[\W]+')
             self.package_name = pattern.sub('', self.package_name).lower()
+
+        if not self.id:
+            self.created = timezone.now()
 
         super(ToolSet, self).save(*args, **kwargs)
 
@@ -105,17 +126,18 @@ class Tool(models.Model):
     view_name = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=300, null=True, blank=True)
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
+    created = models.DateTimeField()
+
+    class Meta:
+        unique_together = ('display_name', 'executable_name', 'view_name')
 
     def __str__(self):
         return self.display_name
 
-        # def save(self, *args, **kwargs):
-        #     if self.executable_name is None:
-        #         self.executable_name = self.display_name.replace(" ", "") + "Executable"
-        #     if self.view_name is None:
-        #         self.view_name = self.display_name.replace(" ", "") + "View"
-        #     super(Tool, self).save(*args, **kwargs)
-
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created = timezone.now()
+        super(Tool, self).save(*args, **kwargs)
 
 def get_sentinel_mpi():
     return MPICluster.objects.get_or_create(cluster_name="deleted cluster")[0]
@@ -133,12 +155,18 @@ class Task(models.Model):
     # status_msg = models.CharField(default="Task Created", max_length=200)
     # status_code = models.SmallIntegerField(default=0)
 
+    updated = models.DateTimeField()
+    created = models.DateTimeField()
 
-    # updated = models.DateTimeField(auto_now=True, auto_now_add=False)
-    # timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    def save(self, *args, **kwargs):
+        # Update timestamps
+        if not self.id:
+            self.created = timezone.now()
+        self.updated = timezone.now()
 
-    def __str__(self):
-        return str(self.id)
+        # create toolactivation if does not exist
+        ToolActivation.objects.get_or_create(mpi_cluster=self.mpi_cluster, toolset=self.tool.toolset)
+        super(Task, self).save(*args, **kwargs)
 
     @staticmethod
     def get_default_status_msg(status_code):
@@ -227,6 +255,9 @@ class Task(models.Model):
 
         return jsmol_files_absolute_uris
 
+    def __str__(self):
+        return str(self.id)
+
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=input, 2=output
@@ -278,22 +309,21 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
     status_msg = models.CharField(max_length=200)
-    timestamp = models.DateTimeField(auto_now=False, auto_now_add=True)
+    timestamp = models.DateTimeField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
     @property
     def __str__(self):
         return "task-{0}_log_{1}".format(self.task_id, self.timestamp.ctime())
 
+    def save(self, *args, **kwargs):
+        # django.utils.timezone is more reliable vs datetime.datetime.now()
+        # reference : http://stackoverflow.com/questions/1737017/django-auto-now-and-auto-now-add
+        self.task.updated = timezone.now()
+        self.timestamp = timezone.now()
+        super(TaskLog, self).save(*args, **kwargs)
 
 
-# @python_2_unicode_compatible
-# class Toolset(models.Model):
-#     toolset_name = models.CharField(max_length=50)
-#     description = models.CharField(max_length=300)
-#
-#     def __str__(self):
-#         return self.toolset_name
 #
 # @python_2_unicode_compatible
 # class Tool(models.Model):

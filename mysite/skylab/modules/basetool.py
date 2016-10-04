@@ -25,11 +25,11 @@ def install_toolsets():
 
 def add_tools_to_toolset(tools, toolset):
 	for t in tools:
-		Tool.objects.get_or_create(display_name=t.get("display_name"),
-								   executable_name=t.get("executable_name",
+		Tool.objects.update_or_create(display_name=t.get("display_name"),
+									  executable_name=t.get("executable_name",
 														 t["display_name"].replace(' ', '') + 'Executable'),
-								   description=t.get("description", None), toolset=toolset,
-								   view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
+									  description=t.get("description", None), toolset=toolset,
+									  view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
 
 
 class MPIModelChoiceField(forms.ModelChoiceField):

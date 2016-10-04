@@ -4,8 +4,8 @@ from django import forms
 from django.conf import settings
 from django.core.validators import RegexValidator
 
-from skylab.models import MPICluster, ToolSet
-from skylab.validators import cluster_name_unique_validator
+from skylab.models import ToolSet
+from skylab.validators import cluster_name_unique_validator, cluster_size_validator, get_current_max_nodes
 
 
 # class MyRegistrationForm(RegistrationForm):
@@ -44,13 +44,7 @@ from skylab.validators import cluster_name_unique_validator
 # 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" %body))
 # 	connection.close()
 
-def get_current_max_nodes():
-	online_clusters = MPICluster.objects.exclude(status=5)
-	current_instance_count = 0
-	for c in online_clusters:
-		current_instance_count += c.cluster_size + 1
 
-	return min(settings.MAX_NODES_PER_CLUSTER, settings.MAX_TOTAL_INSTANCES - current_instance_count)
 
 
 class CreateMPIForm(forms.Form):
@@ -59,7 +53,8 @@ class CreateMPIForm(forms.Form):
 	cluster_name = forms.CharField(label="Cluster name", max_length=50,
 								   validators=[cluster_name_validator, cluster_name_unique_validator],
 								   help_text='This is required to be unique. e.g. chem_205_gamess_12_12345')
-	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=get_current_max_nodes(), initial=1)
+	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=settings.MAX_NODES_PER_CLUSTER,
+									  validators=[cluster_size_validator], initial=1)
 	toolsets = forms.ModelMultipleChoiceField(label="Toolsets", queryset=ToolSet.objects.all(),
 											  help_text="Select toolsets to be activated",
 											  widget=forms.CheckboxSelectMultiple())
@@ -67,6 +62,8 @@ class CreateMPIForm(forms.Form):
 
 	def __init__(self, *args, **kwargs):
 		super(CreateMPIForm, self).__init__(*args, **kwargs)
+		self.fields['cluster_size'].widget.attrs.update({'max': get_current_max_nodes()})
+
 
 		self.helper = FormHelper()
 		self.helper.form_id = 'id-mpiForm'

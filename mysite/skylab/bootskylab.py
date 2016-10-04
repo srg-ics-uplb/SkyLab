@@ -110,12 +110,13 @@ class MPIThreadManager(object):
                                                                          instance.mpi_cluster_id))
             print('Received ToolActivation #{0} ({1}) for MPI #{2}'.format(instance.id, instance.toolset.display_name,
                                                                            instance.mpi_cluster_id))
-            # self.threadHash[instance.mpi_cluster_id].add_task_to_queue(1, "self.activate_tool({0})".format(instance.toolset_id))
+
+            self.threadHash[instance.mpi_cluster_id].add_task_to_queue(1, "self.activate_tool({0})".format(
+                instance.toolset_id))
 
     def receive_task_from_post_save_signal(self, sender, instance, created, **kwargs):
         if created:
             logging.info('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
-            # print('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
 
             # append to queue
             self.threadHash[instance.mpi_cluster_id].add_task_to_queue(instance.priority, instance)
@@ -133,17 +134,19 @@ class MPIThread(threading.Thread):
     def __init__(self, mpi_cluster, manager):
         # current implementation. task_queue only has a single consumer.
 
-        # This design can be improved and cater multiple consumers for this queue
-        # In multiple consumers, this thread would be the producer
-        # Consumers consume task queue, pass cluster_shell to consumer instances
-        # Recommendation: Dynamic consumers spawn based on task intensity
-        # If current task is light on resources regardless of expected running time,
-        # A new consumer is signalled that it is allowed to consume
+        """"
+        This design can be improved and cater multiple consumers for this queue
+        In multiple consumers, this thread would be the producer
+        Consumers consume task queue, pass cluster_shell to consumer instances
+        Recommendation: Dynamic consumers spawn based on task intensity
+        If current task is light on resources regardless of expected running time,
+        A new consumer is signalled that it is allowed to consume
+        """
 
         self.task_queue = Queue.PriorityQueue()
 
         self._stop = threading.Event()
-        self._connected = threading.Event()
+        self._ready = threading.Event()
         self.manager = manager
         self.mpi_cluster = mpi_cluster
         self.frontend_shell = None
@@ -187,17 +190,20 @@ class MPIThread(threading.Thread):
             self.mpi_cluster.change_status(1)
 
         self.mpi_cluster.change_status(2)  # cluster available
-        self._connected.set()
+        self._ready.set()
 
     def connect_to_cluster(self):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
                                            password=settings.CLUSTER_PASSWORD,
                                            missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
+        self.test_cluster_connection()
+
+    def test_cluster_connection(self):
         retries = 0
         exit_loop = False
         while not exit_loop:
             try:
-                self.logger.info(self.log_prefix + "Connecting to cluster...")
+                self.logger.info(self.log_prefix + "Testing connection to cluster...")
                 # check if connection is sucessful
                 # from : http://stackoverflow.com/questions/28288533/check-if-paramiko-ssh-connection-is-still-alive
                 channel = self.cluster_shell._get_ssh_transport().send_ignore()
@@ -364,13 +370,15 @@ class MPIThread(threading.Thread):
     def run(self):
         # block waiting for connected event to be set
         print("Waiting for connection")
-        self._connected.wait()
+        self._ready.wait()
 
         while not self._stop.isSet():
 
             self.logger.debug(self.log_prefix + 'Waiting 5 seconds, before processing again')
             event_is_set = self._stop.wait(5)
 
+            # test cluster connection before processing
+            self.test_cluster_connection()
 
             if event_is_set:
                 self.logger.info(self.log_prefix + 'Terminating ...')
