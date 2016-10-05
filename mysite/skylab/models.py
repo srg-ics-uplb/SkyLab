@@ -75,12 +75,6 @@ class ToolActivation(models.Model):
         super(ToolActivation, self).save(*args, **kwargs)
 
 
-def get_upload_path(instance, filename):
-    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
-
-    upload_path = instance.upload_path
-
-    return 'task_{0}/{1}/{2}'.format(instance.id, upload_path, filename)
 
 
 
@@ -192,6 +186,7 @@ class Task(models.Model):
             154: "Retrieving output files",
             200: "Task completed",
             400: "Task execution error",
+            401: "Task completed. Errors encountered.",
             500: "MPI cluster connection error",
         }
 
@@ -268,6 +263,12 @@ class Task(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+def get_upload_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
+    upload_path = instance.upload_path
+    return 'task_{0}/{1}/{2}'.format(instance.id, upload_path, filename)
 
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):

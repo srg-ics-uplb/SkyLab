@@ -187,9 +187,11 @@ class ConsumerThread(threading.Thread):
                         self.print_to_console(zip_shell.wait_for_result().output)
                         break
                     except spur.RunProcessError as err:
-                        if err.return_code == -1:
-                            self.print_to_console(
-                                "No response from server. Retrying command ({0})".format(command))
+                        if err.return_code == -1:  # no return code received
+                            self.logger.error(
+                                self.log_prefix + 'No response from server. Retrying command ({0})'.format(command))
+                        else:
+                            self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
 
 
 
@@ -212,9 +214,11 @@ class ConsumerThread(threading.Thread):
                 MPICluster.objects.filter(pk=self.mpi_pk).update(supported_tools=tool_name)
                 break
             except spur.RunProcessError as err:
-                # if err.return_code == -1:
-                self.print_to_console("No response from server. Retrying command ({0})".format(command))
-                self.print_to_console(err.args)
+                if err.return_code == -1:  # no return code received
+                    self.logger.error(
+                        self.log_prefix + 'No response from server. Retrying command ({0})'.format(command))
+                else:
+                    self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                 # else:
                 #     break
             except spur.ssh.ConnectionError as err:

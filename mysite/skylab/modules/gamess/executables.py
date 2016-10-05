@@ -13,13 +13,18 @@ from skylab.modules.basetool import P2CToolGeneric
 MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
 
 class GAMESSExecutable(P2CToolGeneric):
+    def __init__(self, **kwargs):
+        super(GAMESSExecutable, self).__init__(**kwargs)
+        self.working_dir = os.path.join(self.remote_task_dir, 'input')
+
+    # TODO: self.input_dir = self.task_dir + "/input" in __init__
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
-        files = self.task.files.filter(type=1)
+        files = SkyLabFile.objects.filter(type=1, task=self.task)
         sftp = self.shell._open_sftp_client()
-        sftp.chdir(self.working_dir + '/input')
+        sftp.chdir(self.working_dir)
 
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
@@ -49,17 +54,15 @@ class GAMESSExecutable(P2CToolGeneric):
             sftp.get(remote_filepath, local_filepath)
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task,
-                                                     upload_path=u'{0}/output'.format(self.task.task_dirname),
-                                                     filename=remote_file)
-                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+                new_file = SkyLabFile.objects.create(type=2, task=self.task)
+                new_file.file.name = os.path.join(new_file.upload_path, os.path.basename(new_file.file.name))
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
 
-        remote_path = os.path.join(self.working_dir, 'output')
+        remote_path = os.path.join(self.remote_task_dir, 'output')
 
-        # retrieve then delete produced scratch files
+        # retrieve then delete produced output
         remote_files = sftp.listdir(path=remote_path)
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
@@ -69,10 +72,9 @@ class GAMESSExecutable(P2CToolGeneric):
             sftp.get(remote_filepath, local_filepath)
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task,
-                                                     # upload_path=u'{0}/output'.format(self.task.task_dirname),
-                                                     filename=remote_file)
-                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'), new_file.filename)
+                new_file = SkyLabFile.objects.create(type=2, task=self.task)
+                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                                  os.path.basename(new_file.file.name))
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
@@ -84,12 +86,12 @@ class GAMESSExecutable(P2CToolGeneric):
         if not self.task.tasklog_set.filter(status_code=400).exists():
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
-            self.task.change_status(status_code=400, status_msg="Output files received. Errors encountered")
+            self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
 
         self.logger.info(self.log_prefix + 'Done. Output files sent')
 
-        # Delete remote working directory
-        self.shell.run(['rm', '-r', self.working_dir])
+        # Delete remote task directory
+        self.shell.run(['rm', '-r', self.remote_task_dir])
 
     def run_tool(self, **kwargs):
         self.task.change_status(status_msg='Task started', status_code=150)
@@ -113,7 +115,6 @@ class GAMESSExecutable(P2CToolGeneric):
         export_path = "/mirror/gamess"
         env_command = "export PATH=$PATH:{0};".format(export_path)
 
-        files = self.task.files.filter(type=1)
         for command in command_list:
             retries = 0
             exit_loop = False
@@ -125,6 +126,7 @@ class GAMESSExecutable(P2CToolGeneric):
                         ['sh', '-c', env_command + command],
                         cwd=self.working_dir + '/input'
                     )
+                    self.logger.debug(self.log_prefix + exec_shell.output)
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
 
@@ -133,7 +135,7 @@ class GAMESSExecutable(P2CToolGeneric):
                         self.logger.error(
                             self.log_prefix + 'No response from server. Retrying command ({0})'.format(command))
                     else:
-                        self.logger.error(self.log_prefix + 'RuntimeError: ' + err.stderr_output)
+                        self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                         error = True
                         exit_loop = True  # exit loop
 
@@ -168,7 +170,7 @@ class GAMESSExecutable(P2CToolGeneric):
             self.task.change_status(
                 status_msg='Task execution error! See .log file for more information', status_code=400)
         else:
-            self.logger.debug(self.log_prefix + 'Finished command execution')
+            self.logger.debug(self.log_prefix + 'Finished command list execution')
 
             self.task.change_status(status_msg='Tool execution successful',
                                     status_code=153)

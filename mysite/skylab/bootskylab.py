@@ -264,10 +264,13 @@ class MPIThread(threading.Thread):
                 self.logger.debug(self.log_prefix + "Installed zip")
                 exit_loop = True  # exit loop
 
-            except spur.RunProcessError:
+            except spur.RunProcessError as err:
                 # run process error with return code -1 (no value returned) is returned during unresponsive connection
-                self.logger.error(self.log_prefix + 'No response from cluster.',
-                                  exc_info=True)
+                if err.return_code == -1:  # no return code received
+                    self.logger.error(
+                        self.log_prefix + 'No response from server. Retrying command ({0})'.format(command))
+                else:
+                    self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
 
             except spur.ssh.ConnectionError:
                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
@@ -304,10 +307,13 @@ class MPIThread(threading.Thread):
                     tool_activation_instance.save()
 
                     exit_loop = True  #exit loop
-                except spur.RunProcessError:
-                    self.logger.error(
-                        self.log_prefix + "No response from server. Command: ({0})".format(command),
-                        exc_info=True)
+                except spur.RunProcessError as err:
+                    if err.return_code == -1:  # no return code received
+                        self.logger.error(
+                            self.log_prefix + "No response from server. Command: ({0})".format(command),
+                            exc_info=True)
+                    else:
+                        self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
 
                 except spur.ssh.ConnectionError:
                     self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
@@ -339,10 +345,13 @@ class MPIThread(threading.Thread):
                 result_cluster_ip = self.frontend_shell.run(["sh", "-c", command], cwd="vcluster")
 
                 exit_loop = True  # exit loop
-            except spur.RunProcessError:
-                self.logger.error(
-                    self.log_prefix + "No response from server. Command: ({0})".format(command),
-                    exc_info=True)
+            except spur.RunProcessError as err:
+                if err.return_code == -1:  # no return code received
+                    self.logger.error(
+                        self.log_prefix + "No response from server. Command: ({0})".format(command),
+                        exc_info=True)
+                else:
+                    self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
 
             except spur.ssh.ConnectionError:
                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)
@@ -430,10 +439,13 @@ class MPIThread(threading.Thread):
                                 #                         cwd="vcluster")  # to remove duplicates in case server restart while creating
                                 exit_loop = True  # exit loop
 
-                            except spur.RunProcessError:
-                                self.logger.error(
-                                    self.log_prefix + "No response from server. Command: ({0})".format(command),
-                                    exc_info=True)
+                            except spur.RunProcessError as err:
+                                if err.return_code == -1:  # no return code received
+                                    self.logger.error(
+                                        self.log_prefix + 'No response from server. Retrying command ({0})'.format(
+                                            command))
+                                else:
+                                    self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
 
                             except spur.ssh.ConnectionError:
                                 self.logger.error(self.log_prefix + "Connection Error to MPI Cluster", exc_info=True)

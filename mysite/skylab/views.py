@@ -153,13 +153,16 @@ def task_fragments_view(request, pk=None):
 
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-info pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_default_status_msg(
+				task.latest_log.status_code) + '</span>'
 		elif task.latest_log.status_code == 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-success pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_default_status_msg(
+				task.latest_log.status_code) + '</span>'
 		elif task.latest_log.status_code >= 400:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.latest_log.status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_default_status_msg(
+				task.latest_log.status_code) + '</span>'
 		# progress_bar
 
 		data = {

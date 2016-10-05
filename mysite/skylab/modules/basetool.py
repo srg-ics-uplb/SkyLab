@@ -7,7 +7,7 @@ from django import forms
 from django.conf import settings
 
 import skylab.modules
-from skylab.models import SkyLabFile, Tool, ToolActivation
+from skylab.models import Tool, ToolActivation
 
 
 def install_toolsets():
@@ -52,16 +52,6 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 																self.toolset.display_name, status)
 
 		return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)
-
-
-# TODO: refactor
-def create_input_skylab_file(tool_activity, directory, file):
-	new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/%s" % (tool_activity.id, directory),
-										 file=file,
-										 filename=file.name)
-	tool_activity.input_files.add(new_file)
-	return "%s/%s" % (new_file.upload_path, new_file.filename)
-
 
 # source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
 def mkdir_p(sftp, remote_directory):
@@ -117,7 +107,8 @@ class P2CToolGeneric(object):
 		self.task = kwargs.get('task')
 		self.logger = kwargs.get('logger')
 		self.log_prefix = kwargs.get('log_prefix', '')
-		self.working_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
+		self.remote_task_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
+		self.working_dir = self.remote_task_dir  # dir where tool commands will be executed
 
 	def clear_or_create_dirs(self, **kwargs):
 		additional_dirs = kwargs.get('additional_dirs', [])
@@ -155,7 +146,7 @@ class P2CToolGeneric(object):
 		if task_remote_subdirs:
 			s_list = []
 			for subdir in task_remote_subdirs:
-				s_list.append('mkdir ' + subdir)
+				s_list.append('mkdir -p' + subdir)
 
 			command = ' && '.join(s_list)
 			self.shell.run(['sh', '-c', command], cwd=self.working_dir)

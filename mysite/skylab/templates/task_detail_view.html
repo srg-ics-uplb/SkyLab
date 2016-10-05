@@ -165,7 +165,7 @@
                 statusCode = content.status_code;
 
 
-                if (statusCode == 200 || statusCode == 400) {
+                if (statusCode == 200 || statusCode == 401) {
                     clearInterval(statusRefresher);
 
                     if (statusCode == 200 && content.uri_dict.length > 0) { //if successful and there is at least one jsmol readable file
