@@ -55,7 +55,7 @@ class GAMESSExecutable(P2CToolGeneric):
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(type=2, task=self.task)
-                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
+                new_file.file.name = os.path.join(new_file.upload_path, remote_file)
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
@@ -68,13 +68,12 @@ class GAMESSExecutable(P2CToolGeneric):
             remote_filepath = os.path.join(remote_path, remote_file)
             local_filepath = os.path.join(local_path, remote_file)
             self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-            self.logger.debug(self.log_prefix + remote_filepath + local_filepath)
             sftp.get(remote_filepath, local_filepath)
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task)
+                new_file = SkyLabFile.objects.create(type=2, task=self.task, render_with_jsmol=True)
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                                  new_file.filename)
+                                                  remote_file)
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer

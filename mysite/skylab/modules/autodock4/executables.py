@@ -119,7 +119,7 @@ class AutoDock4Executable(P2CToolGeneric):
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)
             new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                              new_file.filename)
+                                              zip_filename)
             new_file.save()
 
         if not self.task.tasklog_set.filter(status_code=400).exists():

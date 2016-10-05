@@ -1,3 +1,5 @@
+import os
+
 import pika
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
@@ -36,17 +38,19 @@ def has_read_permission(request, task_id):
 
 @login_required
 def serve_skylabfile(request, task_id, type, filename):
-	try:
-		file = SkyLabFile.objects.get(type=1, task=task_id, filename__exact=filename)
 
+	try:
 		if type == "input":
-			file = SkyLabFile.objects.get(type=1, task=task_id, filename__exact=filename)
+			requested_file = SkyLabFile.objects.get(type=1, task_id=task_id, filename=filename)
 		elif type == "output":
-			file = SkyLabFile.objects.get(type=2, task=task_id, filename__exact=filename)
+			requested_file = SkyLabFile.objects.get(type=2, task_id=task_id, filename=filename)
 	except ObjectDoesNotExist:
+
 		return Http404
 
-	return sendfile(request, file.file.url, attachment=True)
+	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, requested_file.file.name)
+
+	return sendfile(request, fullpath, attachment=True)
 
 
 # if has_read_permission(request, task_id):
@@ -90,6 +94,9 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 	# 	kwargs = super(CreateMPIView, self).get_form_kwargs()
 	# 	kwargs['user'] = self.request.user
 	# 	return kwargs
+
+
+
 
 	def form_valid(self, form):
 		mpi_cluster = MPICluster.objects.create(creator=self.request.user,

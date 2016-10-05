@@ -156,9 +156,10 @@ class MPIThread(threading.Thread):
 
 
         self.logger.info(self.log_prefix + "Populating task queue")
+
         # get tasks that are not finished yet
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(tasklog__status_code=200).exclude(
-            tasklog__status_code__gte=400)
+            tasklog__status_code=401)  # status 400 is not terminal, 401 is
 
         for task in tasks:
             self.add_task_to_queue(task.priority, task)

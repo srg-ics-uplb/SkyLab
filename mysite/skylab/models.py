@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 from django.core.urlresolvers import reverse
 from django.core.validators import MaxValueValidator
 from django.db import models
-from django.dispatch import receiver
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
@@ -275,13 +274,13 @@ class SkyLabFile(models.Model):
     type = models.PositiveSmallIntegerField()  # 1=input, 2=output
     upload_path = models.CharField(max_length=200, blank=True)
     file = models.FileField(upload_to=get_upload_path, blank=True)
-    # filename = models.CharField(max_length=200)
+    filename = models.CharField(max_length=200)
     render_with_jsmol = models.BooleanField(default=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
 
-    @property
-    def filename(self):
-        return os.path.basename(self.file.name)
+    # @property
+    # def filename(self):
+    #     return os.path.basename(self.file.name)
 
 
     def __str__(self):
@@ -290,41 +289,13 @@ class SkyLabFile(models.Model):
     def save(self, *args, **kwargs):
         if not self.upload_path:
             self.upload_path = "input" if self.type == 1 else "output"
+        if self.file:
+            self.filename = os.path.basename(self.file.name)
+
         super(SkyLabFile, self).save(*args, **kwargs)
 
 
-# Retrieved from http: // stackoverflow.com / questions / 16041232 / django - delete - filefield
-# These two auto-delete files from filesystem when they are unneeded:
-@receiver(models.signals.post_delete, sender=SkyLabFile)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
-    """Deletes file from filesystem
-    when corresponding `SkyLabFile` object is deleted.
-    """
-    print instance.file.path
-    print instance
-    if instance.file:
-        if os.path.isfile(instance.file.path):
-            os.remove(instance.file.path)
-
-
-@receiver(models.signals.pre_save, sender=SkyLabFile)
-def auto_delete_file_on_change(sender, instance, **kwargs):
-    """Deletes file from filesystem
-    when corresponding `SkyLabFile` object is changed.
-    """
-    if not instance.pk:
-        return False
-
-    try:
-        old_file = SkyLabFile.objects.get(pk=instance.pk).file
-    except SkyLabFile.DoesNotExist:
-        return False
-
-    if old_file:
-        new_file = instance.file
-        if not old_file == new_file:
-            if os.path.isfile(old_file.path):
-                os.remove(old_file.path)
+#
 
 
 @python_2_unicode_compatible

@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.core.validators import RegexValidator
 
-from skylab.models import ToolSet
+from skylab.models import ToolSet, MPICluster
 from skylab.validators import cluster_name_unique_validator, cluster_size_validator, get_current_max_nodes
 
 
@@ -40,6 +40,13 @@ class CreateMPIForm(forms.Form):
 			HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">')
 
 		)
+
+	def clean_cluster_name(self):
+		cluster_name = self.cleaned_data['cluster_name']
+		if MPICluster.objects.exclude(status=5).filter(cluster_name=cluster_name).exists():
+			raise forms.ValidationError('Cluster with the given name already exists.', code='cluster_name_exists')
+
+		return cluster_name
 
 # class ImpiForm(forms.Form):
 # 	mpi_cluster_size = forms.IntegerField(max_value=3, min_value=1)
