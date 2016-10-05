@@ -177,8 +177,8 @@ class Task(models.Model):
     def get_default_status_msg(status_code):
         status_msgs = {
             000: "Unknown",
-            100: "Initializing",
-            101: "Queued",
+            100: "Task created",
+            101: "Task queued",
             150: "Task started",
             151: "Uploading input files",
             152: "Executing tool script",
@@ -268,7 +268,7 @@ class Task(models.Model):
 def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     upload_path = instance.upload_path
-    return 'task_{0}/{1}/{2}'.format(instance.id, upload_path, filename)
+    return 'task_{0}/{1}/{2}'.format(instance.task_id, upload_path, filename)
 
 @python_2_unicode_compatible
 class SkyLabFile(models.Model):
@@ -278,6 +278,11 @@ class SkyLabFile(models.Model):
     # filename = models.CharField(max_length=200)
     render_with_jsmol = models.BooleanField(default=False)
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="files")
+
+    @property
+    def filename(self):
+        return os.path.basename(self.file.name)
+
 
     def __str__(self):
         return self.filename

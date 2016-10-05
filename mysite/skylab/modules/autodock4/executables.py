@@ -39,7 +39,7 @@ class AutoDock4Executable(P2CToolGeneric):
         self.handle_input_files()
 
         self.task.change_status(status_msg="Executing tool script", status_code=152)
-        command = command_list = json.loads(self.task.command_list)[0]
+        command = json.loads(self.task.command_list)[0]
 
         retries = 0
         exit_loop = False
@@ -119,7 +119,7 @@ class AutoDock4Executable(P2CToolGeneric):
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)
             new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                              os.path.basename(new_file.file.name))
+                                              new_file.filename)
             new_file.save()
 
         if not self.task.tasklog_set.filter(status_code=400).exists():

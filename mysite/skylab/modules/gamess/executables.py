@@ -27,6 +27,7 @@ class GAMESSExecutable(P2CToolGeneric):
         sftp.chdir(self.working_dir)
 
         for f in files:
+
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
@@ -50,12 +51,11 @@ class GAMESSExecutable(P2CToolGeneric):
             remote_filepath = os.path.join(remote_path, remote_file)
             local_filepath = os.path.join(local_path, remote_file)
             self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-            self.logger.debug(self.log_prefix + remote_filepath + local_filepath)
             sftp.get(remote_filepath, local_filepath)
             self.logger.debug(self.log_prefix + ' Received ' + remote_file)
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(type=2, task=self.task)
-                new_file.file.name = os.path.join(new_file.upload_path, os.path.basename(new_file.file.name))
+                new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
@@ -74,7 +74,7 @@ class GAMESSExecutable(P2CToolGeneric):
             with open(local_filepath, "rb") as local_file:
                 new_file = SkyLabFile.objects.create(type=2, task=self.task)
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                                  os.path.basename(new_file.file.name))
+                                                  new_file.filename)
                 new_file.save()
 
             sftp.remove(remote_filepath)  # delete after transfer
@@ -124,9 +124,9 @@ class GAMESSExecutable(P2CToolGeneric):
                 try:
                     exec_shell = self.shell.run(
                         ['sh', '-c', env_command + command],
-                        cwd=self.working_dir + '/input'
+                        cwd=self.working_dir
                     )
-                    self.logger.debug(self.log_prefix + exec_shell.output)
+
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
 

@@ -7,7 +7,7 @@ from django import forms
 from django.conf import settings
 
 import skylab.modules
-from skylab.models import Tool, ToolActivation
+from skylab.models import Tool, ToolActivation, SkyLabFile
 
 
 def install_toolsets():
@@ -111,6 +111,10 @@ class P2CToolGeneric(object):
 		self.working_dir = self.remote_task_dir  # dir where tool commands will be executed
 
 	def clear_or_create_dirs(self, **kwargs):
+		# clean task output skylabfile, with a signal receiver deleting the actual files
+		self.logger.debug(self.log_prefix + "Clearing attached output files if any")
+		SkyLabFile.objects.filter(task=self.task, type=2).delete()
+
 		additional_dirs = kwargs.get('additional_dirs', [])
 		task_remote_subdirs = kwargs.get('task_remote_subdirs', [])
 
@@ -143,13 +147,15 @@ class P2CToolGeneric(object):
 			['sh', '-c', clear_or_create.format(self.working_dir)])
 
 		# create task subdirectories
+		self.logger.debug(self.log_prefix + 'Create task subdirs')
 		if task_remote_subdirs:
 			s_list = []
 			for subdir in task_remote_subdirs:
-				s_list.append('mkdir -p' + subdir)
+				s_list.append('mkdir -p ' + subdir)
 
 			command = ' && '.join(s_list)
-			self.shell.run(['sh', '-c', command], cwd=self.working_dir)
+			self.shell.run(['sh', '-c', command], cwd=self.remote_task_dir)
+
 
 		# create task output folder in skylab media dir
 		try:
