@@ -55,6 +55,8 @@ class AutoDock4Executable(P2CToolGeneric):
                 else:
                     self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                     error = True
+                    self.task.change_status(
+                        status_msg='RuntimeError: ' + err.message, status_code=400)
                     exit_loop = True  # exit loop
 
             except spur.ssh.ConnectionError:
@@ -66,10 +68,7 @@ class AutoDock4Executable(P2CToolGeneric):
                     self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
                     time.sleep(wait_time)
 
-        if error:
-            self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
-        else:
+        if not error:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
             self.task.change_status(status_msg='Tool execution successful',
@@ -180,6 +179,8 @@ class AutoGrid4Executable(P2CToolGeneric):
                 else:
                     self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                     error = True
+                    self.task.change_status(
+                        status_msg='RuntimeError: ' + err.message, status_code=400)
                     exit_loop = True  # exit loop
 
             except spur.ssh.ConnectionError:
@@ -191,10 +192,7 @@ class AutoGrid4Executable(P2CToolGeneric):
                     self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
                     time.sleep(wait_time)
 
-        if error:
-            self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
-        else:
+        if not error:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
             self.task.change_status(status_msg='Tool execution successful',

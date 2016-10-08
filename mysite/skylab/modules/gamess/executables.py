@@ -72,6 +72,8 @@ class GAMESSExecutable(P2CToolGeneric):
                     else:
                         self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                         error = True  # do not retry
+                        self.task.change_status(
+                            status_msg='RuntimeError: ' + err.message, status_code=400)
                         exit_loop = True  # exit loop
 
                 except spur.ssh.ConnectionError:

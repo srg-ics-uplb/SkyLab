@@ -28,9 +28,11 @@ class RayExecutable(P2CToolGeneric):
         sftp.close()
 
     def run_commands(self, **kwargs):
-        command_list = json.dumps(self.task.command_list)
         self.task.change_status(status_msg="Executing tool script", status_code=152)
+        command_list = json.dumps(self.task.command_list)  # load json array
 
+        # spur update_env kwargs can only be used for constant assignments
+        # thus, for environment variables must be exported via a command
         export_path = "/mirror/Ray-2.3.1/build"
         env_command = "export PATH=$PATH:{0};".format(export_path)
 
@@ -42,8 +44,9 @@ class RayExecutable(P2CToolGeneric):
             while not exit_loop:
                 self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
                 try:
+                    # export commands does not persist with spur at least
                     exec_shell = self.shell.run(
-                        ['sh', '-c', env_command + command],
+                        ['sh', '-c', env_command + command],  #run command with env_command
                         cwd=self.working_dir
                     )
 
@@ -57,6 +60,8 @@ class RayExecutable(P2CToolGeneric):
                     else:
                         self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
                         error = True
+                        self.task.change_status(
+                            status_msg='RuntimeError: ' + err.message, status_code=400)
                         exit_loop = True  # exit loop
 
                 except spur.ssh.ConnectionError:
@@ -68,10 +73,7 @@ class RayExecutable(P2CToolGeneric):
                         self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
                         time.sleep(wait_time)
 
-        if error:
-            self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
-        else:
+        if not error:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
             self.task.change_status(status_msg='Tool execution successful',
