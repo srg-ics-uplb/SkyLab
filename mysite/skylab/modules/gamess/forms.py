@@ -6,8 +6,8 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
+from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster, ToolSet
-from skylab.modules.basetool import MPIModelChoiceField
 
 
 def validate_gamess_input_extension(files):
@@ -22,18 +22,16 @@ class GamessForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(GamessForm, self).__init__(*args, **kwargs)
-        # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
+
         user_allowed = Q(allowed_users=self.user)
         cluster_is_public = Q(is_public=True)
-        # supports_gamess = Q(activated_toolset__display_name="GAMESS")
-        # is_ready = Q(status=1)
-        # MPICluster.objects.filter
 
         q = MPICluster.objects.filter(user_allowed | cluster_is_public)
         q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="gamess")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
-                                                         toolset=ToolSet.objects.get(p2ctool_name="gamess"),
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
@@ -54,7 +52,7 @@ class GamessForm(forms.Form):
                     'input_files',
                     css_class="col-md-12"
                 ),
-                HTML('<input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">'),
+                HTML('<input name="submit" value="Submit task" type="submit" class="btn btn-primary btn-block">'),
                 css_class="row"
             )
 

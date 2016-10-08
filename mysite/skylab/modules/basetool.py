@@ -1,57 +1,11 @@
 import os.path
-import pkgutil
 from abc import abstractmethod
 
 import pika
-from django import forms
 from django.conf import settings
 
-import skylab.modules
-from skylab.models import Tool, ToolActivation, SkyLabFile
+from skylab.models import SkyLabFile
 
-
-def install_toolsets():
-	package = skylab.modules
-	prefix = package.__name__ + "."
-	for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
-		if ispkg:  # for packages
-			submod_prefix = modname + "."
-			pkg = importer.find_module(modname).load_module(modname)
-			for submodimporter, submodname, submodispkg in pkgutil.iter_modules(pkg.__path__, submod_prefix):
-				if submodname.endswith(".install"):
-					mod = submodimporter.find_module(submodname).load_module(submodname)
-					mod.insert_to_db()
-
-
-def add_tools_to_toolset(tools, toolset):
-	for t in tools:
-		Tool.objects.update_or_create(display_name=t.get("display_name"),
-									  executable_name=t.get("executable_name",
-														 t["display_name"].replace(' ', '') + 'Executable'),
-									  description=t.get("description", None), toolset=toolset,
-									  view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
-
-
-class MPIModelChoiceField(forms.ModelChoiceField):
-	def __init__(self, *args, **kwargs):
-		self.toolset = kwargs.pop("toolset", None)
-		super(MPIModelChoiceField, self).__init__(*args, **kwargs)
-
-	def label_from_instance(self, obj):
-		if self.toolset is not None:
-			status = ""
-			try:
-				tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
-				if tool_activation.activated:
-					status = "Installed"
-				else:
-					status = "Queued for installation"
-			except ToolActivation.DoesNotExist:
-				status = "Not installed"
-			return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
-																self.toolset.display_name, status)
-
-		return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)
 
 # source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
 def mkdir_p(sftp, remote_directory):
@@ -96,13 +50,10 @@ def send_mpi_message(routing_key, body):
 	connection.close()
 
 
-class P2CToolGeneric(object):
-	# frontend_ip = "10.0.3.101"
-	# frontend_username = "user"
-	# frontend_password = "excellence"
+class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executables
+	# functions are made to be as generic as possible for future simplification of executable creation process
 
-
-	def __init__(self, *args, **kwargs):
+	def __init__(self, **kwargs):
 		self.shell = kwargs.get('shell')
 		self.task = kwargs.get('task')
 		self.logger = kwargs.get('logger')
@@ -162,6 +113,10 @@ class P2CToolGeneric(object):
 			os.makedirs(os.path.join(settings.MEDIA_ROOT, self.task.task_dirname + '/output'))
 		except OSError:
 			pass
+
+	@abstractmethod
+	def run_commands(self, **kwargs):
+		pass
 
 	@abstractmethod
 	def handle_input_files(self, *args, **kwargs):

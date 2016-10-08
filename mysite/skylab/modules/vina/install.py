@@ -1,5 +1,5 @@
+from skylab.bootskylab import add_tools_to_toolset
 from skylab.models import ToolSet
-from skylab.modules.basetool import add_tools_to_toolset
 
 
 def insert_to_db():

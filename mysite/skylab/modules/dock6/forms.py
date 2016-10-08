@@ -7,8 +7,8 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
+from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster
-from skylab.modules.basetool import MPIModelChoiceField
 from validators import multi_dock6_other_resources_validator, dock6_in_extension_validator, \
     multi_grid_other_resources_validator
 

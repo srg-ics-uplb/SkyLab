@@ -1,100 +1,115 @@
+import json
+import math
 import os.path
-import re
-import shutil
+import time
 
+import spur
 from django.conf import settings
 
-from skylab.models import Task, SkyLabFile
+from skylab.models import SkyLabFile
 from skylab.modules.basetool import P2CToolGeneric, mkdir_p
 
-cluster_password = settings.CLUSTER_PASSWORD
 
 class RayExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
-        self.shell = kwargs.get('shell')
-        self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d" % self.id
-        Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(RayExecutable, self).__init__(self, **kwargs)
+        super(RayExecutable, self).__init__(**kwargs)
+        self.working_dir = settings.REMOTE_BASE_DIR
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
-        Task.objects.filter(pk=self.id).update(status="Fetching input files")
-        files = SkyLabFile.objects.filter(input_files__pk=self.id)
+        self.task.change_status(status_msg='Uploading input files', status_code=151)
+        self.logger.debug(self.log_prefix + 'Uploading input files')
+
+        files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
+        sftp = self.shell._open_sftp_client()  # open sftp client
         for f in files:
-            sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, f.upload_path)
-            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
-            sftp.close()
+            sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
+            mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
+            sftp.putfo(f.file, f.filename)  # At this point, you are f.upload_path
+        sftp.close()
 
-    # raise not implemented error
-    def print_msg(self, msg):
-        print ("Ray (Tool Activity %d) : %s" % (self.id, msg))
-
-    def run_tool(self, **kwargs):
-        self.handle_input_files()
+    def run_commands(self, **kwargs):
+        command_list = json.dumps(self.task.command_list)
+        self.task.change_status(status_msg="Executing tool script", status_code=152)
 
         export_path = "/mirror/Ray-2.3.1/build"
+        env_command = "export PATH=$PATH:{0};".format(export_path)
 
-        exec_string = Task.objects.get(pk=self.id).exec_string
-        Task.objects.filter(pk=self.id).update(status="Executing task command")
+        error = False
+        for command in command_list:
+            retries = 0
+            exit_loop = False
 
-        # todo: download ontologyterms.txt
-        # if -gene-ontology is found
+            while not exit_loop:
+                self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
+                try:
+                    exec_shell = self.shell.run(
+                        ['sh', '-c', env_command + command],
+                        cwd=self.working_dir
+                    )
 
-        p = re.compile("-gene-ontology")
-        m = p.search(exec_string)
-        if m is not None:
-            self.print_msg(
-                "Downloading OntologyTerms from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo")
-            self.shell.run(["wget", "-O", "OntologyTerms.txt",
-                            "http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo"],
-                           cwd=self.working_dir + "/input")
+                    self.logger.debug(self.log_prefix + "Finished command exec")
+                    exit_loop = True  # exit loop
 
-        self.print_msg("Running %s" % exec_string)
+                except spur.RunProcessError as err:
+                    if err.return_code == -1:  # no return code received
+                        self.logger.error(
+                            self.log_prefix + 'No response from server. Retrying command ({0})'.format(command))
+                    else:
+                        self.logger.error(self.log_prefix + 'RuntimeError: ' + err.message)
+                        error = True
+                        exit_loop = True  # exit loop
 
-        exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
-        # cwd=self.working_dir)
-        print (exec_shell.output)
+                except spur.ssh.ConnectionError:
+                    self.logger.error('Connection error. Command: ({0})'.format(command), exc_info=True)
+                finally:
+                    if not exit_loop:
+                        retries += 1
+                        wait_time = min(math.pow(2, retries), settings.TRY_WHILE_NOT_EXIT_MAX_TIME)
+                        self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                        time.sleep(wait_time)
 
-        self.print_msg("Finished command execution")
-        Task.objects.filter(pk=self.id).update(status="Finished command execution", status_code=2)
+        if error:
+            self.task.change_status(
+                status_msg='Task execution error! See .log file for more information', status_code=400)
+        else:
+            self.logger.debug(self.log_prefix + 'Finished command list execution')
 
-        self.handle_output_files()
-
-        Task.objects.filter(pk=self.id).update(status="Task finished")
+            self.task.change_status(status_msg='Tool execution successful',
+                                    status_code=153)
 
     def handle_output_files(self, **kwargs):
-        Task.objects.filter(pk=self.id).update(status="Handling output files")
-        self.print_msg("Sending output files to server")
+        self.task.change_status(status_msg='Retrieving output files', status_code=154)
+        self.logger.debug(self.log_prefix + 'Sending output files to server')
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
-        os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
-        output_filename = "RayOutput_%d.zip" % self.id
-        server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
+        zip_filename = self.task.task_dirname + "-output.zip"
+        local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
+        remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
 
-        self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
+        self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
 
-        with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
-                shutil.copyfileobj(remote_file, local_file)
-                local_file.close()
+        sftp = self.shell._open_sftp_client()
+        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.close()
 
-            remote_file.close()
+        # attach transferred file to database
+        new_file = SkyLabFile.objects.create(type=2, task=self.task)
+        new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                          zip_filename)
+        new_file.save()
 
-        with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
-                                                 filename=output_filename)
-            new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
-            new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
-            local_file.close()
+        self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
-        Task.objects.filter(pk=self.id).update(status="Finished handling output files")
-        self.print_msg("Output files sent")
+        if not self.task.tasklog_set.filter(status_code=400).exists():
+            self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
+        else:
+            self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
 
-    def change_status(self, status):
-        pass
+        self.logger.info(self.log_prefix + 'Done. Output files sent')
+
+    def run_tool(self, **kwargs):  # the whole task process
+        self.task.change_status(status_msg='Task started', status_code=150)
+        self.handle_input_files()
+        self.clear_or_create_dirs(task_remote_subdirs=['input', 'output'])
+        self.run_commands()
+        self.handle_output_files()

@@ -7,8 +7,8 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
-from skylab.models import MPICluster
-from skylab.modules.basetool import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField
+from skylab.models import MPICluster, ToolSet
 from validators import pdbqt_file_extension_validator, dpf_file_extension_validator, gpf_file_extension_validator, \
     multi_grid_map_file_validator
 
@@ -43,14 +43,15 @@ class AutodockForm(forms.Form):
         self.user = kwargs.pop('user')
         super(AutodockForm, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_autodock = Q(toolset__display_name="AutoDock4")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_autodock).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
@@ -141,14 +142,15 @@ class AutogridForm(forms.Form):
         self.user = kwargs.pop('user')
         super(AutogridForm, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_autodock = Q(toolset__display_name="AutoDock4")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_autodock).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
@@ -158,24 +160,24 @@ class AutogridForm(forms.Form):
             TabHolder(
                 Tab(
                     'AutoGrid4',
-                    Div(
-                        Field('mpi_cluster', wrapper_class='col-xs-6'),
-                        Div('param_use_with_autodock', css_class='col-xs-4 col-xs-offset-1'),
-                        css_class="col-sm-12"
-                    ),
+                    # Div(
+                    Field('mpi_cluster', wrapper_class='col-xs-12 col-md-8'),
+                    Field('param_use_with_autodock', wrapper_class='col-xs-6 col-md-3 col-md-offset-1'),
+                    #     css_class="col-sm-12"
+                    # ),
                     Fieldset(
                         'Input',
                         Div(
-                            Div('param_receptor_file', css_class='col-xs-4'),
-                            Div('param_ligand_file', css_class='col-xs-4'),
-                            Div('param_gpf_file', css_class='col-xs-4'),
+                            Div('param_receptor_file', css_class='col-xs-12'),
+                            Div('param_ligand_file', css_class='col-xs-12'),
+                            Div('param_gpf_file', css_class='col-xs-12'),
                             css_class='row-fluid col-sm-12'
                         )
                     ),
                     Fieldset(
                         'Output',
                         Div(
-                            Div(AppendedText('param_glg_filename', '.glg'), css_class='col-xs-6'),
+                            Div(AppendedText('param_glg_filename', '.glg'), css_class='col-xs-12 col-md-8'),
                             css_class='row-fluid col-sm-12'
                         ),
                     ),
@@ -211,10 +213,6 @@ class AutogridForm(forms.Form):
                             Div('param_i', css_class='col-xs-12'),
                             Div('param_t', css_class='col-xs-12'),
                             Div('param_d_dock', css_class='col-xs-12'),
-                            # Div('param_k', css_class="col-xs-6"),
-                            # Div('param_i', css_class="col-xs-6"),
-                            # Div('param_t', css_class="col-xs-6"),
-                            # Div('param_d_dock', css_class="col-xs-6"),
                             css_class='row-fluid col-xs-12'
                         )
                     ),

@@ -64,7 +64,7 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
                 if executable:  # ignore blank parameter value
 
                     input_file = form.cleaned_data["param_input_file"]
-                    # filepath = create_input_skylab_file(tool_activity, 'input', input_file)
+                    # filepath = create_input_skylab_file(task, 'input', input_file)
                     instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
                     # filepath = instance.file.name
                     if executable == "pw.x":

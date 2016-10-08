@@ -13,17 +13,17 @@ class Dock6Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
+        self.working_dir = "/mirror/task_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(Dock6Executable, self).__init__(self, **kwargs)
+        super(Dock6Executable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
+        self.shell.run(["sh", "-c", "mkdir -p task_%d/output" % self.id])
         Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, "tool_activity_%d/workdir" % self.id)
+            mkdir_p(sftp, "task_%d/workdir" % self.id)
 
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
@@ -57,13 +57,13 @@ class Dock6Executable(P2CToolGeneric):
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
+        remote_dir = "task_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
         output_filename = "Dock6Output_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
 
         sftp = self.shell._open_sftp_client()
-        remote_path = "/mirror/tool_activity_%d/workdir/" % self.id
+        remote_path = "/mirror/task_%d/workdir/" % self.id
 
         remote_files = sftp.listdir(path=remote_path)
 
@@ -77,24 +77,24 @@ class Dock6Executable(P2CToolGeneric):
                 sftp.remove(remote_filepath)  # delete after transfer
         sftp.close()
 
-        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/tool_activity_%d/" % self.id)
-        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/tool_activity_%d/" % self.id)
+        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/task_%d/" % self.id)
+        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/task_%d/" % self.id)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
                 shutil.copyfileobj(remote_file, local_file)
                 local_file.close()
 
             remote_file.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+            new_file = SkyLabFile.objects.create(upload_path="task_%d/output" % self.id,
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
+            task = Task.objects.get(pk=self.id)
+            task.output_files.add(new_file)
+            task.save()
             local_file.close()
 
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")
@@ -108,17 +108,17 @@ class GridExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d/workdir" % self.id
+        self.working_dir = "/mirror/task_%d/workdir" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(GridExecutable, self).__init__(self, **kwargs)
+        super(GridExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir -p tool_activity_%d/output" % self.id])
+        self.shell.run(["sh", "-c", "mkdir -p task_%d/output" % self.id])
         Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, 'tool_activity_%d/workdir' % self.id)
+            mkdir_p(sftp, 'task_%d/workdir' % self.id)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
@@ -151,13 +151,13 @@ class GridExecutable(P2CToolGeneric):
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
+        remote_dir = "task_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
         output_filename = "GridOutput_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
 
         sftp = self.shell._open_sftp_client()
-        remote_path = "/mirror/tool_activity_%d/workdir/" % self.id
+        remote_path = "/mirror/task_%d/workdir/" % self.id
 
         remote_files = sftp.listdir(path=remote_path)
 
@@ -170,29 +170,28 @@ class GridExecutable(P2CToolGeneric):
             if remote_file in input_filenames:
                 sftp.remove(remote_filepath)  # delete after transfer
 
-
-        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/tool_activity_%d/" % self.id)
-        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/tool_activity_%d/" % self.id)
+        self.shell.run(["zip", "-r", output_filename, "output"], cwd="/mirror/task_%d/" % self.id)
+        self.shell.run(["zip", "-r", "-g", output_filename, "workdir"], cwd="/mirror/task_%d/" % self.id)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
                 shutil.copyfileobj(remote_file, local_file)
                 local_file.close()
 
             remote_file.close()
 
         # delete mpi_cluster directory
-        sftp.rmdir("/mirror/tool_activity_%d" % self.id)
+        sftp.rmdir("/mirror/task_%d" % self.id)
         sftp.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+            new_file = SkyLabFile.objects.create(upload_path="task_%d/output" % self.id,
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
+            task = Task.objects.get(pk=self.id)
+            task.output_files.add(new_file)
+            task.save()
             local_file.close()
 
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")

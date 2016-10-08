@@ -4,7 +4,7 @@ from django import forms
 from django.conf import settings
 from django.core.validators import RegexValidator
 
-from skylab.models import ToolSet, MPICluster
+from skylab.models import ToolSet, MPICluster, ToolActivation
 from skylab.validators import cluster_name_unique_validator, cluster_size_validator, get_current_max_nodes
 
 
@@ -62,3 +62,23 @@ class CreateMPIForm(forms.Form):
 # 		self.helper.form_action = ''
 #
 # 		self.helper.add_input(Submit('submit','Execute'))
+class MPIModelChoiceField(forms.ModelChoiceField):
+    def __init__(self, *args, **kwargs):
+        self.toolset = kwargs.pop("toolset", None)
+        super(MPIModelChoiceField, self).__init__(*args, **kwargs)
+
+    def label_from_instance(self, obj):
+        if self.toolset is not None:
+            status = ""
+            try:
+                tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
+                if tool_activation.activated:
+                    status = "Installed"
+                else:
+                    status = "Queued for installation"
+            except ToolActivation.DoesNotExist:
+                status = "Not installed"
+            return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
+                                                                self.toolset.display_name, status)
+
+        return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)

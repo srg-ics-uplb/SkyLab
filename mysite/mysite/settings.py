@@ -164,17 +164,17 @@ STATIC_URL = '/static/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 #email server settings
-EMAIL_HOST = 'localhost'
-EMAIL_PORT = 1025
+# EMAIL_HOST = 'localhost'
+# EMAIL_PORT = 1025
 
-#displays email in console instead of sending it
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# #displays email in console instead of sending it
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
 
-PRIVATE_MEDIA_ROOT = MEDIA_ROOT
-PRIVATE_MEDIA_URL = MEDIA_URL
+# PRIVATE_MEDIA_ROOT = MEDIA_ROOT
+# PRIVATE_MEDIA_URL = MEDIA_URL
 
 SENDFILE_ROOT = MEDIA_ROOT
 
@@ -206,3 +206,4 @@ JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
 
 TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
 REMOTE_BASE_DIR = '/mirror'
+MPIEXEC_NODES_FILE = '/mirror/nodes.txt'

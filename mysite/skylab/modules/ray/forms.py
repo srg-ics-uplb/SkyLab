@@ -6,8 +6,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
+from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster
-from skylab.modules.basetool import MPIModelChoiceField
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
 
@@ -149,7 +149,7 @@ class OtherParameterForm(forms.Form):
                                                  help_text="Reads sample graphs (generated with -write-kmers).")  # dependent on -write-kmers parameter
     subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)",
                                           validators=[multi_graph_files_validator])
-    # todo: sampleName = tool_activity_%d % id, sampleGraphFile = output_directory/kmers.txt
+    # todo: sampleName = task_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
     # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
@@ -158,7 +158,7 @@ class OtherParameterForm(forms.Form):
     param_search = forms.BooleanField(required=False, label='-search',
                                       help_text="Provide fasta files to be searched in the de Bruijn graph.")
     subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files', validators=[
-        multi_ray_files_validator])  # save to tool_activity_x/input/search
+        multi_ray_files_validator])  # save to task_x/input/search
     param_one_color_per_file = forms.BooleanField(required=False, label="-one-color-per-file",
                                                   help_text="Sets one color per file instead of one per sequence. For files with large numbers of sequences, using one single color per file may be more efficient.")
 

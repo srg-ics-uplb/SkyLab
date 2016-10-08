@@ -7,8 +7,8 @@ from django import forms
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 
+from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster
-from skylab.modules.basetool import MPIModelChoiceField
 from validators import in_file_extension_validator
 
 

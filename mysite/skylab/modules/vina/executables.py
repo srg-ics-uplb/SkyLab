@@ -13,12 +13,12 @@ class VinaExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d" % self.id
+        self.working_dir = "/mirror/task_%d" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(VinaExecutable, self).__init__(self, **kwargs)
+        super(VinaExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
+        self.shell.run(["sh", "-c", "mkdir task_%d" % self.id])
         Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
@@ -57,7 +57,7 @@ class VinaExecutable(P2CToolGeneric):
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
+        remote_dir = "task_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
         output_filename = "VinaOutput_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
@@ -65,20 +65,20 @@ class VinaExecutable(P2CToolGeneric):
         self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
                 shutil.copyfileobj(remote_file, local_file)
                 local_file.close()
 
             remote_file.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+            new_file = SkyLabFile.objects.create(upload_path="task_%d/output" % self.id,
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
+            task = Task.objects.get(pk=self.id)
+            task.output_files.add(new_file)
+            task.save()
             local_file.close()
 
         Task.objects.filter(pk=self.id).update(status="Finished handling output files")
@@ -92,17 +92,17 @@ class VinaSplitExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_%d" % self.id
+        self.working_dir = "/mirror/task_%d" % self.id
         Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
-        super(VinaSplitExecutable, self).__init__(self, **kwargs)
+        super(VinaSplitExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_%d" % self.id])
+        self.shell.run(["sh", "-c", "mkdir task_%d" % self.id])
         Task.objects.filter(pk=self.id).update(status="Fetching input files")
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, 'tool_activity_%d/output' % self.id)
+            mkdir_p(sftp, 'task_%d/output' % self.id)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
             sftp.close()
 
@@ -118,7 +118,7 @@ class VinaSplitExecutable(P2CToolGeneric):
 
         self.print_msg("Running %s" % exec_string)
 
-        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd="tool_activity_%d/output" % self.id)
+        exec_shell = self.shell.run(["sh", "-c", exec_string], cwd="task_%d/output" % self.id)
         # cwd=self.working_dir)
 
         self.print_msg(exec_shell.output)
@@ -135,7 +135,7 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = "tool_activity_%d" % self.id
+        remote_dir = "task_%d" % self.id
         os.makedirs(os.path.join(media_root, "%s/output" % remote_dir))
         output_filename = "VinaSplitOutput_%d.zip" % self.id
         server_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, output_filename))
@@ -150,20 +150,20 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
 
         with self.shell.open("/mirror/%s/%s" % (remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_%d/output
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
                 shutil.copyfileobj(remote_file, local_file)
                 local_file.close()
 
             remote_file.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path="tool_activity_%d/output" % self.id,
+            new_file = SkyLabFile.objects.create(upload_path="task_%d/output" % self.id,
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
+            task = Task.objects.get(pk=self.id)
+            task.output_files.add(new_file)
+            task.save()
             local_file.close()
 
     def change_status(self, status):

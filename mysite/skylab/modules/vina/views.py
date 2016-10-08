@@ -3,7 +3,6 @@ from __future__ import print_function
 from __future__ import print_function
 from __future__ import print_function
 
-import json
 import os.path
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -12,7 +11,6 @@ from django.utils.text import get_valid_filename
 from django.views.generic import TemplateView, FormView
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.basetool import send_mpi_message
 from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 
 
@@ -37,7 +35,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 exec_string=exec_string_template
             )
 
-            # receptor_filepath = create_input_skylab_file(tool_activity, 'input',
+            # receptor_filepath = create_input_skylab_file(task, 'input',
             #                                              vina_form.cleaned_data['param_receptor'])
             instance = SkyLabFile.objects.create(type=1, file=vina_form.cleaned_data['param_receptor'], task=task)
             receptor_filepath = instance.file.name
@@ -109,25 +107,12 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 filepath = instance.file.name
                 # filepath = create_input_skylab_file(task, 'input/ligands', f)
                 basename = os.path.splitext(f.name)[0]
-                outpath = "tool_activity_%d/output/%s" % (task.id, basename)
+                outpath = "task_%d/output/%s" % (task.id, basename)
 
                 exec_string += exec_string_template % (outpath, filepath, outpath, outpath)
 
             task.exec_string = exec_string
             task.save()
-
-            print(exec_string)
-            data = {
-                "actions": "use_tool",
-                "activity": task.id,
-                "tool": task.tool_name,
-                "param_executable": "vina",
-            }
-            message = json.dumps(data)
-            print(message)
-            # find a way to know if thread is already running
-            send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
-            task.status = "Task Queued"
 
             return redirect("../toolactivity/%d" % task.id)
         else:
@@ -172,15 +157,4 @@ class VinaSplitView(LoginRequiredMixin, FormView):
 
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
-        data = {
-            "actions": "use_tool",
-            "activity": task.id,
-            "tool": task.tool_name,
-            "param_executable": "vina split",
-        }
-        message = json.dumps(data)
-        print(message)
-        # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
-        task.status = "Task Queued"
         return super(VinaSplitView, self).form_valid(form)

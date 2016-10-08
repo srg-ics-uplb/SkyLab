@@ -7,8 +7,8 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
+from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster
-from skylab.modules.basetool import MPIModelChoiceField
 from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
 
 

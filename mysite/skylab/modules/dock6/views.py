@@ -1,14 +1,12 @@
 from __future__ import print_function
 from __future__ import print_function
 
-import json
 import os.path
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile
-from skylab.modules.basetool import send_mpi_message
 from skylab.modules.dock6.forms import Dock6Form, GridForm
 
 
@@ -52,19 +50,6 @@ class Dock6FormView(LoginRequiredMixin, FormView):
 
         task.exec_string = exec_string
         task.save()
-
-        # todo: access toolname and param_executable name from database
-        data = {
-            "actions": "use_tool",
-            "activity": task.id,
-            "tool": task.tool_name,
-            "param_executable": "dock6",
-        }
-        message = json.dumps(data)
-        print(message)
-        # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
-        # mpi_cluster.status = "Task Queued"
 
         return super(Dock6FormView, self).form_valid(form)
 
@@ -114,18 +99,5 @@ class GridFormView(LoginRequiredMixin, FormView):
 
         task.exec_string = exec_string
         task.save()
-
-        # todo: access toolname and param_executable name from database
-        data = {
-            "actions": "use_tool",
-            "activity": task.id,
-            "tool": task.tool_name,
-            "param_executable": "grid",
-        }
-        message = json.dumps(data)
-        print(message)
-        # find a way to know if thread is already running
-        send_mpi_message("skylab.consumer.%d" % task.mpi_cluster.id, message)
-        task.status = "Task Queued"
 
         return super(GridFormView, self).form_valid(form)

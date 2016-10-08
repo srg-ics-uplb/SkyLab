@@ -161,15 +161,16 @@ class Task(models.Model):
         if not self.id:
             created = True
             self.created = timezone.now()
-            # Create log file stating task is created
 
         self.updated = timezone.now()
 
         # create toolactivation if does not exist
-        ToolActivation.objects.get_or_create(mpi_cluster=self.mpi_cluster, toolset=self.tool.toolset)
+        ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id)
         super(Task, self).save(*args, **kwargs)
 
+        # placed below super since instance does not have pk until saved
         if created:
+            # Create tasklog stating task is created
             self.change_status(status_code=100, status_msg="Task created")
 
     @staticmethod

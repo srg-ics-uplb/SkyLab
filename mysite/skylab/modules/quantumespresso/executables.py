@@ -14,17 +14,17 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
-        self.working_dir = "/mirror/tool_activity_{0}".format(self.id)
+        self.working_dir = "/mirror/task_{0}".format(self.id)
         self.pseudo_dir = self.working_dir + "/pseudo"
         self.tmp_dir = self.working_dir + "/tempdir"
 
         Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
-        super(QuantumESPRESSOExecutable, self).__init__(self, **kwargs)
+        super(QuantumESPRESSOExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir tool_activity_{0}".format(self.id)])
-        tool_activity = Task.objects.get(pk=self.id)
-        tool_activity.change_status(status_msg="Fetching input files", status_code=151)
+        self.shell.run(["sh", "-c", "mkdir task_{0}".format(self.id)])
+        task = Task.objects.get(pk=self.id)
+        task.change_status(status_msg="Fetching input files", status_code=151)
         files = SkyLabFile.objects.filter(input_files__pk=self.id)
         for f in files:
             sftp = self.shell._open_sftp_client()
@@ -33,7 +33,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
             sftp.close()
 
         self.shell.run(["sh", "-c", "mkdir pseudo;"], cwd=self.working_dir)
-        pseudopotentials = json.loads(tool_activity.additional_info).get("pseudopotentials", None)
+        pseudopotentials = json.loads(task.additional_info).get("pseudopotentials", None)
         if pseudopotentials:
             for pseudo_file in pseudopotentials:
                 pass
@@ -80,7 +80,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         self.print_msg("Sending output files to server")
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        remote_dir = 'tool_activity_{0}'.format(self.id)
+        remote_dir = 'task_{0}'.format(self.id)
         os.makedirs(os.path.join(media_root, '{0}/output'.format(remote_dir)))
         output_filename = 'QuantumEspressoOutput_{0}.zip'.format(self.id)
         server_zip_filepath = os.path.join(media_root, '{0}/output/{1}'.format(remote_dir, output_filename))
@@ -88,25 +88,25 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         self.shell.run(["zip", "-r", output_filename, "output"], cwd=self.working_dir)
 
         with self.shell.open("/mirror/{0}/{1}".format(remote_dir, output_filename), "rb") as remote_file:
-            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/tool_activity_id/output
+            with open(server_zip_filepath, "wb") as local_file:  # transfer to media/task_id/output
                 shutil.copyfileobj(remote_file, local_file)
                 local_file.close()
 
             remote_file.close()
 
         with open(server_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(upload_path='tool_activity_{0}/output'.format(self.id),
+            new_file = SkyLabFile.objects.create(upload_path='task_{0}/output'.format(self.id),
                                                  filename=output_filename)
             new_file.file.name = os.path.join(new_file.upload_path, new_file.filename)
             new_file.save()
-            tool_activity = Task.objects.get(pk=self.id)
-            tool_activity.output_files.add(new_file)
-            tool_activity.save()
+            task = Task.objects.get(pk=self.id)
+            task.output_files.add(new_file)
+            task.save()
             local_file.close()
 
         # delete tool activity folder
         sftp = self.shell._open_sftp_client()
-        sftp.rmdir('/mirror/tool_activity_{0}'.format(self.id))
+        sftp.rmdir('/mirror/task_{0}'.format(self.id))
         sftp.close()
 
         error_flag = kwargs.get("error", False)
@@ -114,7 +114,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
             Task.objects.get(pk=self.id).change_status(status_code=200, status_msg="Task Finished")
             self.print_msg("Output files sent")
             pass
-            # TODO: delete tool_activity_folder
+            # TODO: delete task_folder
         else:
             pass
 
