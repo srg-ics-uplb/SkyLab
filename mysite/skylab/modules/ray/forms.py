@@ -7,7 +7,7 @@ from django.db.models import Q
 from multiupload.fields import MultiFileField
 
 from skylab.forms import MPIModelChoiceField
-from skylab.models import MPICluster
+from skylab.models import MPICluster, ToolSet
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
 
@@ -27,12 +27,12 @@ class SelectMPIFilesForm(forms.Form):
         self.user = kwargs.get('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_ray = Q(supported_tools="ray")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_ray).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="ray")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
@@ -50,7 +50,7 @@ class SelectMPIFilesForm(forms.Form):
 
             Div(
                 Field('mpi_cluster', wrapper_class='col-xs-6'),
-                css_class="col-sm-12"
+                css_class="row"
             ),
 
             Fieldset(

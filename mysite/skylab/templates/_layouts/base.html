@@ -4,7 +4,8 @@
     <title>{% block title %}SkyLab |{% endblock title %}</title>
     {% load staticfiles %}
     {% block head %}
-    <link rel="stylesheet" href="{% static 'bootstrap/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}">
+        <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap-theme.min.css' %}">
     <link rel="stylesheet" href="{% static 'font-awesome-4.6.3/css/font-awesome.min.css' %}">
     <link rel="stylesheet" href="{% static 'skylab/css/skylab.css' %}">
     {% endblock %}
@@ -132,7 +133,8 @@
                 <li>
 
                     {% if user.is_authenticated %}
-                        <a href="/skylab/accounts/logout">
+                        <a href="." onclick="logout()">
+                            {# calls logout function that logouts google account then skylab account #}
                             <i class="fa fa-sign-out fa-fw"></i> Logout
                         </a>
                     {% else %}
@@ -152,10 +154,18 @@
     </div>
 {% block js_imports %}
     <script src="{% static 'jquery/js/jquery-1.12.4.min.js' %}"></script>
-    <script src="{% static 'bootstrap/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'bootstrap-3.3.7-dist/js/npm.js' %}"></script>
 {#<script src="{% static 'metisMenu/dist/metisMenu.min.js' %}"></script>#}
 {#<script src="{% static 'sb-admin-2/js/sb-admin-2.js' %}"></script>#}
 <script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+    {#    LOGOUTS GOOGLE ACCOUNT ON SKYLAB ACCOUNT LOGOUT. REMOVE THIS FUNCTION TO PRESERVE OAUTH WORKFLOW#}
+    <script type="text/javascript">
+        var logout = function () {
+            document.location.href = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue={% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}{% url 'account_logout' %}";
+        }
+
+    </script>
 {% endblock %}
 {% block js %}{% endblock js %}
 </body>

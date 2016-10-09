@@ -88,8 +88,10 @@ AUTHENTICATION_BACKENDS = (
 
 SOCIALACCOUNT_PROVIDERS = \
     {'google':
-         {'SCOPE': ['profile', 'email'],
-          'AUTH_PARAMS': {'access_type': 'online'}}}
+        {
+            'AUTH_PARAMS': {'access_type': 'online', 'prompt': 'select_account'},
+        }
+    }
 
 
 WSGI_APPLICATION = 'mysite.wsgi.application'
@@ -161,7 +163,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #crispy form settings
-CRISPY_TEMPLATE_PACK = 'bootstrap4'
+CRISPY_TEMPLATE_PACK = 'bootstrap3'
 
 #email server settings
 # EMAIL_HOST = 'localhost'
@@ -201,6 +203,12 @@ SOCIALACCOUNT_ADAPTER = "skylab.googleadapter.UniversityAccountAdapter"
 SOCIALACCOUNT_QUERY_EMAIL = True
 LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
+# ACCOUNT_LOGOUT_REDIRECT_URL = ""
+# #TODO: redirect to logged out page
+# ACCOUNT_USERNAME_REQUIRED = False
+# ACCOUNT_EMAIL_REQUIRED = False
+ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
+SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
 JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
 

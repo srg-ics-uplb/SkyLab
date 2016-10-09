@@ -1,5 +1,4 @@
 from django.conf.urls import include, url
-from django.contrib.auth.views import logout
 
 from skylab.modules.autodock4.views import AutodockView, AutogridView
 from skylab.modules.dock6.views import Dock6FormView, GridFormView
@@ -29,7 +28,7 @@ urlpatterns = [
     url(r'^$', views.HomeView.as_view(), name='skylab-home'),
     url(r'^create-mpi-cluster$', views.CreateMPIView.as_view(), name='create_mpi'),
     # skip logout confirmation
-    url(r'^accounts/logout/$', logout, {'next_page': '/'}),
+    # url(r'^accounts/logout/$', logout, {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),
 
     url(r'^files/task/(?P<task_id>\d+)/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_skylabfile,

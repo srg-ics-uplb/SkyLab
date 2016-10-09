@@ -54,7 +54,7 @@ class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executabl
 	# functions are made to be as generic as possible for future simplification of executable creation process
 
 	def __init__(self, **kwargs):
-		self.shell = kwargs.get('shell')
+		self.shell = kwargs.get('shell')  # cluster shell
 		self.task = kwargs.get('task')
 		self.logger = kwargs.get('logger')
 		self.log_prefix = kwargs.get('log_prefix', '')
@@ -112,6 +112,7 @@ class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executabl
 		try:
 			os.makedirs(os.path.join(settings.MEDIA_ROOT, self.task.task_dirname + '/output'))
 		except OSError:
+			# output dir already exists
 			pass
 
 	@abstractmethod
