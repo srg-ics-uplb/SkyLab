@@ -8,7 +8,13 @@
 
 
 {% block content %}
-    <p>Howdy{% if user.is_authenticated %} {{ user.first_name }}{% endif %}!</p>
+    <p>Howdy{% if user.is_authenticated %} {{ user.first_name }}
+        {% for account in user.socialaccount_set.all %}
+            {% if account.provider == 'google' %}
+                {{ account.extra_data.id }}
+            {% endif %}
+        {% endfor %}
+    {% endif %}!</p>
 
 
 {% endblock %}
