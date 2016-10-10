@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
 
 import os
+import random
 import re
+import string
 
 from django.conf import settings
 from django.contrib.auth.models import User
@@ -23,17 +25,24 @@ def get_available_tools():  # TODO: get file __path__
 def get_sentinel_user():
     return User.objects.get_or_create(username='deleted_user')[0]
 
+
+def generate_share_key(N=5):
+    """
+    :param N:
+    :return: string of capital letters and numbers with length n
+    """
+    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
+
 @python_2_unicode_compatible
 class MPICluster(models.Model):
     MAX_MPI_CLUSTER_SIZE = settings.MAX_NODES_PER_CLUSTER
-    # TODO: current can be lower than set MAX
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
     cluster_name = models.CharField(max_length=50, unique=True)
     cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
-    # tool_list = get_available_tools()CharField
-    # print tool_list
+    # todo: share key form : (if user enters share key user is added in allowed users)
+    share_key = models.CharField(default=generate_share_key, max_length=5)
     queued_for_deletion = models.BooleanField(default=False)
     toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
                                       through='ToolActivation')

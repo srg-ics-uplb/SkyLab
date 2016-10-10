@@ -44,7 +44,7 @@
             {#            <p>Command: {{ object.command_list }}</p>#}
 
             <strong>Input Files: </strong>
-            <div id="task-input-files-list" class="list-group">
+            <div id="task-input-files-list" class="list-group scrollable-task-file-list">
                 {% for file in object.input_files %}
                     <a class="list-group-item"
                        href="{% url "skylab_file_url" task_id=object.id type="input" filename=file.filename %}">{{ file.filename }}</a>
@@ -52,7 +52,7 @@
             </div>
 
             <strong>Output Files: </strong>
-            <div id="task-output-files-list" class="list-group"></div>
+            <div id="task-output-files-list" class="list-group scrollable-task-file-list"></div>
             {#Display logs#}
             {#            <p>Logs:</p>#}
             {#            <ul id="task-logs-list">#}

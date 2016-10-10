@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": {
+    "simple": {
+      "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    }
+  },
+  "handlers": {
+    "console": {
+      "class": "logging.StreamHandler",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "stream": "ext://sys.stdout"
+    },
+    "mpi_thread_info_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "when": "midnight",
+      "level": "INFO",
+      "formatter": "simple",
+      "filename": "skylab/logs/mpi_threads_info.log",
+      "backupCount": 14,
+      "encoding": "utf8"
+    },
+    "mpi_thread_debug_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "when": "midnight",
+      "level": "DEBUG",
+      "formatter": "simple",
+      "filename": "skylab/logs/mpi_threads_debug.log",
+      "backupCount": 14,
+      "encoding": "utf8"
+    },
+    "mpi_thread_error_file_handler": {
+      "class": "logging.handlers.TimedRotatingFileHandler",
+      "when": "midnight",
+      "level": "ERROR",
+      "formatter": "simple",
+      "filename": "skylab/logs/mpi_threads_error.log",
+      "backupCount": 14,
+      "encoding": "utf8"
+    }
+  },
+  "loggers": {
+    "my_module": {
+      "level": "ERROR",
+      "handlers": [
+        "console"
+      ],
+      "propagate": "false"
+    },
+    "skylab.bootskylab": {
+      "level": "DEBUG",
+      "handlers": [
+        "console",
+        "mpi_thread_info_file_handler",
+        "mpi_thread_debug_file_handler",
+        "mpi_thread_error_file_handler"
+      ],
+      "propagate": "true"
+    }
+  }
+}

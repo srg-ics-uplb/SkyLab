@@ -125,8 +125,9 @@ class GAMESSExecutable(P2CToolGeneric):
         # retrieve then delete produced output files
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
         for remote_file in remote_files:
-            if stat.S_IFREG(remote_file.st_mode):  # if regular file
-                remote_filepath = os.path.join(remote_path, remote_file)
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if stat.S_IFREG(sftp.stat(remote_filepath).st_mode):  # if regular file
+
                 local_filepath = os.path.join(local_path, remote_file)
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)

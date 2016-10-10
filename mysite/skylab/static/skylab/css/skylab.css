@@ -6,6 +6,12 @@
 	margin: 0 7px;
 }
 
+.scrollable-task-file-list {
+	height: auto;
+	max-height: 400px;
+	overflow-x: hidden;
+}
+
 @media (min-width: 768px) {
 	.nav .breadcrumb {
 		float: left;

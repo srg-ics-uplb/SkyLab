@@ -8,7 +8,7 @@ from django.db.models import Q
 from multiupload.fields import MultiFileField
 
 from skylab.forms import MPIModelChoiceField
-from skylab.models import MPICluster
+from skylab.models import MPICluster, ToolSet
 from validators import pdbqt_file_extension_validator, multi_pdbqt_file_validator
 
 
@@ -84,14 +84,15 @@ class VinaForm(forms.Form):
         self.user = kwargs.get('user')
         super(VinaForm, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_vina = Q(supported_tools="vina")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_vina).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="vina")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
@@ -225,14 +226,15 @@ class VinaSplitForm(forms.Form):
         self.user = kwargs.pop('user')
         super(VinaSplitForm, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_vina = Q(supported_tools="vina")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_vina).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="vina")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 

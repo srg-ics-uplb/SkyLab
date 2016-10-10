@@ -1,16 +1,13 @@
-from __future__ import print_function
-from __future__ import print_function
-from __future__ import print_function
-from __future__ import print_function
-
+import json
 import os.path
 
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.urlresolvers import reverse
 from django.shortcuts import render, redirect
 from django.utils.text import get_valid_filename
 from django.views.generic import TemplateView, FormView
 
-from skylab.models import Task, SkyLabFile
+from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 
 
@@ -27,12 +24,12 @@ class VinaView(LoginRequiredMixin, TemplateView):
         vina_form = VinaForm(request.POST, request.FILES)
 
         if vina_form.is_valid():
-            cluster_name = vina_form.cleaned_data['mpi_cluster']
+            cluster = vina_form.cleaned_data['mpi_cluster']
 
             exec_string_template = "mkdir -p %s; vina "
+            tool = Tool.objects.get(display_name="Vina")
             task = Task.objects.create(
-                mpi_cluster=cluster_name, tool_name="vina", executable_name="vina", user=self.request.user,
-                exec_string=exec_string_template
+                mpi_cluster=cluster, tool=tool, user=self.request.user
             )
 
             # receptor_filepath = create_input_skylab_file(task, 'input',
@@ -106,19 +103,23 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 instance = SkyLabFile.objects.create(type=1, upload_path='input/ligands', file=f, task=task)
                 filepath = instance.file.name
                 # filepath = create_input_skylab_file(task, 'input/ligands', f)
-                basename = os.path.splitext(f.name)[0]
-                outpath = "task_%d/output/%s" % (task.id, basename)
+                filename_without_ext = os.path.splitext(f.name)[0]
+                outpath = "task_%d/output/%s" % (task.id, filename_without_ext)
+
+                # todo: mkdir task_xx/output/basename
+                # use additional info field to pass task subdirs
 
                 exec_string += exec_string_template % (outpath, filepath, outpath, outpath)
 
             task.exec_string = exec_string
             task.save()
 
-            return redirect("../toolactivity/%d" % task.id)
+            # return redirect("../toolactivity/%d" % task.id)
+            return redirect('task_detailview', kwargs={'pk': task.id})
+
         else:
             return render(request, 'modules/vina/use_vina.html', {
                 'vina_form': vina_form,
-
             })
 
 
@@ -133,7 +134,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_success_url(self):
-        return "../task/%d" % self.kwargs['id']
+        return reverse('task_detailview', kwargs={'pk': self.kwargs.get('id')})
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
@@ -149,11 +150,12 @@ class VinaSplitView(LoginRequiredMixin, FormView):
 
         print(exec_string)
 
+        tool = Tool.objects.get(display_name="Vina split")
         task = Task.objects.create(
-            mpi_cluster=cluster, tool_name="vina", executable_name="vina_split", user=self.request.user,
-            exec_string=exec_string
+            mpi_cluster=cluster, tool=tool, user=self.request.user,
+            command_list=json.dumps([exec_string])
         )
-        self.kwargs['id'] = task.id
+        self.kwargs['id'] = task.id  # pass to get_success_url
 
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
