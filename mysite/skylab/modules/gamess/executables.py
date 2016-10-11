@@ -35,13 +35,13 @@ class GAMESSExecutable(P2CToolGeneric):
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
 
-        # there are times when this setting is reset?
-        # command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
-        # shmax_fixer = self.shell.spawn(['sh', '-c', command], use_pty=True)
-        # shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-        # shmax_fixer.wait_for_result()
+        # when instance is restarted this settings resets : observation
+        command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
+        shmax_fixer = self.shell.spawn(['sh', '-c', command], use_pty=True)
+        shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+        shmax_fixer.wait_for_result()
 
-        command_list = json.loads(self.task.command_list)  #load json array
+        command_list = json.loads(self.task.task_data)['command_list']  # load json array
 
         # spur update_env kwargs can only be used for constant assignments
         # thus, for environment variables must be exported via a command
@@ -126,7 +126,7 @@ class GAMESSExecutable(P2CToolGeneric):
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
-            if stat.S_IFREG(sftp.stat(remote_filepath).st_mode):  # if regular file
+            if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
 
@@ -161,9 +161,9 @@ class GAMESSExecutable(P2CToolGeneric):
         """
 
         # retrieve then delete produced scratch files
-        zip_filename = self.task.task_dirname + "-scratch_files.zip" % self.task.id
+        zip_filename = self.task.task_dirname + "-scratch_files.zip"
         local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
-        remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
+        remote_zip_filepath = os.path.join(settings.REMOTE_BASE_DIR, zip_filename)
 
         self.shell.run(["zip", "-r", zip_filename, "scr"])  # zip scr folder
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip

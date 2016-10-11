@@ -20,7 +20,7 @@ install_toolsets()
 # # MPICluster.objects.filter(activated_toolset__display_name="Autodo")
 #
 setup_logging()  # setup logger, handlers
-# Task.objects.all().delete()
+# Task.objects.filter(tasklog__status_code=101).delete()
 # TaskLog.objects.all().delete()
 # SkyLabFile.objects.all().delete()
 manager = MPIThreadManager()

@@ -217,6 +217,7 @@ class VinaForm(forms.Form):
                     raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
 
 class VinaSplitForm(forms.Form):
+    # todo: remove prefix fields
     param_input = forms.FileField(label="Input file (.pdbqt)", help_text="Vina docking result",
                                   validators=[pdbqt_file_extension_validator])
     param_ligand_prefix = forms.CharField(label="Prefix for ligands", help_text="Optional", required=False)

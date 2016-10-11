@@ -173,7 +173,7 @@ class RayView(LoginRequiredMixin, TemplateView):
 
             command_list.append(command)
 
-            task.command_list = json.dumps(command_list)
+            task.task_data = json.dumps({'command_list': command_list})
             task.save()
 
             return redirect(reverse('task_detailview', kwargs={'pk': task.id}))

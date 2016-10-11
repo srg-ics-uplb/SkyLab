@@ -33,7 +33,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
             sftp.close()
 
         self.shell.run(["sh", "-c", "mkdir pseudo;"], cwd=self.working_dir)
-        pseudopotentials = json.loads(task.additional_info).get("pseudopotentials", None)
+        pseudopotentials = json.loads(self.task.task_data).get("pseudopotentials", None)
         if pseudopotentials:
             for pseudo_file in pseudopotentials:
                 pass
@@ -56,10 +56,9 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         # TODO manual export env_vars not reliable
         env_vars = {"PATH": "$PATH:{0}".format(export_path), "TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir}
 
-        command_list = json.loads(Task.objects.get(pk=self.id).command_list)
+        command_list = json.loads(self.task.task_data)['command_list']
 
-
-        # self.print_msg("Running %s" % command_list)
+        # self.print_msg("Running %s" % task_data)
 
         # exec_shell = self.shell.run(["sh", "-c", "export PATH=$PATH:%s; echo $PATH; %s;" % (export_path, exec_string)])
         for command in command_list:

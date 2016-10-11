@@ -16,14 +16,14 @@ class AutoDock4Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
         super(AutoDock4Executable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'workdir')
-        self.input_upload_dir = self.working_dir
+        # self.input_upload_dir = self.working_dir
 
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
         files = self.task.files.filter(type=1)
         sftp = self.shell._open_sftp_client()
-        sftp.chdir(self.input_upload_dir)
+        sftp.chdir(self.working_dir)
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
@@ -32,7 +32,7 @@ class AutoDock4Executable(P2CToolGeneric):
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
-        command = json.loads(self.task.command_list)[0]
+        command = json.loads(self.task.task_data)['command_list'][0]
 
         retries = 0
         exit_loop = False
@@ -111,11 +111,10 @@ class AutoDock4Executable(P2CToolGeneric):
         self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
         self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
 
-        sftp.get(remote_zip_filepath, local_zip_filepath)
+        self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
+        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.close()
-        # with self.shell.open("/mirror/%s/%s" % (remote_dir, zip_filename), "rb") as remote_file:
-        #     with open(local_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
-        #         shutil.copyfileobj(remote_file, local_file)
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)
@@ -154,7 +153,7 @@ class AutoGrid4Executable(P2CToolGeneric):
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
-        command = json.loads(self.task.command_list)[0]
+        command = json.loads(self.task.task_data)['command_list'][0]
 
         self.task.change_status(status_msg="Executing tool script", status_code=152)
         retries = 0
@@ -226,18 +225,17 @@ class AutoGrid4Executable(P2CToolGeneric):
             if remote_file in input_filenames:
                 sftp.remove(remote_filepath)  # delete after transfer
 
-        zip_filename = self.task.task_dirname + "-output.zip" % self.task.id
+        zip_filename = self.task.task_dirname + "-output.zip"
         local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, zip_filename))
         remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
 
         self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
         self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
 
-        sftp.get(remote_zip_filepath, local_zip_filepath)
+        self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
+        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.close()
-        # with self.shell.open("/mirror/%s/%s" % (remote_dir, zip_filename), "rb") as remote_file:
-        #     with open(local_zip_filepath, "wb") as local_file:  # transfer to media/task_%d/output
-        #         shutil.copyfileobj(remote_file, local_file)
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)

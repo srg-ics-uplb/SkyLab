@@ -106,25 +106,23 @@ class Dock6Executable(P2CToolGeneric):
 
 class GridExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
-        self.shell = kwargs.get('shell')
-        self.id = kwargs.get('id')
-        self.working_dir = "/mirror/task_%d/workdir" % self.id
-        Task.objects.filter(pk=self.id).update(status="Task started", status_code=1)
         super(GridExecutable, self).__init__(**kwargs)
+        self.working_dir = os.path.join(self.remote_task_dir, "workdir")
+        # task subdirs = workdir, output
 
     def handle_input_files(self, **kwargs):
-        self.shell.run(["sh", "-c", "mkdir -p task_%d/output" % self.id])
-        Task.objects.filter(pk=self.id).update(status="Fetching input files")
-        files = SkyLabFile.objects.filter(input_files__pk=self.id)
-        for f in files:
-            sftp = self.shell._open_sftp_client()
-            mkdir_p(sftp, 'task_%d/workdir' % self.id)
-            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
-            sftp.close()
+        self.task.change_status(status_msg='Uploading input files', status_code=151)
+        self.logger.debug(self.log_prefix + 'Uploading input files')
 
-    # raise not implemented error
-    def print_msg(self, msg):
-        print ("Grid (Tool Activity %d) : %s" % (self.id, msg))
+        files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
+        sftp = self.shell._open_sftp_client()
+        sftp.chdir(self.working_dir)  #cd /mirror/task_xx
+
+        for f in files:
+            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+            sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
+            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+        sftp.close()
 
     def run_tool(self, **kwargs):
         self.handle_input_files()

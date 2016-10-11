@@ -26,8 +26,7 @@ class GAMESSView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
         tool = Tool.objects.get(display_name="GAMESS")
         task = Task.objects.create(
-            mpi_cluster=cluster, tool=tool, user=self.request.user,
-            command_list=""
+            mpi_cluster=cluster, tool=tool, user=self.request.user
         )
         command_list = []
         for f in form.cleaned_data['input_files']:
@@ -38,7 +37,7 @@ class GAMESSView(LoginRequiredMixin, FormView):
             command_list.append(command)
 
         task.refresh_from_db()
-        task.command_list = json.dumps(command_list)
+        task.task_data = json.dumps({'command_list': command_list})
         task.save()
 
 

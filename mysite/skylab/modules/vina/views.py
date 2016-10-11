@@ -26,7 +26,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
         if vina_form.is_valid():
             cluster = vina_form.cleaned_data['mpi_cluster']
 
-            exec_string_template = "mkdir -p %s; vina "
+            exec_string_template = "mkdir -p {outpath}; vina "
             tool = Tool.objects.get(display_name="Vina")
             task = Task.objects.create(
                 mpi_cluster=cluster, tool=tool, user=self.request.user
@@ -44,7 +44,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 flex_filepath = instance.file.name
                 exec_string_template += "--flex %s " % flex_filepath
 
-            exec_string_template += "--ligand %s --out %s/out.pdbqt --log %s/log.txt "
+            exec_string_template += "--ligand {filepath} --out {outpath}/out.pdbqt --log {outpath}/log.txt "
 
             if vina_form.cleaned_data['param_score_only']:  # search space not required
                 exec_string_template += "--score_only "
@@ -56,20 +56,20 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 size_y = vina_form.cleaned_data['param_size_y']
                 size_z = vina_form.cleaned_data['param_size_z']
 
-                exec_string_template += "--center_x %s --center_y %s --center_z %s --size_x %s --size_y %s --size_z %s " % (
-                center_x, center_y, center_z, size_x, size_y, size_z)
+                exec_string_template += "--center_x {0:s} --center_y {1:s} --center_z {2:s} --size_x {3:s} --size_y {4:s} --size_z {5:s} ".format(
+                    center_x, center_y, center_z, size_x, size_y, size_z)
 
             if vina_form.cleaned_data.get('param_seed'):
-                exec_string_template += "--seed %s " % vina_form.cleaned_data['param_seed']
+                exec_string_template += "--seed {0:s} ".format(vina_form.cleaned_data['param_seed'])
 
             if vina_form.cleaned_data.get('param_exhaustiveness'):
-                exec_string_template += "--exhaustiveness %s " % vina_form.cleaned_data['param_exhaustiveness']
+                exec_string_template += "--exhaustiveness {0:s} ".format(vina_form.cleaned_data['param_exhaustiveness'])
 
             if vina_form.cleaned_data.get('param_num_modes'):
-                exec_string_template += "--num_modes %s " % vina_form.cleaned_data['param_num_modes']
+                exec_string_template += "--num_modes {0:s} ".format(vina_form.cleaned_data['param_num_modes'])
 
             if vina_form.cleaned_data.get('param_energy_range'):
-                exec_string_template += "--energy_range %s " % vina_form.cleaned_data['param_energy_range']
+                exec_string_template += "--energy_range {0:s} ".format(vina_form.cleaned_data['param_energy_range'])
 
             if vina_form.cleaned_data['param_local_only']:
                 exec_string_template += "--local_only "
@@ -78,40 +78,45 @@ class VinaView(LoginRequiredMixin, TemplateView):
                 exec_string_template += "--randomize_only "
 
             if vina_form.cleaned_data.get('param_weight_gauss1'):
-                exec_string_template += "--weight_gauss1 %s " % vina_form.cleaned_data['param_weight_gauss1']
+                exec_string_template += "--weight_gauss1 {0:s} ".format(vina_form.cleaned_data['param_weight_gauss1'])
 
             if vina_form.cleaned_data.get('param_weight_gauss2'):
-                exec_string_template += "--weight_gauss2 %s " % vina_form.cleaned_data['param_weight_gauss2']
+                exec_string_template += "--weight_gauss2 {0:s} ".format(vina_form.cleaned_data['param_weight_gauss2'])
 
             if vina_form.cleaned_data.get('param_weight_repulsion'):
-                exec_string_template += "--weight_repulsion %s " % vina_form.cleaned_data['param_weight_repulsion']
+                exec_string_template += "--weight_repulsion {0:s} ".format(
+                    vina_form.cleaned_data['param_weight_repulsion'])
 
             if vina_form.cleaned_data.get('param_weight_hydrophobic'):
-                exec_string_template += "--weight_hydrophobic %s " % vina_form.cleaned_data['param_weight_hydrophobic']
+                exec_string_template += "--weight_hydrophobic {0:s} ".format(
+                    vina_form.cleaned_data['param_weight_hydrophobic'])
 
             if vina_form.cleaned_data.get('param_weight_hydrogen'):
-                exec_string_template += "--weight_hydrogen %s " % vina_form.cleaned_data['param_weight_hydrogen']
+                exec_string_template += "--weight_hydrogen {0:s} ".format(
+                    vina_form.cleaned_data['param_weight_hydrogen'])
 
             if vina_form.cleaned_data.get('param_weight_rot'):
-                exec_string_template += "--weight_rot %s " % vina_form.cleaned_data['param_weight_rot']
+                exec_string_template += "--weight_rot {0:s} ".format(vina_form.cleaned_data['param_weight_rot'])
 
             exec_string_template += "; "
 
-            # LAST
-            exec_string = ""
+            # build commands
+
+            command_list = []
+            task_remote_subdirs = ['input', 'output']
             for f in vina_form.cleaned_data['param_ligands']:
                 instance = SkyLabFile.objects.create(type=1, upload_path='input/ligands', file=f, task=task)
                 filepath = instance.file.name
                 # filepath = create_input_skylab_file(task, 'input/ligands', f)
                 filename_without_ext = os.path.splitext(f.name)[0]
-                outpath = "task_%d/output/%s" % (task.id, filename_without_ext)
+                task_remote_subdir = 'output/' + filename_without_ext
 
-                # todo: mkdir task_xx/output/basename
-                # use additional info field to pass task subdirs
+                outpath = os.path.join(task.task_dirname, task_remote_subdir)
 
-                exec_string += exec_string_template % (outpath, filepath, outpath, outpath)
+                task_remote_subdirs.append(task_remote_subdir)
+                command_list.append(exec_string_template.format(outpath=outpath, filepath=filepath))
 
-            task.exec_string = exec_string
+            task.task_data = json.dumps({'command_list': command_list, 'task_remote_subdirs': task_remote_subdirs})
             task.save()
 
             # return redirect("../toolactivity/%d" % task.id)
@@ -124,6 +129,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
 
 
 class VinaSplitView(LoginRequiredMixin, FormView):
+    #TODO: support dynamic formsetl multiple input files; remove input, output prefix; set to created default
     template_name = "modules/vina/use_vina_split.html"
     form_class = VinaSplitForm
 
@@ -140,20 +146,26 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         cluster = form.cleaned_data['mpi_cluster']
 
         input_file = form.cleaned_data['param_input']
-        exec_string = "vina_split --input %s " % input_file.name
+        exec_string = u"vina_split --input {0:s} ".format(input_file.name)
+
+        input_filename_without_ext = os.path.splitext(os.path.basename(input_file.name))[0]
 
         if form.cleaned_data.get('param_ligand_prefix'):
-            exec_string += "--ligand %s " % get_valid_filename(form.cleaned_data['param_ligand_prefix'])
+            exec_string += u"--ligand {0:s} ".format(get_valid_filename(form.cleaned_data['param_ligand_prefix']))
+        else:
+            exec_string += u"--ligand {0:s}-ligand ".format(input_filename_without_ext)
 
         if form.cleaned_data.get('param_flex_prefix'):
-            exec_string += "--flex %s " % get_valid_filename(form.cleaned_data['param_flex_prefix'])
+            exec_string += u"--flex {0:s} ".format(get_valid_filename(form.cleaned_data['param_flex_prefix']))
+        else:
+            exec_string += u"--flex {0:s}-flex ".format(input_filename_without_ext)
 
-        print(exec_string)
+        #print(exec_string)
 
         tool = Tool.objects.get(display_name="Vina split")
         task = Task.objects.create(
             mpi_cluster=cluster, tool=tool, user=self.request.user,
-            command_list=json.dumps([exec_string])
+            task_data=json.dumps({'command_list': [exec_string]})
         )
         self.kwargs['id'] = task.id  # pass to get_success_url
 

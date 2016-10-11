@@ -29,7 +29,7 @@ class RayExecutable(P2CToolGeneric):
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
-        command_list = json.dumps(self.task.command_list)  # load json array
+        command_list = json.loads(self.task.task_data)['command_list']  # load json array
 
         # spur update_env kwargs can only be used for constant assignments
         # thus, for environment variables must be exported via a command

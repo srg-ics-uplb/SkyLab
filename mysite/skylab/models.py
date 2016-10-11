@@ -152,8 +152,8 @@ def get_sentinel_mpi():
 @python_2_unicode_compatible
 class Task(models.Model):
     priority = models.PositiveSmallIntegerField(default=3)  # 1=(reserved) p2c tool activate, 2=high, 3=normal
-    command_list = models.CharField(max_length=500, blank=True)
-    additional_info = models.CharField(max_length=500, blank=True)
+    task_data = models.CharField(max_length=500, blank=True)
+    # additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 

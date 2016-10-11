@@ -48,7 +48,7 @@ def serve_skylabfile(request, task_id, type, filename):
 
 		return Http404
 
-	fullpath = os.path.join(settings.PRIVATE_MEDIA_ROOT, requested_file.file.name)
+	fullpath = os.path.join(settings.MEDIA_ROOT, requested_file.file.name)
 
 	return sendfile(request, fullpath, attachment=True)
 

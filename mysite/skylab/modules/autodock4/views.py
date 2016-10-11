@@ -61,7 +61,7 @@ class AutodockView(LoginRequiredMixin, FormView):
 
         exec_string += ";"
 
-        task.command_list = json.dumps([exec_string])
+        task.task_data = json.dumps({'command_list': [exec_string]})
         task.save()
 
         # find a way to know if thread is already running
@@ -133,7 +133,7 @@ class AutogridView(LoginRequiredMixin, FormView):
 
             exec_string += ";"
 
-            task.command_list = json.dumps([exec_string])
+            task.task_data = json.dumps({'command_list': [exec_string]})
             task.save()
 
         return super(AutogridView, self).form_valid(form)

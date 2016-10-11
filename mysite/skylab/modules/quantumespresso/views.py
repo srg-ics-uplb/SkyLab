@@ -52,12 +52,12 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
                 mpi_cluster=cluster_name, tool_name="quantum espresso", executable_name="quantum espresso",
                 user=self.request.user,
                 # additional_info=
-                # command_list=json.dumps(command_list)
+                # task_data=json.dumps(task_data)
             )
 
             # build command list
             command_list = []
-            additional_info = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
+            task_data = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
             scf_output_files = []
             for form in input_formset:
                 executable = form.cleaned_data.get('param_executable')
@@ -87,12 +87,12 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
                         command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
                         para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
 
-            additional_info['scf_output_files'] = scf_output_files
-            task.additional_info = json.dumps(additional_info)
-            task.command_list = json.dumps(command_list)
+            task_data['scf_output_files'] = scf_output_files
+            task_data['command_list'] = command_list
+            task.task_data = json.dumps(task_data)
             task.save()
 
-            print(task.command_list)
+            print(task.task_data)
 
             # data = {
             #     "actions": "use_tool",
