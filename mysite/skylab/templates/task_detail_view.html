@@ -159,7 +159,7 @@
         Models = [];
 
         var retrieveCurrentStatus = function () {
-            ajaxGet('../../task-fragments/{{ object.id }}', function (content) {
+            ajaxGet('{% url 'refresh_task_detail_view' pk=object.id %}', function (content) {
                 //onSuccess
                 {#                alert(content.status_code);#}
                 statusCode = content.status_code;

@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.urlresolvers import reverse
 from django.http import Http404
 from django.http import HttpResponse
 from django.views.generic import DetailView
@@ -38,7 +39,6 @@ def has_read_permission(request, task_id):
 
 @login_required
 def serve_skylabfile(request, task_id, type, filename):
-
 	try:
 		if type == "input":
 			requested_file = SkyLabFile.objects.get(type=1, task_id=task_id, filename=filename)
@@ -78,6 +78,7 @@ def send_mpi_message(routing_key, body):
 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 	connection.close()
 
+
 class HomeView(TemplateView):
 	template_name = "home.html"
 
@@ -106,7 +107,6 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 
 		mpi_cluster.allowed_users.add(self.request.user)
 		mpi_cluster.save()
-
 
 		for t in form.cleaned_data['toolsets']:
 			ToolActivation.objects.create(toolset=t, mpi_cluster=mpi_cluster, activated=False)
@@ -142,12 +142,58 @@ class ToolActivityDetail(LoginRequiredMixin, DetailView):
 		qs = super(ToolActivityDetail, self).get_queryset()
 		return qs.filter(user=self.request.user)
 
+
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
+
 @login_required
 @ajax
-def task_fragments_view(request, pk=None):
+def refresh_nav_task_list(request):
+	tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
+	list_items = []
+	if tasks:
+		task_item_template = '<li><a href="{task_url}"><div><p><strong>Task {task_id} <small>({tool_name})</small></strong><span class="pull-right text-{progress_bar_type}">{task_status_msg}</span></p><div class="progress progress-striped {active}"><div class="progress-bar progress-bar-{progress_bar_type}" role="progressbar" aria-valuenow="{task_completion_rate}aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%"><span class="sr-only">{task_status_msg}</span></div></div></div></a></li>'
+		for task in tasks:  # build <li class="divider"></li>.join(list_items)
+			task_id = task.id
+			task_url = reverse('task_detail_view', kwargs={'pk': task_id})
+			tool_name = 'Quantum Espresso'  # task.tool.display_name
+			task_completion_rate = task.completion_rate
+			active = 'active' if task_completion_rate < 100 else ''
+			latest_log = task.latest_log
+			task_status_msg = task.get_simple_status_msg(latest_log.status_code)
+
+			if latest_log.status_code < 200:
+				progress_bar_type = 'info'
+			elif task.latest_log.status_code / 100 == 2:
+				progress_bar_type = 'success'
+			elif task.latest_log.status_code >= 400:
+				progress_bar_type = 'danger'
+			else:
+				progress_bar_type = 'warning'
+
+			list_items.append(task_item_template.format(tool_name=tool_name, task_id=task_id, task_url=task_url,
+														task_completion_rate=task_completion_rate,
+														task_status_msg=task_status_msg, active=active,
+														progress_bar_type=progress_bar_type))
+
+		list_items.append(  # link to task list view
+			'<li><a class="text-center" href="#"><strong>See All Tasks</strong><i class="fa fa-angle-right"></i></a></li>')
+	else:
+		list_items.append('<li><div><p class="text-center text-muted">No tasks created</p></div></li>')
+
+	data = {
+		'inner-fragments': {
+			'#nav-task-list': '<li class="divider"></li>'.join(list_items)
+		}
+	}
+
+	return data
+
+
+@login_required
+@ajax
+def refresh_task_detail_view(request, pk=None):
 	if pk is not None:
 		task = Task.objects.get(pk=pk, user=request.user.id)
 		# print task.id
@@ -156,19 +202,19 @@ def task_fragments_view(request, pk=None):
 		task_output_file_list = ''
 		for item in task.get_output_files_urls():
 			task_output_file_list += '<a class="list-group-item" href="%s">%s</a>' % (
-			item.get("url"), item.get("filename"))
+				item.get("url"), item.get("filename"))
 
 		if task.latest_log.status_code < 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_default_status_msg(
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg(
 				task.latest_log.status_code) + '</span>'
 		elif task.latest_log.status_code == 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_default_status_msg(
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg(
 				task.latest_log.status_code) + '</span>'
 		elif task.latest_log.status_code >= 400:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_default_status_msg(
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg(
 				task.latest_log.status_code) + '</span>'
 		# progress_bar
 

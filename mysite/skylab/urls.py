@@ -14,8 +14,10 @@ urlpatterns = [
 
                   # url(r'^$', views.use_impi, name='home'),
 
-    url(r'^task/(?P<pk>\d+)/$', views.ToolActivityDetail.as_view(), name='task_detailview'),
-    url(r'^task-fragments/(?P<pk>\d+)$', views.task_fragments_view, name='task_fragments'),
+    url(r'^task/(?P<pk>\d+)/$', views.ToolActivityDetail.as_view(), name='task_detail_view'),
+    url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view, name='refresh_task_detail_view'),
+    url(r'^ajax/nav-task-list-fragments$', views.refresh_nav_task_list, name='refresh_nav_task_list'),
+
     url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
     url(r'^ray$', RayView.as_view(), name='use_ray'),
     url(r'^vina/vina$', VinaView.as_view(), name="use_vina"),
@@ -25,6 +27,7 @@ urlpatterns = [
     url(r'^dock6/dock6$', Dock6FormView.as_view(), name="use_dock6_dock6"),
     url(r'^dock6/grid$', GridFormView.as_view(), name="use_dock6_grid"),
     url(r'^quantum-espresso$', QuantumESPRESSOView.as_view(), name="use_quantum_espresso"),
+
     url(r'^$', views.HomeView.as_view(), name='skylab-home'),
     url(r'^create-mpi-cluster$', views.CreateMPIView.as_view(), name='create_mpi'),
     # skip logout confirmation

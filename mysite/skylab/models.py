@@ -183,27 +183,27 @@ class Task(models.Model):
             self.change_status(status_code=100, status_msg="Task created")
 
     @staticmethod
-    def get_default_status_msg(status_code):
+    def get_simple_status_msg(status_code):
         status_msgs = {
             000: "Unknown",
-            100: "Task created",
-            101: "Task queued",
-            150: "Task started",
-            151: "Uploading input files",
-            152: "Executing tool script",
-            153: "Tool execution successful",
-            154: "Retrieving output files",
-            200: "Task completed",
-            400: "Task execution error",
-            401: "Task completed. Errors encountered.",
-            500: "MPI cluster connection error",
+            100: "Initializing",
+            101: "Queued",
+            150: "Started",
+            151: "Processing",
+            152: "Processing",
+            153: "Processing",
+            154: "Processing",
+            200: "Success",
+            400: "Error",
+            401: "Error",
+            500: "Error",
         }
 
         return status_msgs.get(status_code, "Status code %d not recognized" % status_code)
 
     def change_status(self, **kwargs):
         status_code = kwargs.get('status_code', 000)
-        status_msg = kwargs.get('status_msg', self.get_default_status_msg(status_code))
+        status_msg = kwargs.get('status_msg', self.get_simple_status_msg(status_code))
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
 
     @property
@@ -222,6 +222,25 @@ class Task(models.Model):
     @property
     def logs(self):
         return self.tasklog_set.all()
+
+    @property
+    def completion_rate(self):
+        status_code = self.tasklog_set.latest('timestamp').status_code
+        completion_rates = {
+            000: 0,
+            100: 0,
+            101: 5,
+            150: 10,
+            151: 20,
+            152: 40,
+            153: 60,
+            154: 80,
+            200: 100,
+            400: 90,
+            401: 100,
+            500: 100,
+        }
+        return completion_rates.get(status_code, 0)
 
     # workaround for accessing latest log from template
     @property
