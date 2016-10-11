@@ -1,12 +1,11 @@
-from __future__ import print_function
-from __future__ import print_function
-
+import json
 import os.path
 
+from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import FormView
 
-from skylab.models import Task, SkyLabFile
+from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.dock6.forms import Dock6Form, GridForm
 
 
@@ -26,10 +25,15 @@ class Dock6FormView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
 
-        exec_string = "mpirun -np 4 dock6.mpi "
+        cluster_size = cluster.cluster_size
+        tool = Tool.objects.get(display_name="Dock 6")
+
+        # -n cluster_size
+        command = "mpiexec -n {0:d} -f {1:s} dock6.mpi ".format(cluster_size, settings.MPIEXEC_NODES_FILE)
+
+        # command = "mpiexec -np 4 dock6.mpi "
         task = Task.objects.create(
-            mpi_cluster=cluster, tool_name="dock6", executable_name="dock6", user=self.request.user,
-            exec_string=exec_string
+            mpi_cluster=cluster, tool=tool, user=self.request.user
         )
         self.kwargs['id'] = task.id
 
@@ -38,17 +42,17 @@ class Dock6FormView(LoginRequiredMixin, FormView):
         input_file = form.cleaned_data['param_input_file']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
-        exec_string += "-i %s " % input_file.name
+        command += u"-i {0:s} ".format(input_file.name)
 
         for f in form.cleaned_data['param_other_files']:
             SkyLabFile.objects.create(type=1, file=f, task=task)
 
         if form.cleaned_data.get('param_output_prefix'):
-            exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
+            command += u"-o ../output/{0:s}.out ".format(form.cleaned_data['param_output_prefix'])
         else:
-            exec_string += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
+            command += u"-o ../output/{0:s}.out ".format(os.path.splitext(input_file.name)[0])
 
-        task.exec_string = exec_string
+        task.task_data = json.dumps({'command_list': [command]})
         task.save()
 
         return super(Dock6FormView, self).form_valid(form)
@@ -69,35 +73,35 @@ class GridFormView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
-
-        exec_string = "grid "
+        tool = Tool.objects.get(display_name="Grid")
+        command = "grid "
         task = Task.objects.create(
-            mpi_cluster=cluster, tool_name="dock6", executable_name="grid", user=self.request.user,
-            exec_string=exec_string
+            mpi_cluster=cluster, tool=tool, user=self.request.user,
+
         )
         self.kwargs['id'] = task.id
 
         input_file = form.cleaned_data['param_input_file']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
-        exec_string += "-i %s " % input_file.name
+        command += "-i %s " % input_file.name
 
         for f in form.cleaned_data['param_other_files']:
             SkyLabFile.objects.create(type=1, file=f, task=task)
 
 
         if form.cleaned_data.get('param_output_prefix'):
-            exec_string += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
+            command += "-o ../output/%s.out " % form.cleaned_data['param_output_prefix']
         else:
-            exec_string += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
+            command += "-o ../output/%s.out " % os.path.splitext(input_file.name)[0]
 
         if form.cleaned_data['param_terse']:
-            exec_string += "-t "
+            command += "-t "
 
         if form.cleaned_data['param_verbose']:
-            exec_string += "-v "
+            command += "-v "
 
-        task.exec_string = exec_string
+        task.task_data = json.dumps({'command_list': [command]})
         task.save()
 
         return super(GridFormView, self).form_valid(form)

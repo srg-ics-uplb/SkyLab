@@ -92,11 +92,12 @@ class AutoDock4Executable(P2CToolGeneric):
 
         remote_dir = self.task.task_dirname
 
+        input_files = SkyLabFile.objects.filter(type=1, task=self.task)
+        input_filenames = [file.filename for file in input_files]
+
         sftp = self.shell._open_sftp_client()
         remote_path = self.working_dir
         remote_files = sftp.listdir(path=remote_path)
-        input_files = SkyLabFile.objects.filter(type=1, task=self.task)
-        input_filenames = [file.filename for file in input_files]
 
         # remove input files in workdir
         for remote_file in remote_files:
