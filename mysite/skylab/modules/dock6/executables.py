@@ -31,13 +31,13 @@ class GridExecutable(P2CToolGeneric):
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
 
-    #todo: check if dock6 needs export
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
 
         command_list = json.loads(self.task.task_data)['command_list']  # load json array
 
+        # dock6 and grid does not need export
         error = False
         for command in command_list:
             retries = 0

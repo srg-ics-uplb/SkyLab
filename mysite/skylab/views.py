@@ -1,6 +1,5 @@
 import os
 
-import pika
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -58,25 +57,25 @@ def serve_skylabfile(request, task_id, type, filename):
 # else:  # if user fails test return 403
 # 	return HttpResponseForbidden()
 
-def send_mpi_message(routing_key, body):
-	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-
-	channel = connection.channel()
-
-	channel.exchange_declare(exchange='topic_logs',
-							 type='topic')
-
-	channel.confirm_delivery()
-
-	channel.basic_publish(exchange='topic_logs',
-						  routing_key=routing_key,
-						  body=body,
-						  properties=pika.BasicProperties(
-							  delivery_mode=2,  # make message persistent
-						  ))
-
-	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
-	connection.close()
+# def send_mpi_message(routing_key, body):
+# 	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+#
+# 	channel = connection.channel()
+#
+# 	channel.exchange_declare(exchange='topic_logs',
+# 							 type='topic')
+#
+# 	channel.confirm_delivery()
+#
+# 	channel.basic_publish(exchange='topic_logs',
+# 						  routing_key=routing_key,
+# 						  body=body,
+# 						  properties=pika.BasicProperties(
+# 							  delivery_mode=2,  # make message persistent
+# 						  ))
+#
+# 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+# 	connection.close()
 
 
 class HomeView(TemplateView):
