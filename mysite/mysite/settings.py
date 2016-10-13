@@ -162,6 +162,9 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
+# We'll use a bit of Python to tell it to use a directory called "static" in our project's main directory:
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
 #crispy form settings
 CRISPY_TEMPLATE_PACK = 'bootstrap3'
 

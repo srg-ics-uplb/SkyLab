@@ -149,14 +149,15 @@ def index(request):
 @login_required
 @ajax
 def refresh_nav_task_list(request):
-	tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
+	tasks = Task.objects.filter(user=request.user.id).order_by('tasklog__status_code', '-updated')[:3]
 	list_items = []
 	if tasks:
+
 		task_item_template = '<li><a href="{task_url}"><div><p><strong>Task {task_id} <small>({tool_name})</small></strong><span class="pull-right text-{progress_bar_type}">{task_status_msg}</span></p><div class="progress progress-striped {active}"><div class="progress-bar progress-bar-{progress_bar_type}" role="progressbar" aria-valuenow="{task_completion_rate}aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%"><span class="sr-only">{task_status_msg}</span></div></div></div></a></li>'
 		for task in tasks:  # build <li class="divider"></li>.join(list_items)
 			task_id = task.id
 			task_url = reverse('task_detail_view', kwargs={'pk': task_id})
-			tool_name = 'Quantum Espresso'  # task.tool.display_name
+			tool_name = task.tool.display_name
 			task_completion_rate = task.completion_rate
 			active = 'active' if task_completion_rate < 100 else ''
 			latest_log = task.latest_log

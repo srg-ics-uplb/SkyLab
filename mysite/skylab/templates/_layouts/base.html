@@ -152,6 +152,8 @@
 {#<script src="{% static 'sb-admin-2/js/sb-admin-2.js' %}"></script>#}
     <script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
     {#    LOGOUTS GOOGLE ACCOUNT ON SKYLAB ACCOUNT LOGOUT. REMOVE THIS FUNCTION TO PRESERVE OAUTH WORKFLOW#}
+
+    {% if user.is_authenticated %}
     <script type="text/javascript">
         var logout = function () {
 
@@ -160,12 +162,12 @@
 
         var navTasksOnClick = function () {
             ajaxGet('{% url 'refresh_nav_task_list' %}', function (content) {
-                {#                alert(content)#}
                 {#       todo: process content         #}
             })
         }
 
     </script>
+    {% endif %}
 {% endblock %}
 {% block js %}{% endblock js %}
 </body>

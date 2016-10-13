@@ -1,5 +1,6 @@
-from django import forms
 import os.path
+
+from django import forms
 
 
 def in_file_extension_validator(file):
