@@ -248,15 +248,12 @@
             addSelectionOptions: false,
             use: "HTML5", {# JAVA HTML5 WEBGL are all options #}
             j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
-            jarPath: "{% static 'jsmol/java' %}", {# this needs to point to where the java directory is.  #}
-            jarFile: "JmolAppletSigned.jar",
-            isSigned: true,
             script: script,
             serverURL: "{{ jsmol_server_url }}",
             readyFunction: jmol_isReady,
-            disableJ2SLoadMonitor: true,
-            disableInitialConsole: true,
-            allowJavaScript: true,
+            //disableJ2SLoadMonitor: true,
+            //disableInitialConsole: true,
+            //allowJavaScript: true,
             zIndexBase: 0,
             {#            defaultModel: "$dopamine",#}
             {#            console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"#}
