@@ -42,106 +42,49 @@
 
             {# top-right navbar        #}
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="#"><i class="fa fa-cloud fa-fw"></i> My Cluster </a></li>
-                <li><a href="#"><i class="fa fa-gears fa-fw"></i> Tools </a></li>
-                <li class="dropdown">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#" onclick="navTasksOnClick()">
-                        <i class="fa fa-tasks fa-fw"></i> Tasks <i class="fa fa-caret-down"></i>
-                    </a>
-                    <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
-                        <li>
-                            <div>
-                                <p class="text-center text-muted">
-                                    No tasks created
-                                </p>
-                            </div>
+                {% if user.is_authenticated %}
+                    <li><a href="{% url 'mpi_list_view' %}"><i class="fa fa-cloud fa-fw"></i> MPI Clusters </a></li>
+                    <li><a href="{% url 'toolset_list_view' %}"><i class="fa fa-gears fa-fw"></i> Tools </a></li>
+                    <li class="dropdown">
+                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" onclick="navTasksOnClick()">
+                            <i class="fa fa-tasks fa-fw"></i> Tasks <i class="fa fa-caret-down"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
+                            <li>
+                                <div>
+                                    <p class="text-center text-muted">
+                                        No tasks created
+                                    </p>
+                                </div>
+                            </li>
+                        </ul>
+                        <!-- /.dropdown-tasks -->
+                    </li>
 
-
-                        </li>
-                        {#                        <li>#}
-                        {#                            <a href="#">#}
-                        {#                                <div>#}
-                        {#                                    <p>#}
-                        {#                                        <strong>Task 1</strong>#}
-                        {#                                        <span class="pull-right text-muted">40% Complete</span>#}
-                        {#                                    </p>#}
-                        {#                                    <div class="progress progress-striped active">#}
-                        {#                                        <div class="progress-bar progress-bar-success" role="progressbar"#}
-                        {#                                             aria-valuenow="40"#}
-                        {#                                             aria-valuemin="0" aria-valuemax="100" style="width: 40%">#}
-                        {#                                            <span class="sr-only">40% Complete (success)</span>#}
-                        {#                                        </div>#}
-                        {#                                    </div>#}
-                        {#                                </div>#}
-                        {#                            </a>#}
-                        {#                        </li>#}
-                        {#                        <li class="divider"></li>#}
-                        {#                        <li>#}
-                        {#                            <a href="#">#}
-                        {#                                <div>#}
-                        {#                                    <p>#}
-                        {#                                        <strong>Task 2</strong>#}
-                        {#                                        <span class="pull-right text-muted">20% Complete</span>#}
-                        {#                                    </p>#}
-                        {#                                    <div class="progress progress-striped active">#}
-                        {#                                        <div class="progress-bar progress-bar-info" role="progressbar"#}
-                        {#                                             aria-valuenow="20"#}
-                        {#                                             aria-valuemin="0" aria-valuemax="100" style="width: 20%">#}
-                        {#                                            <span class="sr-only">20% Complete</span>#}
-                        {#                                        </div>#}
-                        {#                                    </div>#}
-                        {#                                </div>#}
-                        {#                            </a>#}
-                        {#                        </li>#}
-                        {#                        <li class="divider"></li>#}
-                        {#                        <li>#}
-                        {#                            <a href="#">#}
-                        {#                                <div>#}
-                        {#                                    <p>#}
-                        {#                                        <strong>Task 3</strong>#}
-                        {#                                        <span class="pull-right text-muted">60% Complete</span>#}
-                        {#                                    </p>#}
-                        {#                                    <div class="progress progress-striped active">#}
-                        {#                                        <div class="progress-bar progress-bar-warning" role="progressbar"#}
-                        {#                                             aria-valuenow="60"#}
-                        {#                                             aria-valuemin="0" aria-valuemax="100" style="width: 60%">#}
-                        {#                                            <span class="sr-only">60% Complete (warning)</span>#}
-                        {#                                        </div>#}
-                        {#                                    </div>#}
-                        {#                                </div>#}
-                        {#                            </a>#}
-                        {#                        </li>#}
-                        {#                        <li class="divider"></li>#}
-
-                        {#                        <li>#}
-                        {#                            <a class="text-center" href="#">#}
-                        {#                                <strong>See All Tasks</strong>#}
-                        {#                                <i class="fa fa-angle-right"></i>#}
-                        {#                            </a>#}
-                        {#                        </li>#}
-                    </ul>
-                    <!-- /.dropdown-tasks -->
-                </li>
-                <li>
                     {# todo: user thumbnail, dropdown - logout #}
-                    {% if user.is_authenticated %}
+
+                        <li>
                         <a href="{% url 'account_logout' %}"  {# onclick="logout()" #}>
                             {# calls logout function that logouts google account then skylab account #}
                             <i class="fa fa-sign-out fa-fw"></i> Logout
                         </a>
-                    {% else %}
+                        </li>
+                {% else %}
+                    <li>
                         <a href="/skylab/accounts/google/login/?process=login">
                             <i class="fa fa-sign-in fa-fw"></i> Login
                         </a>
-                    {% endif %}
+                    </li>
+                {% endif %}
 
-                </li>
+
             </ul>
 
     </div>
     </div>
 </nav>
 <div class="container">
+    <br>
         {% block content %}{% endblock content %}
     </div>
 {% block js_imports %}

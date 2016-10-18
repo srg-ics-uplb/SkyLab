@@ -1,0 +1,28 @@
+{% extends 'layouts/base.html' %}
+{% load staticfiles %}
+
+{% block title %}{{ block.super }}Toolsets{% endblock %}
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'dataTables/css/dataTables.bootstrap.min.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <h1>Toolsets</h1>
+    </div>
+    <div class="row">
+        <div class="list-group">
+            {% for toolset in toolsets %}
+                <a href="#" class="list-group-item">
+                    <h4 class="list-group-item-heading">
+                        {{ toolset.display_name }}
+                    </h4>
+                    <p class="list-group-item-text">
+                        {{ toolset.description }}
+                    </p>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

@@ -15,7 +15,7 @@ from django_ajax.decorators import ajax
 from sendfile import sendfile
 
 from forms import CreateMPIForm
-from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile
+from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet
 
 
 def has_read_permission(request, task_id):
@@ -83,6 +83,7 @@ class HomeView(TemplateView):
 	template_name = "layouts/home.html"
 
 
+
 class CreateMPIView(LoginRequiredMixin, FormView):
 	template_name = 'layouts/create_mpi_cluster.html'
 	form_class = CreateMPIForm
@@ -113,8 +114,13 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 		return super(CreateMPIView, self).form_valid(form)
 
 
+class ToolsetListView(LoginRequiredMixin, ListView):
+	model = ToolSet
+	context_object_name = 'toolsets'
+	template_name = 'layouts/toolset_list_view.html'
+
 class MPIListView(LoginRequiredMixin, ListView):
-	model = MPICluster
+	queryset = MPICluster.objects.exclude(status=5)
 	template_name = 'layouts/mpi_list_view.html'
 	context_object_name = 'mpi_clusters'
 	paginate_by = 5
@@ -123,7 +129,7 @@ class MPIListView(LoginRequiredMixin, ListView):
 		qs = super(MPIListView, self).get_queryset()
 		user_allowed = Q(allowed_users=self.request.user)
 		cluster_is_public = Q(is_public=True)
-		return qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+		return qs.filter(user_allowed | cluster_is_public).order_by('-updated')
 
 
 class MPIDetailView(LoginRequiredMixin, DetailView):

@@ -125,6 +125,7 @@ class ToolSet(models.Model):
         if not self.id:
             self.created = timezone.now()
 
+
         super(ToolSet, self).save(*args, **kwargs)
 
 
@@ -142,7 +143,7 @@ class Tool(models.Model):
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
     view_name = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=300, null=True, blank=True)
-    toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE)
+    toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
     created = models.DateTimeField()
 
     class Meta:
@@ -154,6 +155,7 @@ class Tool(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created = timezone.now()
+
         super(Tool, self).save(*args, **kwargs)
 
 def get_sentinel_mpi():
