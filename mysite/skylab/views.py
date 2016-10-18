@@ -5,9 +5,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
+from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
-from django.views.generic import DetailView
+from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
 from django_ajax.decorators import ajax
@@ -79,15 +80,15 @@ def serve_skylabfile(request, task_id, type, filename):
 
 
 class HomeView(TemplateView):
-	template_name = "home.html"
+	template_name = "layouts/home.html"
 
 
 class CreateMPIView(LoginRequiredMixin, FormView):
-	template_name = 'create_mpi_cluster.html'
+	template_name = 'layouts/create_mpi_cluster.html'
 	form_class = CreateMPIForm
 
-	# TODO: change success url (-> my mpi cluster view)
-	success_url = 'create-mpi-cluster'
+	def get_success_url(self):
+		return reverse('mpi_detail_view', kwargs={'pk': self.kwargs.pop('pk')})
 
 	# def get_form_kwargs(self):
 	# 	# pass "user" keyword argument with the current user to your form
@@ -95,14 +96,13 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 	# 	kwargs['user'] = self.request.user
 	# 	return kwargs
 
-
-
-
 	def form_valid(self, form):
+
 		mpi_cluster = MPICluster.objects.create(creator=self.request.user,
 												cluster_name=form.cleaned_data['cluster_name'],
 												cluster_size=form.cleaned_data['cluster_size'],
 												is_public=form.cleaned_data['is_public'])
+		self.kwargs['pk'] = mpi_cluster.id
 
 		mpi_cluster.allowed_users.add(self.request.user)
 		mpi_cluster.save()
@@ -113,32 +113,55 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 		return super(CreateMPIView, self).form_valid(form)
 
 
-# class CreateMPIView(LoginRequiredMixin, CreateView):
-# 	template_name = 'create_mpi_cluster.html'
-# 	form_class = Create_MPI_Cluster_Form
-#
-# 	# TODO: change success url (-> my mpi cluster view)
-# 	success_url = 'create-mpi-cluster'
-#
-# 	def get_form_kwargs(self):
-# 		# pass "user" keyword argument with the current user to your form
-# 		kwargs = super(CreateMPIView, self).get_form_kwargs()
-# 		kwargs['user'] = self.request.user
-# 		return kwargs
+class MPIListView(LoginRequiredMixin, ListView):
+	model = MPICluster
+	template_name = 'layouts/mpi_list_view.html'
+	context_object_name = 'mpi_clusters'
+	paginate_by = 5
+
+	def get_queryset(self):
+		qs = super(MPIListView, self).get_queryset()
+		user_allowed = Q(allowed_users=self.request.user)
+		cluster_is_public = Q(is_public=True)
+		return qs.exclude(status=5).filter(user_allowed | cluster_is_public)
 
 
-class ToolActivityDetail(LoginRequiredMixin, DetailView):
+class MPIDetailView(LoginRequiredMixin, DetailView):
+	model = MPICluster
+	template_name = 'layouts/mpi_detail_view.html'
+
+	context_object_name = 'mpi_cluster'
+
+	def get_queryset(self):
+		qs = super(MPIDetailView, self).get_queryset()
+		user_allowed = Q(allowed_users=self.request.user)
+		cluster_is_public = Q(is_public=True)
+		return qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+
+
+class TaskListView(LoginRequiredMixin, ListView):
 	model = Task
-	template_name = 'task_detail_view.html'
+	template_name = 'layouts/task_list_view.html'
+	context_object_name = 'tasks'
+
+	def get_queryset(self):
+		qs = super(TaskListView, self).get_queryset()
+		return qs.filter(user=self.request.user)
+
+
+class TaskDetailView(LoginRequiredMixin, DetailView):
+	model = Task
+	template_name = 'layouts/task_detail_view.html'
+	context_object_name = 'task'  # task object can be accessed in template by the name 'task'
 
 	def get_context_data(self, **kwargs):
-		context = super(ToolActivityDetail, self).get_context_data(**kwargs)
+		context = super(TaskDetailView, self).get_context_data(**kwargs)
 		context["jsmol_files_absolute_uris"] = context["object"].get_dict_jsmol_files_uris(self.request)
 		context["jsmol_server_url"] = settings.JSMOL_SERVER_URL
 		return context
 
 	def get_queryset(self):
-		qs = super(ToolActivityDetail, self).get_queryset()
+		qs = super(TaskDetailView, self).get_queryset()
 		return qs.filter(user=self.request.user)
 
 

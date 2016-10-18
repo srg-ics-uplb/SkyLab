@@ -106,7 +106,8 @@ class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
             # send_mpi_message("skylab.consumer.%d" % mpi_cluster.mpi_cluster.id, message)
             # mpi_cluster.status = "Task Queued"
 
-            return redirect('../task/{0}'.format(task.id))
+
+            return redirect('task_detail_view', pk=task.id)
         else:
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
                 'select_mpi_form': select_mpi_form,

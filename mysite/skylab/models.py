@@ -54,6 +54,17 @@ class MPICluster(models.Model):
     updated = models.DateTimeField()
     created = models.DateTimeField()
 
+    @property
+    def current_status_default_msg(self):
+        status_msg = {
+            0: 'Creating',
+            1: 'Connecting',
+            2: 'Online',
+            4: 'Connection error',
+            5: 'Deleted'
+        }
+        return status_msg.get(self.status, "Status code unknown")
+
     def get_absolute_url(self):
         return reverse('mpi-detail', kwargs={'pk': self.pk})
 

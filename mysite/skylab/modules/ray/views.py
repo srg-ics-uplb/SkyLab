@@ -2,7 +2,6 @@ import json
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.core.urlresolvers import reverse
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
@@ -176,7 +175,9 @@ class RayView(LoginRequiredMixin, TemplateView):
             task.task_data = json.dumps({'command_list': command_list})
             task.save()
 
-            return redirect(reverse('task_detailview', kwargs={'pk': task.id}))
+            return redirect('task_detail_view', pk=task.id)
+
+            # return redirect(reverse('task_detailview', kwargs={'pk': task.id}))
         else:
             return render(request, 'modules/ray/use_ray.html', {
                 'select_mpi_form': select_mpi_form,

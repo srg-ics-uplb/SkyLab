@@ -109,7 +109,7 @@ class InputParameterForm(forms.Form):
 
     def clean(self):
         if self.cleaned_data:
-            parameter = self.cleaned_data["param_executable"]
+            parameter = self.cleaned_data.get('parameter')
             input_file1 = self.cleaned_data.get('input_file1')
             input_file2 = self.cleaned_data.get('input_file2')
 

@@ -13,8 +13,10 @@ urlpatterns = [
                   # url(r'^accounts/', include('registration.backends.default.urls')),
 
                   # url(r'^$', views.use_impi, name='home'),
-
-    url(r'^task/(?P<pk>\d+)/$', views.ToolActivityDetail.as_view(), name='task_detail_view'),
+    url(r'^mpi-clusters$', views.MPIListView.as_view(), name='mpi_list_view'),
+    url(r'^mpi-clusters/(?P<pk>\d+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
+    url(r'^tasks$', views.TaskListView.as_view(), name='task_list_view'),
+    url(r'^tasks/(?P<pk>\d+)$', views.TaskDetailView.as_view(), name='task_detail_view'),
     url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view, name='refresh_task_detail_view'),
     url(r'^ajax/nav-task-list-fragments$', views.refresh_nav_task_list, name='refresh_nav_task_list'),
 

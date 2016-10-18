@@ -1,0 +1,16 @@
+{% extends 'layouts/base.html' %}
+{% load staticfiles %}
+
+{% block title %}{{ block.super }}Tasks{% endblock %}
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% for task in tasks %}
+        <div class='row'>
+
+        </div>
+    {% endfor %}
+{% endblock %}

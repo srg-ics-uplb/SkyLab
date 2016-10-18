@@ -119,8 +119,7 @@ class VinaView(LoginRequiredMixin, TemplateView):
             task.task_data = json.dumps({'command_list': command_list, 'task_remote_subdirs': task_remote_subdirs})
             task.save()
 
-            # return redirect("../toolactivity/%d" % task.id)
-            return redirect('task_detailview', kwargs={'pk': task.id})
+            return redirect('task_detail_view', pk=task.id)
 
         else:
             return render(request, 'modules/vina/use_vina.html', {
@@ -140,7 +139,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_success_url(self):
-        return reverse('task_detailview', kwargs={'pk': self.kwargs.get('id')})
+        return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']

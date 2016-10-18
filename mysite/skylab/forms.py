@@ -9,15 +9,15 @@ from skylab.validators import cluster_name_unique_validator, cluster_size_valida
 
 
 class CreateMPIForm(forms.Form):
-	cluster_name_validator = RegexValidator(r'^\w+$',
+	cluster_name_validator = RegexValidator(r'^[a-zA-Z]\w*$',
 											'Must start with a letter. Only alphanumeric characters and _ are allowed.')
-	cluster_name = forms.CharField(label="Cluster name", max_length=50,
+	cluster_name = forms.CharField(label="Cluster name", max_length=50, min_length=5,
 								   validators=[cluster_name_validator, cluster_name_unique_validator],
 								   help_text='This is required to be unique. e.g. chem_205_gamess_12_12345')
 	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=settings.MAX_NODES_PER_CLUSTER,
 									  validators=[cluster_size_validator], initial=1)
-	toolsets = forms.ModelMultipleChoiceField(label="Toolsets", queryset=ToolSet.objects.all(),
-											  help_text="Select toolsets to be activated",
+	toolsets = forms.ModelMultipleChoiceField(required=False, label="Toolsets", queryset=ToolSet.objects.all(),
+											  help_text="Select toolsets to be activated. Optional",
 											  widget=forms.CheckboxSelectMultiple())
 	is_public = forms.BooleanField(required=False, label="Share to public")
 

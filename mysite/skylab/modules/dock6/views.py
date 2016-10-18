@@ -3,6 +3,7 @@ import os.path
 
 from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.shortcuts import reverse
 from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
@@ -20,7 +21,7 @@ class Dock6FormView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_success_url(self):
-        return "../task/%d" % self.kwargs['id']
+        return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
@@ -69,7 +70,7 @@ class GridFormView(LoginRequiredMixin, FormView):
         return kwargs
 
     def get_success_url(self):
-        return "../toolactivity/%d" % self.kwargs['id']
+        return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']

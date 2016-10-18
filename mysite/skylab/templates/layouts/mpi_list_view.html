@@ -1,0 +1,18 @@
+{% extends 'layouts/base.html' %}
+{% load staticfiles %}
+
+{% block title %}{{ block.super }}MPI Clusters{% endblock %}
+{% block head %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
+{% endblock %}
+
+{% block content %}
+    {% for cluster in mpi_clusters %}
+        <div class='row'>
+            <p>{{ cluster.cluster_name }}</p>
+            <p>{{ cluster.cluster_ip }}</p>
+            <p>{{ cluster.creator.first_name }}</p>
+        </div>
+    {% endfor %}
+{% endblock %}
