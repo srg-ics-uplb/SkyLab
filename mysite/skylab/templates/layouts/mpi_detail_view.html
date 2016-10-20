@@ -5,6 +5,7 @@
 {% block head %}
     {{ block.super }}
     <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-switch-master/dist/css/bootstrap3/bootstrap-switch.min.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -16,7 +17,9 @@
                     <h1 class="text-center"> MPI Cluster {{ mpi_cluster.id }}</h1>
                 </div>
                 <div class="col-xs-4 col-xs-push-2">
-                    <span class="btn btn-default">Public switch</span>
+                    <input type="checkbox" name="visibility-checkbox" data-label-text="Public"
+                           {% if mpi_cluster.is_public %}checked{% endif %}>
+                    {#                    <span class="btn btn-default">Public switch</span>#}
                     {#                    <span class="btn btn-default">Share key</span>#}
                 </div>
 
@@ -94,12 +97,41 @@
 
 {% endblock %}
 
+{% block js_imports %}
+    {{ block.super }}
+    <script type="text/javascript"
+            src="{% static 'bootstrap-switch-master/dist/js/bootstrap-switch.min.js' %}"></script>
+{% endblock %}
+
 {% block js %}
     <script>
-        {#    todo: change on public status#}
         {%  if mpi_cluster.is_public %}
             $('#mpi-info-table').find('th:nth-child(4)').hide();
             $('#mpi-info-table').find('td:nth-child(4)').hide();
         {% endif %}
+
+        $("input[type=checkbox][name='visibility-checkbox']").bootstrapSwitch();
+        $("input[type=checkbox][name='visibility-checkbox']").on('switchChange.bootstrapSwitch', function (event, state) {
+            {#          console.log(this); // DOM element#}
+            {#          console.log(event); // jQuery event#}
+            if (state == true) {
+                $('#mpi-info-table').find('th:nth-child(4)').hide();
+                $('#mpi-info-table').find('td:nth-child(4)').hide();
+            } else {
+                $('#mpi-info-table').find('th:nth-child(4)').show();
+                $('#mpi-info-table').find('td:nth-child(4)').show();
+            }
+
+            ajaxPost('{% url 'post_mpi_privacy_change' %}', {
+                'is_public': state,
+                'pk':{{mpi_cluster.id}}
+            }, function (content) {
+                //onSuccess
+                alert(content);
+            });
+            console.log(state); // true | false
+        });
+        {#    todo: change on public status#}
+
     </script>
 {% endblock %}

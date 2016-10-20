@@ -108,14 +108,14 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 		mpi_cluster.allowed_users.add(self.request.user)
 		mpi_cluster.save()
 
-		for t in form.cleaned_data['toolsets']:
-			ToolActivation.objects.update_or_create(toolset=t, mpi_cluster=mpi_cluster, defaults={'status': 1})
+		for toolset in form.cleaned_data['toolsets']:
+			ToolActivation.objects.update_or_create(toolset=toolset, mpi_cluster=mpi_cluster, defaults={'status': 1})
 
 		toolsets = ToolSet.objects.all()
 
 		for toolset in toolsets:
 			if toolset not in form.cleaned_data['toolsets']:
-				ToolActivation.objects.get_or_create(toolset=t, mpi_cluster=mpi_cluster, defaults={'status': 0})
+				ToolActivation.objects.get_or_create(toolset=toolset, mpi_cluster=mpi_cluster, defaults={'status': 0})
 
 		return super(CreateMPIView, self).form_valid(form)
 
@@ -187,6 +187,17 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
+
+@login_required
+@ajax
+def post_mpi_visibility(request):
+	is_public = request.POST.get('is_public') == 'true'
+	pk = request.POST.get('pk')
+
+	mpi_cluster = MPICluster.objects.get(pk=pk)
+	mpi_cluster.is_public = is_public
+	mpi_cluster.save()
+	return None
 
 @login_required
 @ajax

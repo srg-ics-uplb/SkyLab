@@ -5,7 +5,7 @@ from skylab.models import MPICluster
 
 
 def cluster_name_unique_validator(cluster_name):
-    if MPICluster.objects.filter(cluster_name=cluster_name).exclude(status=5).exists():
+    if MPICluster.objects.filter(cluster_name=cluster_name).exists():  # exclude(status=5)
         raise ValidationError(u'Cluster with name "' + cluster_name + '" already exists',
                               code="create_existing_mpi_error")
 

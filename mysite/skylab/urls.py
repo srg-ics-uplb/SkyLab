@@ -20,6 +20,7 @@ urlpatterns = [
     url(r'^tasks/(?P<pk>\d+)$', views.TaskDetailView.as_view(), name='task_detail_view'),
     url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view, name='refresh_task_detail_view'),
     url(r'^ajax/nav-task-list-fragments$', views.refresh_nav_task_list, name='refresh_nav_task_list'),
+    url(r'^ajax/mpi-privacy$', views.post_mpi_visibility, name='post_mpi_privacy_change'),
 
     url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
     url(r'^ray$', RayView.as_view(), name='use_ray'),
