@@ -9,9 +9,11 @@ def insert_to_db():
     toolset_description = 'Ray is a parallel software that computes de novo genome assemblies with next-generation sequencing data'
     toolset_source_url = 'http://denovoassembler.sourceforge.net/'
 
-    toolset, created = ToolSet.objects.get_or_create(display_name=toolset_name, package_name=package_name,
-                                                     p2ctool_name=p2ctool_name,
-                                                     description=toolset_description, source_url=toolset_source_url)
+    toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
+                                                        p2ctool_name=p2ctool_name,
+                                                        defaults={'display_name': toolset_name,
+                                                                  'description': toolset_description,
+                                                                  'source_url': toolset_source_url})
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [

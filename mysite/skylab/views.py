@@ -109,7 +109,13 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 		mpi_cluster.save()
 
 		for t in form.cleaned_data['toolsets']:
-			ToolActivation.objects.create(toolset=t, mpi_cluster=mpi_cluster, activated=False)
+			ToolActivation.objects.update_or_create(toolset=t, mpi_cluster=mpi_cluster, defaults={'status': 1})
+
+		toolsets = ToolSet.objects.all()
+
+		for toolset in toolsets:
+			if toolset not in form.cleaned_data['toolsets']:
+				ToolActivation.objects.get_or_create(toolset=t, mpi_cluster=mpi_cluster, defaults={'status': 0})
 
 		return super(CreateMPIView, self).form_valid(form)
 
@@ -137,6 +143,13 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
 	template_name = 'layouts/mpi_detail_view.html'
 
 	context_object_name = 'mpi_cluster'
+
+	def get_context_data(self, **kwargs):
+		context = super(MPIDetailView, self).get_context_data(**kwargs)
+		context['skylab_toolsets'] = ToolSet.objects.all()
+
+		context['tool_activations'] = ToolActivation.objects.filter(mpi_cluster=self.kwargs['pk'])
+		return context
 
 	def get_queryset(self):
 		qs = super(MPIDetailView, self).get_queryset()

@@ -8,7 +8,7 @@ from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
 from skylab.forms import MPIModelChoiceField
-from skylab.models import MPICluster
+from skylab.models import MPICluster, ToolSet
 from validators import multi_dock6_other_resources_validator, dock6_in_extension_validator, \
     multi_grid_other_resources_validator
 
@@ -35,12 +35,12 @@ class GridForm(forms.Form):
         self.user = kwargs.pop('user')
         super(GridForm, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_dock6 = Q(supported_tools="dock6")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_dock6).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
@@ -100,12 +100,12 @@ class Dock6Form(forms.Form):
         self.user = kwargs.pop('user')
         super(Dock6Form, self).__init__(*args, **kwargs)
 
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_dock6 = Q(supported_tools="dock6")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_dock6).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(

@@ -11,7 +11,7 @@ from skylab.validators import cluster_name_unique_validator, cluster_size_valida
 class CreateMPIForm(forms.Form):
 	cluster_name_validator = RegexValidator(r'^[a-zA-Z]\w*$',
 											'Must start with a letter. Only alphanumeric characters and _ are allowed.')
-	cluster_name = forms.CharField(label="Cluster name", max_length=50, min_length=5,
+	cluster_name = forms.CharField(label="Cluster name", max_length=30, min_length=5,
 								   validators=[cluster_name_validator, cluster_name_unique_validator],
 								   help_text='This is required to be unique. e.g. chem_205_gamess_12_12345')
 	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=settings.MAX_NODES_PER_CLUSTER,
@@ -19,7 +19,7 @@ class CreateMPIForm(forms.Form):
 	toolsets = forms.ModelMultipleChoiceField(required=False, label="Toolsets", queryset=ToolSet.objects.all(),
 											  help_text="Select toolsets to be activated. Optional",
 											  widget=forms.CheckboxSelectMultiple())
-	is_public = forms.BooleanField(required=False, label="Share to public")
+	is_public = forms.BooleanField(required=False, label="Public")
 
 	def __init__(self, *args, **kwargs):
 		super(CreateMPIForm, self).__init__(*args, **kwargs)
@@ -63,22 +63,20 @@ class CreateMPIForm(forms.Form):
 #
 # 		self.helper.add_input(Submit('submit','Execute'))
 class MPIModelChoiceField(forms.ModelChoiceField):
-    def __init__(self, *args, **kwargs):
-        self.toolset = kwargs.pop("toolset", None)
-        super(MPIModelChoiceField, self).__init__(*args, **kwargs)
+	def __init__(self, *args, **kwargs):
+		self.toolset = kwargs.pop("toolset", None)
+		super(MPIModelChoiceField, self).__init__(*args, **kwargs)
 
-    def label_from_instance(self, obj):
-        if self.toolset is not None:
-            status = ""
-            try:
-                tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
-                if tool_activation.activated:
-                    status = "Installed"
-                else:
-                    status = "Queued for installation"
-            except ToolActivation.DoesNotExist:
-                status = "Not installed"
-            return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
-                                                                self.toolset.display_name, status)
+	def label_from_instance(self, obj):
+		if self.toolset is not None:
+			status = ""
+			tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
 
-        return "{0} (nodes : {1}))".format(obj.cluster_name, obj.cluster_size)
+			if tool_activation.status == 2:
+				status = "Installed"
+			elif tool_activation.status == 1:
+				status = "Queued for installation"
+			elif tool_activation.status == 0:
+				status = "Not installed"
+			return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
+																self.toolset.display_name, status)

@@ -9,25 +9,97 @@
 
 {% block content %}
     <div class='row'>
-        <div id="task-detail-div"
+        <div id="task-info-div"
              class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-offset-1 col-md-10 col-lg-10 col-lg-offset-1">
-            <h1 class="text-center">MPI Cluster : {{ mpi_cluster.cluster_name }}</h1>
-            <dl class="dl-horizontal col-xs-6 col-xs-offset-3 text-center">
-                <dt>Cluster name</dt>
-                <dd>{{ mpi_cluster.cluster_name }}</dd>
-                <dt>IP Address</dt>
-                <dd>{{ mpi_cluster.cluster_ip }}</dd>
-                <dt>Status</dt>
-                <dd>{{ mpi_cluster.current_status_default_msg }}</dd>
-                <dt>Share key</dt>
-                <dd>{{ mpi_cluster.share_key }}</dd>
+            <div class="row">
+                <div class="col-xs-offset-4 col-xs-4">
+                    <h1 class="text-center"> MPI Cluster {{ mpi_cluster.id }}</h1>
+                </div>
+                <div class="col-xs-4 col-xs-push-2">
+                    <span class="btn btn-default">Public switch</span>
+                    {#                    <span class="btn btn-default">Share key</span>#}
+                </div>
 
-            </dl>
+            </div>
+            <div class="row">
 
-            {#   todo: activate new toolset, queue for deletion#}
+                <table id="mpi-info-table" class="table table-bordered table-responsive">
+                    <thead>
+                    <tr>
+                        <th>Cluster name</th>
+                        <th>IP address</th>
+                        <th>Status</th>
+                        <th>Share key</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>{{ mpi_cluster.cluster_name }}</td>
+                        <td>{{ mpi_cluster.cluster_ip }}</td>
+                        <td>{{ mpi_cluster.current_simple_status_msg }}</td>
+                        <td>{{ mpi_cluster.share_key }}</td>
+                    </tr>
+                    </tbody>
+                </table>
+                {#                <dl class="dl-horizontal col-xs-6 col-xs-offset-3 text-center">#}
+                {#                    <dt>Cluster name</dt>#}
+                {#                    <dd>{{ mpi_cluster.cluster_name }}</dd>#}
+                {#                    <dt>IP Address</dt>#}
+                {#                    <dd>{{ mpi_cluster.cluster_ip }}</dd>#}
+                {#                    <dt>Status</dt>#}
+                {#                    <dd>{{ mpi_cluster.current_simple_status_msg }}</dd>#}
+                {#                    <dt>Share key</dt>#}
+                {#                    <dd>{{ mpi_cluster.share_key }}</dd>#}
+                {##}
+                {#                </dl>#}
+            </div>
+            <div class="row">
+                <h3>Toolsets</h3>
+                <table class="table table-responsive table-bordered table-striped">
+                    <thead>
+                    <tr>
+                        <th>Toolset</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    {% for tool_activation in mpi_cluster.toolactivation_set.all %}
+                        <tr>
+                            <td>{{ tool_activation.toolset.display_name }}</td>
+                            <td>
+
+                                {% if tool_activation.status == 0 %}
+                                    {{ tool_activation.current_status_msg }}
+                                    {# activate button                            #}
+                                {% elif tool_activation.status == 1 %}
+                                    <span class="text-info"> {{ tool_activation.current_status_msg }}</span>
+                                {% elif tool_activation.status == 2 %} {# status == 2 ; activated #}
+                                    <span class="text-sucess"> {{ tool_activation.current_status_msg }}</span>
+                                    </td>
+                                {% endif %}
+
+
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
 
         </div>
-
-
     </div>
+
+    {#   todo: activate new toolset, queue for deletion#}
+
+
+
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        {#    todo: change on public status#}
+        {%  if mpi_cluster.is_public %}
+            $('#mpi-info-table').find('th:nth-child(4)').hide();
+            $('#mpi-info-table').find('td:nth-child(4)').hide();
+        {% endif %}
+    </script>
 {% endblock %}

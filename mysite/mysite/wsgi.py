@@ -19,7 +19,6 @@ from skylab.bootskylab import install_toolsets, setup_logging
 
 install_toolsets()
 
-# # MPICluster.objects.filter(activated_toolset__display_name="Autodo")
 #
 setup_logging()  # setup logger, handlers
 # Task.objects.filter(tasklog__status_code=101).delete()

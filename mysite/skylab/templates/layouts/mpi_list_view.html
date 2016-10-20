@@ -37,7 +37,7 @@
                         {% else %}
                             text-info
                         {% endif %}">
-                        {{ cluster.current_status_default_msg }}
+                        {{ cluster.current_simple_status_msg }}
                         </span>
                         {% if cluster.queued_for_deletion %}
                             <span class="text-warning"> (For deletion)</span>

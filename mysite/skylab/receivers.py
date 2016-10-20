@@ -1,9 +1,9 @@
 import os
 
-from django.db.models.signals import post_delete, pre_save
+from django.db.models.signals import post_delete, pre_save, post_save
 from django.dispatch import receiver
 
-from skylab.models import SkyLabFile, Task, TaskLog
+from skylab.models import SkyLabFile, Task, TaskLog, ToolSet, ToolActivation, MPICluster
 
 
 # @receiver(post_save, sender=MPICluster)
@@ -11,6 +11,13 @@ from skylab.models import SkyLabFile, Task, TaskLog
 #     """"Delete related models on task delete"""
 #     if instance.status == 5:
 #         ToolActivation.objects.filter(mpi_cluster=instance).delete()
+
+@receiver(post_save, sender=ToolSet)
+def auto_add_tool_activations_on_toolset_create(sender, instance, **kwargs):
+    """" Create toolactivations for the newly created toolset for each mpi cluster that is not deleted"""
+    if kwargs['created'] == True:
+        for cluster in MPICluster.objects.exclude(status=5):
+            ToolActivation.objects.get_or_create(mpi_cluster=cluster, toolset=instance)
 
 @receiver(post_delete, sender=Task)
 def auto_delete_related_models_on_task_delete(sender, instance, **kwargs):

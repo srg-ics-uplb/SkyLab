@@ -166,8 +166,8 @@ class MPIThread(threading.Thread):
         for task in tasks:
             self.add_task_to_queue(task.priority, task)
 
-        unactivated_toolsets = self.mpi_cluster.toolsets.filter(toolactivation__activated=False)
-        for toolset in unactivated_toolsets:
+        queued_toolset_activations = self.mpi_cluster.toolsets.filter(toolactivation__status=1)
+        for toolset in queued_toolset_activations:
             self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
 
         init_thread = threading.Thread(target=self.connect_or_create)
@@ -287,7 +287,7 @@ class MPIThread(threading.Thread):
     def activate_toolset(self, toolset_id):
         # check if toolset is already activated
         tool_activation_instance = ToolActivation.objects.get(toolset=toolset_id, mpi_cluster=self.mpi_cluster.id)
-        if not tool_activation_instance.activated:
+        if not tool_activation_instance.status == 2:
             toolset = ToolSet.objects.get(pk=toolset_id)
 
             self.logger.debug(self.log_prefix + "Activating " + toolset.display_name)
@@ -304,7 +304,7 @@ class MPIThread(threading.Thread):
 
                     # set activated to true after installation
                     tool_activation_instance.refresh_from_db()
-                    tool_activation_instance.activated = True
+                    tool_activation_instance.status = 2
                     tool_activation_instance.save()
 
                     exit_loop = True  #exit loop
@@ -327,7 +327,7 @@ class MPIThread(threading.Thread):
                         time.sleep(wait_time)
 
     def create_mpi_cluster(self):
-        # TODO: test if works
+
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
 
         retries = 0
@@ -479,8 +479,12 @@ def install_toolsets():
 
 def add_tools_to_toolset(tools, toolset):
     for t in tools:
-        Tool.objects.update_or_create(display_name=t.get("display_name"),
-                                      executable_name=t.get("executable_name",
+        Tool.objects.update_or_create(display_name=t.get('display_name'),
+                                      defaults={
+                                          'executable_name': t.get("executable_name",
                                                             t["display_name"].replace(' ', '') + 'Executable'),
-                                      description=t.get("description", None), toolset=toolset,
-                                      view_name=t.get("view_name", t["display_name"].title().replace(' ', '') + 'View'))
+                                          'description': t.get("description", None),
+                                          'toolset': toolset,
+                                          'view_name': t.get("view_name",
+                                                             t["display_name"].title().replace(' ', '') + 'View')
+                                      })

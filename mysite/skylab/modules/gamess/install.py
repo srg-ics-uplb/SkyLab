@@ -10,9 +10,11 @@ def insert_to_db():
                           'is a general ab initio quantum chemistry package.'
     toolset_source_url = 'http://www.msg.ameslab.gov/gamess/'
 
-    toolset, created = ToolSet.objects.get_or_create(display_name=toolset_name, package_name=package_name,
-                                                     p2ctool_name="gamess",
-                                                     description=toolset_description, source_url=toolset_source_url)
+    toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
+                                                        p2ctool_name=p2ctool_name,
+                                                        defaults={'display_name': toolset_name,
+                                                                  'description': toolset_description,
+                                                                  'source_url': toolset_source_url})
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [

@@ -9,9 +9,11 @@ def insert_to_db():
     toolset_description = 'AutoDock Vina is an open-source program for doing molecular docking.'
     toolset_source_url = 'http://vina.scripps.edu/'
 
-    toolset, created = ToolSet.objects.get_or_create(display_name=toolset_name, package_name=package_name,
-                                                     p2ctool_name=p2ctool_name,
-                                                     description=toolset_description, source_url=toolset_source_url)
+    toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
+                                                        p2ctool_name=p2ctool_name,
+                                                        defaults={'display_name': toolset_name,
+                                                                  'description': toolset_description,
+                                                                  'source_url': toolset_source_url})
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [

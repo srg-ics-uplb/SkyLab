@@ -23,7 +23,7 @@ def get_available_tools():  # TODO: get file __path__
 
 
 def get_sentinel_user():
-    return User.objects.get_or_create(username='deleted_user')[0]
+    return User.objects.get_or_create(username='deleted_user')
 
 
 def generate_share_key(N=5):
@@ -31,22 +31,27 @@ def generate_share_key(N=5):
     :param N:
     :return: string of capital letters and numbers with length n
     """
-    return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
+    while True:
+        key = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
+        if MPICluster.objects.filter(share_key=key).exists():
+            continue
+        return key
+
 
 @python_2_unicode_compatible
 class MPICluster(models.Model):
     MAX_MPI_CLUSTER_SIZE = settings.MAX_NODES_PER_CLUSTER
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
-    cluster_name = models.CharField(max_length=50, unique=True)
+    cluster_name = models.CharField(max_length=30, unique=True)
     cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
     # todo: share key form : (if user enters share key user is added in allowed users)
-    share_key = models.CharField(default=generate_share_key, max_length=5)
+    share_key = models.CharField(default=generate_share_key, max_length=10)
     queued_for_deletion = models.BooleanField(default=False)
     toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",
                                       through='ToolActivation')
-    creator = models.ForeignKey(User, on_delete=models.SET(get_sentinel_user), related_name="creator")
+    creator = models.ForeignKey(User, on_delete=models.CASCADE, related_name="creator", null=True)
     allowed_users = models.ManyToManyField(User, related_name="allowed_users")
     is_public = models.BooleanField(default=True)
     status = models.SmallIntegerField(default=0)
@@ -55,7 +60,7 @@ class MPICluster(models.Model):
     created = models.DateTimeField()
 
     @property
-    def current_status_default_msg(self):
+    def current_simple_status_msg(self):
         status_msg = {
             0: 'Creating',
             1: 'Connecting',
@@ -87,13 +92,24 @@ class MPICluster(models.Model):
 class ToolActivation(models.Model):
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE)
     toolset = models.ForeignKey("ToolSet", on_delete=models.CASCADE)
-    activated = models.BooleanField(default=False)
+    # activated = models.BooleanField(default=False)
+    status = models.SmallIntegerField(default=0)
+
+    class Meta:
+        unique_together = ('mpi_cluster', 'toolset')
 
     def save(self, *args, **kwargs):
         self.mpi_cluster.updated = timezone.now()
         super(ToolActivation, self).save(*args, **kwargs)
 
-
+    @property
+    def current_status_msg(self):
+        if self.status == 2:
+            return "Activated"
+        elif self.status == 1:
+            return "Queued for activation"
+        elif self.status == 0:
+            return 'None'
 
 
 
@@ -120,7 +136,7 @@ class ToolSet(models.Model):
     def save(self, *args, **kwargs):
         if self.package_name is None:
             pattern = re.compile('[\W]+')
-            self.package_name = pattern.sub('', self.package_name).lower()
+            self.package_name = pattern.sub('', self.display_name).lower()
 
         if not self.id:
             self.created = timezone.now()
@@ -141,6 +157,7 @@ class Tool(models.Model):
     display_name = models.CharField(max_length=50,
                                     unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
+    #todo: simple_name = models.CharField(max_length=50, default=)
     view_name = models.CharField(max_length=50, blank=True)
     description = models.CharField(max_length=300, null=True, blank=True)
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
@@ -153,13 +170,20 @@ class Tool(models.Model):
         return self.display_name
 
     def save(self, *args, **kwargs):
+        # if self.simple_name is None:
+        #     self.simple_name = self.display_name.lower().replace(' ','')
+
         if not self.id:
             self.created = timezone.now()
 
         super(Tool, self).save(*args, **kwargs)
 
+    @property
+    def simple_name(self):
+        return self.display_name.lower().replace(' ', '-')
+
 def get_sentinel_mpi():
-    return MPICluster.objects.get_or_create(cluster_name="deleted cluster")[0]
+    return MPICluster.objects.get_or_create(cluster_name="deleted cluster", defaults={'status': 5})[0]
 
 
 @python_2_unicode_compatible
@@ -170,7 +194,7 @@ class Task(models.Model):
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.SET(get_sentinel_mpi), null=True)
+    mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE, null=True)
     # status_msg = models.CharField(default="Task Created", max_length=200)
     # status_code = models.SmallIntegerField(default=0)
 
@@ -187,7 +211,8 @@ class Task(models.Model):
         self.updated = timezone.now()
 
         # create toolactivation if does not exist
-        ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id)
+        ToolActivation.objects.update_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
+                                                defaults={'status': 1})
         super(Task, self).save(*args, **kwargs)
 
         # placed below super since instance does not have pk until saved

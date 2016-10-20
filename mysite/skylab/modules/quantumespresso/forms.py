@@ -8,7 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 
 from skylab.forms import MPIModelChoiceField
-from skylab.models import MPICluster
+from skylab.models import MPICluster, ToolSet
 from validators import in_file_extension_validator
 
 
@@ -34,12 +34,12 @@ class SelectMPIFilesForm(forms.Form):
         self.user = kwargs.get('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        current_user_as_creator = Q(creator=self.user)
-        cluster_is_public = Q(shared_to_public=True)
-        supports_qe = Q(supported_tools="quantum espresso")
-        # is_ready = Q(status=1)
-        q = MPICluster.objects.filter(current_user_as_creator | cluster_is_public)
-        q = q.filter(supports_qe).exclude(status=5)  # exclude unusable clusters
+        user_allowed = Q(allowed_users=self.user)
+        cluster_is_public = Q(is_public=True)
+
+        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        q = q.exclude(status=5).exclude(queued_for_deletion=True)
+        toolset = ToolSet.objects.get(p2ctool_name="quantum-espresso")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(required=False, queryset=q, label="MPI Cluster",
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
@@ -80,7 +80,7 @@ class InputParameterForm(forms.Form):
         ('', '---------'),
         ('pw.x', 'pw.x'),
     )
-    param_executable = forms.ChoiceField(choices=EXECUTABLE_CHOICES, required=False)
+    param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
     param_input_file = forms.FileField(label="Input file (.in)", validators=[in_file_extension_validator],
                                        required=False,
                                        help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
