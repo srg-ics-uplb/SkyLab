@@ -17,6 +17,7 @@
             <thead>
             <tr>
                 <th>Cluster name</th>
+                <th>Nodes</th>
                 <th>IP address</th>
                 <th>Status</th>
                 <th>Visibility</th>
@@ -27,6 +28,7 @@
                 {#        <div class='row'>#}
                 <tr class="clickable-row" data-href="{% url 'mpi_detail_view' pk=cluster.id %}">
                     <td>{{ cluster.cluster_name }}</td>
+                    <td>{{ cluster.total_node_count }}</td>
                     <td>{{ cluster.cluster_ip }}</td>
                     <td>
                         <span class="

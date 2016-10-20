@@ -101,7 +101,7 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 
 		mpi_cluster = MPICluster.objects.create(creator=self.request.user,
 												cluster_name=form.cleaned_data['cluster_name'],
-												cluster_size=form.cleaned_data['cluster_size'],
+												cluster_size=form.cleaned_data['cluster_size'] - 1,
 												is_public=form.cleaned_data['is_public'])
 		self.kwargs['pk'] = mpi_cluster.id
 
@@ -187,6 +187,21 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
+
+@login_required
+@ajax
+def post_mpi_delete(request):
+	pk = request.POST.get('pk')
+	mpi_cluster = MPICluster.objects.get(pk=pk)
+	mpi_cluster.queued_for_deletion = True
+	mpi_cluster.save()
+
+	data = {
+		'cluster_ip': mpi_cluster.cluster_ip,
+		'status_msg': mpi_cluster.current_simple_status_msg,
+		'status': mpi_cluster.status
+	}
+	return data
 
 @login_required
 @ajax

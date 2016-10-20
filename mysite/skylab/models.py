@@ -60,6 +60,10 @@ class MPICluster(models.Model):
     created = models.DateTimeField()
 
     @property
+    def total_node_count(self):
+        return self.cluster_size + 1
+
+    @property
     def current_simple_status_msg(self):
         status_msg = {
             0: 'Creating',

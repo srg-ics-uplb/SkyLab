@@ -104,7 +104,7 @@
         };
 
         var navTasksOnClick = function () {
-            ajaxGet('{% url 'refresh_nav_task_list' %}', function (content) {
+            ajaxGet('{% url 'ajax_refresh_nav_task_list' %}', function (content) {
                 {#       todo: process content         #}
             })
         }

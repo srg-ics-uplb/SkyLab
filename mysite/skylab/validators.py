@@ -13,8 +13,13 @@ def cluster_name_unique_validator(cluster_name):
 def cluster_size_validator(value):
     current_max = get_current_max_nodes()
     if value > current_max:
-        raise ValidationError(u'Can only create max of {0} nodes'.format(current_max),
-                              code="create_existing_mpi_error")
+        if current_max > 1:
+            raise ValidationError(u'Can only create max of {0} nodes'.format(current_max),
+                                  code="cluster_size_above_limit")
+        else:
+            raise ValidationError(u'Sorry. The system reached limit for creating clusters.'.format(current_max),
+                                  code="cluster_size_above_limit")
+
 
 
 def get_current_max_nodes():

@@ -14,8 +14,9 @@ class CreateMPIForm(forms.Form):
 	cluster_name = forms.CharField(label="Cluster name", max_length=30, min_length=5,
 								   validators=[cluster_name_validator, cluster_name_unique_validator],
 								   help_text='This is required to be unique. e.g. chem_205_gamess_12_12345')
-	cluster_size = forms.IntegerField(label="Cluster size", min_value=1, max_value=settings.MAX_NODES_PER_CLUSTER,
-									  validators=[cluster_size_validator], initial=1)
+	# ./vcluster-start cluster_name cluster_size-1
+	cluster_size = forms.IntegerField(label="Cluster size", min_value=2, max_value=settings.MAX_NODES_PER_CLUSTER,
+									  validators=[cluster_size_validator], initial=2)
 	toolsets = forms.ModelMultipleChoiceField(required=False, label="Toolsets", queryset=ToolSet.objects.all(),
 											  help_text="Select toolsets to be activated. Optional",
 											  widget=forms.CheckboxSelectMultiple())

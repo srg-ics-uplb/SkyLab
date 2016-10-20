@@ -107,7 +107,7 @@ class MPIThreadManager(object):
         return self.frontend_shell
 
     def receive_toolactivation_from_post_save_signal(self, sender, instance, created, **kwargs):
-        if created:
+        if created and instance.status == 1:
             logging.info(
                 'Received ToolActivation #{0} ({1}) for MPI #{2}'.format(instance.id, instance.toolset.display_name,
                                                                          instance.mpi_cluster_id))
@@ -142,7 +142,6 @@ class MPIThread(threading.Thread):
         If current task is light on resources regardless of expected running time,
         A new consumer is signalled that it is allowed to consume
         """
-
         self.task_queue = Queue.PriorityQueue()
 
         self._stop = threading.Event()
@@ -166,6 +165,7 @@ class MPIThread(threading.Thread):
         for task in tasks:
             self.add_task_to_queue(task.priority, task)
 
+        # get toolactivations queued for activation (status == 1)
         queued_toolset_activations = self.mpi_cluster.toolsets.filter(toolactivation__status=1)
         for toolset in queued_toolset_activations:
             self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
@@ -175,7 +175,6 @@ class MPIThread(threading.Thread):
 
         super(MPIThread, self).__init__()
 
-    # TODO: implement connect and create to cluster functions
     def connect_or_create(self):
 
         self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
@@ -327,7 +326,6 @@ class MPIThread(threading.Thread):
                         time.sleep(wait_time)
 
     def create_mpi_cluster(self):
-
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
 
         retries = 0
