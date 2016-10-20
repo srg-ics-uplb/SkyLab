@@ -190,6 +190,20 @@ def index(request):
 
 @login_required
 @ajax
+def post_mpi_toolset_activate(request):
+	mpi_pk = request.POST.get('mpi_pk')
+	toolset_pk = request.POST.get('toolset_pk')
+	obj, created = ToolActivation.objects.update_or_create(mpi_cluster_id=mpi_pk, toolset_id=toolset_pk,
+														   defaults={'status': 1})
+
+	data = {
+		'status': obj.status,
+		'status_msg': obj.current_status_msg
+	}
+	return data
+
+@login_required
+@ajax
 def post_mpi_delete(request):
 	pk = request.POST.get('pk')
 	mpi_cluster = MPICluster.objects.get(pk=pk)

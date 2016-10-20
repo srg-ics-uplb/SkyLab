@@ -113,7 +113,7 @@ class ToolActivation(models.Model):
         elif self.status == 1:
             return "Queued for activation"
         elif self.status == 0:
-            return 'None'
+            return 'Not selected for activation'
 
 
 

@@ -73,28 +73,31 @@
                     <thead>
                     <tr>
                         <th>Toolset</th>
+                        <th>Description</th>
                         <th>Status</th>
                     </tr>
                     </thead>
+                    <tbody>
                     {% for tool_activation in mpi_cluster.toolactivation_set.all %}
                         <tr>
                             <td>{{ tool_activation.toolset.display_name }}</td>
-                            <td>
-
+                            <td>{{ tool_activation.toolset.description }}</td>
+                            <td id="tool-activation-status-cell-{{ tool_activation.toolset.id }}">
                                 {% if tool_activation.status == 0 %}
-                                    {{ tool_activation.current_status_msg }}
+                                    <span class="text-muted">{{ tool_activation.current_status_msg }}</span>
+                                    <button class="btn btn-success pull-right toolset-activate-btn"
+                                            data-toolset-pk="{{ tool_activation.toolset.id }}">Activate
+                                    </button>
                                     {# activate button                            #}
                                 {% elif tool_activation.status == 1 %}
                                     <span class="text-info"> {{ tool_activation.current_status_msg }}</span>
                                 {% elif tool_activation.status == 2 %} {# status == 2 ; activated #}
-                                    <span class="text-sucess"> {{ tool_activation.current_status_msg }}</span>
-                                    </td>
+                                    <span class="text-success"> {{ tool_activation.current_status_msg }}</span>
                                 {% endif %}
-
-
                             </td>
                         </tr>
                     {% endfor %}
+                    </tbody>
                 </table>
             </div>
             {% if mpi_cluster.creator == user and not mpi_cluster.queued_for_deletion %}
@@ -151,6 +154,8 @@
                 mpi_info_table.find('td:nth-child(5)').hide();
             {% endif %}
 
+            $('[data-toggle="tooltip"]').tooltip();
+
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
             visibility_switch.bootstrapSwitch();
             {# init as bootstrap switch #}
@@ -175,6 +180,7 @@
 
             });
 
+            {# delete cluster via ajax post, update html            #}
             var deleteCluster = function () {
                 ajaxPost('{% url 'ajax_post_mpi_delete' %}', {
                     'pk':{{mpi_cluster.id}}
@@ -200,7 +206,29 @@
                     mpi_status_cell.addClass();
                     $('#mpi-info-deletion-txt').html('(Scheduled for deletion)')
                 });
-            }
+            };
+
+            {# activate toolset via ajax post, update html #}
+            $('.toolset-activate-btn').on('click', function () {
+                button = $(this);
+                ajaxPost('{% url 'ajax_post_mpi_toolset_activate' %}', {
+                    'mpi_pk':{{mpi_cluster.id}},
+                    'toolset_pk': $(this).data('toolset-pk')
+                }, function (content) {
+                    button.hide();
+
+                    button.siblings('span').html(content.status_msg);
+                    button.siblings('span').removeClass();
+                    switch (content.status) {
+                        case 2:
+                            button.siblings('span').addClass('text-success');
+                            break;
+                        default:
+                            button.siblings('span').addClass('text-info');
+                    }
+
+                })
+            })
         </script>
     {% endif %}
 {% endblock %}

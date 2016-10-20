@@ -6,7 +6,7 @@ def insert_to_db():
     toolset_name = 'Ray'
     package_name = __name__.replace(".install", '')
     p2ctool_name = 'ray'
-    toolset_description = 'Ray is a parallel software that computes de novo genome assemblies with next-generation sequencing data'
+    toolset_description = 'Ray is a parallel software that computes de novo genome assemblies with next-generation sequencing data.'
     toolset_source_url = 'http://denovoassembler.sourceforge.net/'
 
     toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
