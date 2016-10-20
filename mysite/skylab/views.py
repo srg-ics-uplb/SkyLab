@@ -190,42 +190,67 @@ def index(request):
 
 @login_required
 @ajax
+def post_allow_user_access_to_mpi(request):
+	share_key = request.POST.get('share_key')
+	error = True
+	if share_key:
+		try:
+			cluster = MPICluster.objects.get(share_key=share_key)
+			error = False
+			print "found match"
+			cluster.allowed_users.add(request.user)
+		except MPICluster.DoesNotExist:
+			print "nothing found"
+			pass
+
+	# todo: return inner fragments
+	data = {'error': 'true' if error else 'false'}
+	return data
+
+@login_required
+@ajax
 def post_mpi_toolset_activate(request):
 	mpi_pk = request.POST.get('mpi_pk')
 	toolset_pk = request.POST.get('toolset_pk')
-	obj, created = ToolActivation.objects.update_or_create(mpi_cluster_id=mpi_pk, toolset_id=toolset_pk,
-														   defaults={'status': 1})
+	if mpi_pk and toolset_pk:
+		obj, created = ToolActivation.objects.update_or_create(mpi_cluster_id=mpi_pk, toolset_id=toolset_pk,
+															   defaults={'status': 1})
 
-	data = {
-		'status': obj.status,
-		'status_msg': obj.current_status_msg
-	}
-	return data
+		data = {
+			'status': obj.status,
+			'status_msg': obj.current_status_msg
+		}
+		return data
+	return None
 
 @login_required
 @ajax
 def post_mpi_delete(request):
 	pk = request.POST.get('pk')
-	mpi_cluster = MPICluster.objects.get(pk=pk)
-	mpi_cluster.queued_for_deletion = True
-	mpi_cluster.save()
+	if pk:
+		mpi_cluster = MPICluster.objects.get(pk=pk)
+		mpi_cluster.queued_for_deletion = True
+		mpi_cluster.save()
 
-	data = {
-		'cluster_ip': mpi_cluster.cluster_ip,
-		'status_msg': mpi_cluster.current_simple_status_msg,
-		'status': mpi_cluster.status
-	}
-	return data
+		data = {
+			'cluster_ip': mpi_cluster.cluster_ip,
+			'status_msg': mpi_cluster.current_simple_status_msg,
+			'status': mpi_cluster.status
+		}
+		return data
+	return None
 
 @login_required
 @ajax
 def post_mpi_visibility(request):
-	is_public = request.POST.get('is_public') == 'true'
+	is_public = request.POST.get('is_public')
 	pk = request.POST.get('pk')
 
-	mpi_cluster = MPICluster.objects.get(pk=pk)
-	mpi_cluster.is_public = is_public
-	mpi_cluster.save()
+	if is_public and pk:
+		is_public = is_public == 'true'
+		mpi_cluster = MPICluster.objects.get(pk=pk)
+		mpi_cluster.is_public = is_public
+		mpi_cluster.save()
 	return None
 
 @login_required

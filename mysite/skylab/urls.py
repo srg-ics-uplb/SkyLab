@@ -24,6 +24,7 @@ urlpatterns = [
     url(r'^ajax/mpi-privacy$', views.post_mpi_visibility, name='ajax_post_mpi_privacy_change'),
     url(r'^ajax/post-mpi-delete', views.post_mpi_delete, name='ajax_post_mpi_delete'),
     url(r'^ajax/post-mpi-toolset-activate', views.post_mpi_toolset_activate, name='ajax_post_mpi_toolset_activate'),
+    url(r'akax/post-mpi-allow-user', views.post_allow_user_access_to_mpi, name='ajax_post_allow_user_access_to_mpi'),
 
     url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
     url(r'^ray$', RayView.as_view(), name='use_ray'),
