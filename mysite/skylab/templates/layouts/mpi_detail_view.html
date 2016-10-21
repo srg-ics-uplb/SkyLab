@@ -99,7 +99,8 @@
             {% if mpi_cluster.creator == user and not mpi_cluster.queued_for_deletion %}
                 <div class="row">
                     <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
-                            data-target="#delete-confirm-modal">Delete this cluster
+                            data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
+                        Delete this cluster
                     </button>
                 </div>
                 <div class="modal fade" id="delete-confirm-modal" role="dialog">
@@ -149,8 +150,6 @@
                 mpi_info_table.find('th:nth-child(5)').hide();
                 mpi_info_table.find('td:nth-child(5)').hide();
             {% endif %}
-
-            $('[data-toggle="tooltip"]').tooltip();
 
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
 

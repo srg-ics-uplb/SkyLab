@@ -83,7 +83,6 @@ class HomeView(TemplateView):
 	template_name = "layouts/home.html"
 
 
-
 class CreateMPIView(LoginRequiredMixin, FormView):
 	template_name = 'layouts/create_mpi_cluster.html'
 	form_class = CreateMPIForm
@@ -124,6 +123,7 @@ class ToolsetListView(LoginRequiredMixin, ListView):
 	model = ToolSet
 	context_object_name = 'toolsets'
 	template_name = 'layouts/toolset_list_view.html'
+
 
 class MPIListView(LoginRequiredMixin, ListView):
 	queryset = MPICluster.objects.exclude(status=5)
@@ -191,21 +191,44 @@ def index(request):
 @login_required
 @ajax
 def post_allow_user_access_to_mpi(request):
+	"""
+	:param request:  ajax request
+	:return data:  dictionary containing mpi cluster list data
+	"""
+
 	share_key = request.POST.get('share_key')
-	error = True
+	error = False
+	data = {}
 	if share_key:
 		try:
-			cluster = MPICluster.objects.get(share_key=share_key)
-			error = False
-			print "found match"
+			cluster = MPICluster.objects.get(share_key=share_key)  # give user access to cluster
 			cluster.allowed_users.add(request.user)
-		except MPICluster.DoesNotExist:
-			print "nothing found"
-			pass
 
-	# todo: return inner fragments
-	data = {'error': 'true' if error else 'false'}
+			user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
+			cluster_is_public = Q(is_public=True)
+			qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
+			qs = qs.exclude(status=5)
+
+			rows = []
+			for cluster in qs:  # build array of arrays containing info for each cluster
+				rows.append([
+					cluster.id,
+					cluster.cluster_name,
+					cluster.total_node_count,
+					cluster.cluster_ip,
+					cluster.task_queued_count,
+					cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+					'Public' if cluster.is_public else 'Private'
+				])
+			data['rows'] = rows
+
+		except MPICluster.DoesNotExist:
+			error = True
+
+	data['error'] = 'true' if error else 'false'
+	print (data)
 	return data
+
 
 @login_required
 @ajax
@@ -222,6 +245,7 @@ def post_mpi_toolset_activate(request):
 		}
 		return data
 	return None
+
 
 @login_required
 @ajax
@@ -240,6 +264,7 @@ def post_mpi_delete(request):
 		return data
 	return None
 
+
 @login_required
 @ajax
 def post_mpi_visibility(request):
@@ -252,6 +277,7 @@ def post_mpi_visibility(request):
 		mpi_cluster.is_public = is_public
 		mpi_cluster.save()
 	return None
+
 
 @login_required
 @ajax
@@ -267,14 +293,14 @@ def refresh_nav_task_list(request):
 			tool_name = task.tool.display_name
 			task_completion_rate = task.completion_rate
 			active = 'active' if task_completion_rate < 100 else ''
-			latest_log = task.latest_log
-			task_status_msg = task.get_simple_status_msg(latest_log.status_code)
 
-			if latest_log.status_code < 200:
+			task_status_msg = task.get_simple_status_msg
+
+			if task.status_code < 200:
 				progress_bar_type = 'info'
-			elif task.latest_log.status_code / 100 == 2:
+			elif task.status_code / 100 == 2:
 				progress_bar_type = 'success'
-			elif task.latest_log.status_code >= 400:
+			elif task.status_code >= 400:
 				progress_bar_type = 'danger'
 			else:
 				progress_bar_type = 'warning'
@@ -304,25 +330,22 @@ def refresh_task_detail_view(request, pk=None):
 	if pk is not None:
 		task = Task.objects.get(pk=pk, user=request.user.id)
 		# print task.id
-		# print "Status code", task.latest_log.status_code
+		# print "Status code", task.status_code
 
 		task_output_file_list = ''
 		for item in task.get_output_files_urls():
 			task_output_file_list += '<a class="list-group-item" href="%s">%s</a>' % (
 				item.get("url"), item.get("filename"))
 
-		if task.latest_log.status_code < 200:
+		if task.status_code < 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg(
-				task.latest_log.status_code) + '</span>'
-		elif task.latest_log.status_code == 200:
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg + '</span>'
+		elif task.status_code == 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg(
-				task.latest_log.status_code) + '</span>'
-		elif task.latest_log.status_code >= 400:
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg + '</span>'
+		elif task.status_code >= 400:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg(
-				task.latest_log.status_code) + '</span>'
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg + '</span>'
 		# progress_bar
 
 		data = {
@@ -333,7 +356,7 @@ def refresh_task_detail_view(request, pk=None):
 				'#task-view-progress-bar': progress_bar,
 				'#task-status': status_msg,
 			},
-			'status_code': task.latest_log.status_code,
+			'status_code': task.status_code,
 			'progress': progress_bar,
 			# 'has_jsmol_file': task.has_jsmol_file,
 			'uri_dict': task.get_dict_jsmol_files_uris(request),

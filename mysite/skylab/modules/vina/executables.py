@@ -107,7 +107,7 @@ class VinaExecutable(P2CToolGeneric):
 
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
-        if not self.task.tasklog_set.filter(status_code=400).exists():
+        if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
             self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
@@ -215,7 +215,7 @@ class VinaSplitExecutable(P2CToolGeneric):
 
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
-        if not self.task.tasklog_set.filter(status_code=400).exists():
+        if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
             self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")

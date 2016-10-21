@@ -21,7 +21,7 @@ install_toolsets()
 
 #
 setup_logging()  # setup logger, handlers
-# Task.objects.filter(tasklog__status_code=101).delete()
+
 # TaskLog.objects.all().delete()
 # SkyLabFile.objects.all().delete()
 # manager = MPIThreadManager()

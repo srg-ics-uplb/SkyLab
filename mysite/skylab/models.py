@@ -74,6 +74,12 @@ class MPICluster(models.Model):
         }
         return status_msg.get(self.status, "Status code unknown")
 
+    @property
+    def task_queued_count(self):
+        return Task.objects.filter(mpi_cluster=self.id).exclude(status_code=200).exclude(status_code=401).count()
+
+    #     401 terminal status
+
     def get_absolute_url(self):
         return reverse('mpi-detail', kwargs={'pk': self.pk})
 
@@ -199,8 +205,8 @@ class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE, null=True)
-    # status_msg = models.CharField(default="Task Created", max_length=200)
-    # status_code = models.SmallIntegerField(default=0)
+    status_msg = models.CharField(default="Task Created", max_length=200)
+    status_code = models.SmallIntegerField(default=0)
 
     updated = models.DateTimeField()
     created = models.DateTimeField()
@@ -224,8 +230,7 @@ class Task(models.Model):
             # Create tasklog stating task is created
             self.change_status(status_code=100, status_msg="Task created")
 
-    @staticmethod
-    def get_simple_status_msg(status_code):
+    def get_simple_status_msg(self):
         status_msgs = {
             000: "Unknown",
             100: "Initializing",
@@ -241,11 +246,14 @@ class Task(models.Model):
             500: "Error",
         }
 
-        return status_msgs.get(status_code, "Status code %d not recognized" % status_code)
+        return status_msgs.get(self.status_code, "Status code %d not recognized" % self.status_code)
 
     def change_status(self, **kwargs):
         status_code = kwargs.get('status_code', 000)
-        status_msg = kwargs.get('status_msg', self.get_simple_status_msg(status_code))
+        status_msg = kwargs.get('status_msg')
+        self.status_code = status_code
+        self.status_msg = self.get_simple_status_msg
+        self.save()
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
 
     @property
@@ -267,7 +275,7 @@ class Task(models.Model):
 
     @property
     def completion_rate(self):
-        status_code = self.tasklog_set.latest('timestamp').status_code
+        status_code = self.task.status_code
         completion_rates = {
             000: 0,
             100: 0,
