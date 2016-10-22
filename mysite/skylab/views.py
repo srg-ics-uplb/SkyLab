@@ -8,6 +8,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
+from django.shortcuts import redirect
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
@@ -144,6 +145,15 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
 
 	context_object_name = 'mpi_cluster'
 
+	def get(self, request, *args, **kwargs):
+		try:
+			self.object = self.get_object()
+		except Http404:
+			# redirect here
+			return redirect('mpi_list_view')
+		context = self.get_context_data(object=self.object)
+		return self.render_to_response(context)
+
 	def get_context_data(self, **kwargs):
 		context = super(MPIDetailView, self).get_context_data(**kwargs)
 		context['skylab_toolsets'] = ToolSet.objects.all()
@@ -172,6 +182,14 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 	model = Task
 	template_name = 'layouts/task_detail_view.html'
 	context_object_name = 'task'  # task object can be accessed in template by the name 'task'
+
+	def get(self, request, *args, **kwargs):
+		try:
+			self.object = self.get_object()
+		except Http404:  # get_object() throws Http404 if does not exist
+			return redirect('task_list_view')  # redirect to list view
+		context = self.get_context_data(object=self.object)  # pass retrieved object
+		return self.render_to_response(context)
 
 	def get_context_data(self, **kwargs):
 		context = super(TaskDetailView, self).get_context_data(**kwargs)
@@ -294,7 +312,7 @@ def refresh_nav_task_list(request):
 			task_completion_rate = task.completion_rate
 			active = 'active' if task_completion_rate < 100 else ''
 
-			task_status_msg = task.get_simple_status_msg
+			task_status_msg = task.get_simple_status_msg()
 
 			if task.status_code < 200:
 				progress_bar_type = 'info'
@@ -339,13 +357,13 @@ def refresh_task_detail_view(request, pk=None):
 
 		if task.status_code < 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg() + '</span>'
 		elif task.status_code == 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg() + '</span>'
 		elif task.status_code >= 400:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg + '</span>'
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg() + '</span>'
 		# progress_bar
 
 		data = {

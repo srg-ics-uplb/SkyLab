@@ -26,9 +26,12 @@
                         <th>Cluster name</th>
                         <th>Nodes</th>
                         <th>IP address</th>
+                        <th>Tasks queued</th>
                         <th>Status</th>
+
                         {% if mpi_cluster.creator == user %}
-                            <th>Share key</th>{% endif %}
+                            <th>Share key</th>
+                        {% endif %}
                         <th>Visibility</th>
                     </tr>
                     </thead>
@@ -37,6 +40,7 @@
                         <td>{{ mpi_cluster.cluster_name }}</td>
                         <td>{{ mpi_cluster.total_node_count }}</td>
                         <td id="mpi-info-ip">{{ mpi_cluster.cluster_ip }}</td>
+                        <td>{{ mpi_cluster.task_queued_count }}</td>
                         <td>
                             <span id="mpi-info-status" class="
                             {% if mpi_cluster.status == 2 %}
@@ -54,6 +58,7 @@
                                 deletion){% endif %} </span>
 
                         </td>
+
                         {% if mpi_cluster.creator == user %}
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
                         <td><input type="checkbox" name="visibility-checkbox" data-label-text="Public"
@@ -147,8 +152,8 @@
             {# if cluster is public hide share key column        #}
             mpi_info_table = $('#mpi-info-table');
             {%  if mpi_cluster.is_public %}
-                mpi_info_table.find('th:nth-child(5)').hide();
-                mpi_info_table.find('td:nth-child(5)').hide();
+                mpi_info_table.find('th:nth-child(6)').hide();
+                mpi_info_table.find('td:nth-child(6)').hide();
             {% endif %}
 
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
@@ -161,11 +166,11 @@
             visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
                 {# if cluster is public hide share key column, otherwise, show       #}
                 if (state == true) {
-                    mpi_info_table.find('th:nth-child(5)').hide();
-                    mpi_info_table.find('td:nth-child(5)').hide();
+                    mpi_info_table.find('th:nth-child(6)').hide();
+                    mpi_info_table.find('td:nth-child(6)').hide();
                 } else {
-                    mpi_info_table.find('th:nth-child(5)').show();
-                    mpi_info_table.find('td:nth-child(5)').show();
+                    mpi_info_table.find('th:nth-child(6)').show();
+                    mpi_info_table.find('td:nth-child(6)').show();
                 }
 
                 {# tell server about the change            #}

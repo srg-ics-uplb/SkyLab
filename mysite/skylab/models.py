@@ -275,7 +275,7 @@ class Task(models.Model):
 
     @property
     def completion_rate(self):
-        status_code = self.task.status_code
+        status_code = self.status_code
         completion_rates = {
             000: 0,
             100: 0,
