@@ -403,6 +403,7 @@ class MPIThread(threading.Thread):
                         self.logger.info('{0}Processing {1}'.format(self.log_prefix, task_log_prefix))
 
                         mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
+
                         cls = getattr(mod, current_task.tool.executable_name)
                         # cls()
                         executable_obj = cls(shell=self.cluster_shell, task=current_task, logger=self.logger,

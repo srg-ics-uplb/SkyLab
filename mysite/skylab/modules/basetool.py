@@ -1,7 +1,6 @@
 import os.path
 from abc import abstractmethod
 
-import pika
 from django.conf import settings
 
 from skylab.models import SkyLabFile
@@ -28,26 +27,26 @@ def mkdir_p(sftp, remote_directory):
 		return True
 
 
-def send_mpi_message(routing_key, body):
-	connection = pika.BlockingConnection(pika.ConnectionParameters(
-		host='localhost'))
-
-	channel = connection.channel()
-
-	channel.exchange_declare(exchange='topic_logs',
-							 type='topic')
-
-	channel.confirm_delivery()
-
-	channel.basic_publish(exchange='topic_logs',
-						  routing_key=routing_key,
-						  body=body,
-						  properties=pika.BasicProperties(
-							  delivery_mode=2,  # make message persistent
-						  ))
-
-	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
-	connection.close()
+# def send_mpi_message(routing_key, body):
+# 	connection = pika.BlockingConnection(pika.ConnectionParameters(
+# 		host='localhost'))
+#
+# 	channel = connection.channel()
+#
+# 	channel.exchange_declare(exchange='topic_logs',
+# 							 type='topic')
+#
+# 	channel.confirm_delivery()
+#
+# 	channel.basic_publish(exchange='topic_logs',
+# 						  routing_key=routing_key,
+# 						  body=body,
+# 						  properties=pika.BasicProperties(
+# 							  delivery_mode=2,  # make message persistent
+# 						  ))
+#
+# 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+# 	connection.close()
 
 
 class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executables
