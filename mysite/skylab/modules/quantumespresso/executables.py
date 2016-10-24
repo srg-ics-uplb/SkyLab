@@ -10,7 +10,7 @@ from skylab.modules.basetool import P2CToolGeneric, mkdir_p
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class QuantumESPRESSOExecutable(P2CToolGeneric):
+class QuantumEspressoExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         self.shell = kwargs.get('shell')
         self.id = kwargs.get('id')
@@ -19,7 +19,7 @@ class QuantumESPRESSOExecutable(P2CToolGeneric):
         self.tmp_dir = self.working_dir + "/tempdir"
 
         Task.objects.get(pk=self.id).change_status(status_msg="Task started", status_code=150)
-        super(QuantumESPRESSOExecutable, self).__init__(**kwargs)
+        super(QuantumEspressoExecutable, self).__init__(**kwargs)
 
     def handle_input_files(self, **kwargs):
         self.shell.run(["sh", "-c", "mkdir task_{0}".format(self.id)])

@@ -23,7 +23,7 @@ install_toolsets()
 setup_logging()  # setup logger, handlers
 
 # TaskLog.objects.all().delete()
-# SkyLabFile.objects.all().delete()
+# # SkyLabFile.objects.all().delete()
 # manager = MPIThreadManager()
 
 # SkyLabFile.objects.get(task_id=20, type=2, filename='glyz_makefp.log')

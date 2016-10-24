@@ -373,7 +373,7 @@ def post_mpi_visibility(request):
 @login_required
 @ajax
 def refresh_nav_task_list(request):
-	tasks = Task.objects.filter(user=request.user.id).order_by('tasklog__status_code', '-updated')[:3]
+	tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
 	list_items = []
 	if tasks:
 

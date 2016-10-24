@@ -12,9 +12,9 @@ from skylab.models import SkyLabFile
 from skylab.modules.basetool import P2CToolGeneric
 
 
-class GAMESSExecutable(P2CToolGeneric):
+class GamessExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
-        super(GAMESSExecutable, self).__init__(**kwargs)
+        super(GamessExecutable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'input')  # this is where the commands will be executed
 
     # TODO: self.input_dir = self.task_dir + "/input" in __init__
