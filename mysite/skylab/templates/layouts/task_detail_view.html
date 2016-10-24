@@ -68,20 +68,22 @@
         <div id="jsmol-container-div"
              class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0 hidden">
             <br>
-            <div id="appdiv"></div>
-            <div id="jsmol-options-div">
-                <div class="form-row">
-                    <label>File</label>
-                    <select id="jsmol_file_list"></select>
+            <div id="appdiv" class="row"></div>
+            <div id="jsmol-options-div" class="row">
+                <div class="form-group">
+                    <label for="jsmol_file_list">File</label>
+                    <select id="jsmol_file_list" class="form-control"></select>
                 </div>
 
-                <div class="form-row">
-                    <label>Display quality: </label>
-                    <input id="platformSpeed" data-slider-id='platformSpeedSlider' type="range" data-slider-min="1"
+                <div class="form-group">
+                    <label for="platformSpeed">Display quality: </label>
+                    <input id="platformSpeed" class="form-control" data-slider-id='platformSpeedSlider' type="range"
+                           data-slider-min="1"
                            data-slider-max="8" data-slider-step="1" data-slider-value="8"/>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
+
                     <label>Display as:</label>
                     <label class="radio-inline"><input type="radio" name="displayAs"
                                                        value="select *;cartoons off;spacefill only">Spacefill</label>
@@ -95,9 +97,10 @@
                     <label class="radio-inline"><input type="radio" name="displayAs"
                                                        value="select protein or nucleic;cartoons only; set cartoonFancy true">Cartoon
                         (fancy)</label>
+
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
                     <label>Color Scheme:</label>
                     <label class="radio-inline"><input type="radio" name="color" value="color property atomno">Atom no.</label>
                     <label class="radio-inline"><input type="radio" name="color" value="color cpk">CPK</label>
@@ -106,14 +109,14 @@
                                                        value="color structure">Structure</label>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
                     <label>Isosurface:</label>
                     <label class="radio-inline"><input type="radio" name="isosurface" value="select *;isosurface vdw">vdW</label>
                     <label class="radio-inline"><input type="radio" name="isosurface"
                                                        value="if ({atomno < 10}.partialcharge == 0){calculate partialcharge};isosurface vdw map mep">MEP</label>
                 </div>
 
-                <div id="isosurface_options_div" class="form-row">
+                <div id="isosurface_options_div" class="form-group">
                     <label>Isosurface options: </label>
                     <label class="radio-inline"><input type="radio" name="isosurface-options"
                                                        value="isosurface translucent">Translucent</label>
@@ -121,7 +124,7 @@
                     <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface delete">Off</label>
                 </div>
 
-                <div class="form-row">
+                <div class="form-group">
                     <label>Labels:</label>
                     <label class="radio-inline"><input type="radio" name="displayLabel"
                                                        value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
@@ -166,7 +169,6 @@
                     clearInterval(statusRefresher);
 
                     if (statusCode == 200 && content.uri_dict.length > 0) { //if successful and there is at least one jsmol readable file
-                        alert(content.progress);
                         content.uri_dict.forEach(addModel);
                         {#                        {% for absolute_uri in jsmol_files_absolute_uris %}#}
                         {#                            Models.push(["{{ absolute_uri.uri }}","{{ absolute_uri.filename }}"]); // Models.push([absolute_uri, filename])#}
@@ -239,7 +241,7 @@
 
         var Info = {
             width: "100%",
-            height: "60%",
+            height: "100%",
             debug: false,
             color: "0x468499",
             addSelectionOptions: false,

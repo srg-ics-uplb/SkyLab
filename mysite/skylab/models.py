@@ -236,8 +236,8 @@ class Task(models.Model):
         self.updated = timezone.now()
 
         # create toolactivation if does not exist
-        ToolActivation.objects.update_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
-                                                defaults={'status': 1})
+        ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
+                                             defaults={'status': 1})
         super(Task, self).save(*args, **kwargs)
 
         # placed below super since instance does not have pk until saved

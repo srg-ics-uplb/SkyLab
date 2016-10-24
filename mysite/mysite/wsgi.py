@@ -15,7 +15,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
-from skylab.bootskylab import install_toolsets, setup_logging
+from skylab.bootskylab import install_toolsets, setup_logging, MPIThreadManager
 
 install_toolsets()
 
@@ -24,7 +24,7 @@ setup_logging()  # setup logger, handlers
 
 # TaskLog.objects.all().delete()
 # # SkyLabFile.objects.all().delete()
-# manager = MPIThreadManager()
+manager = MPIThreadManager()
 
 # SkyLabFile.objects.get(task_id=20, type=2, filename='glyz_makefp.log')
 
