@@ -59,13 +59,17 @@
                     <div class="form-group">
                         <label for="toolset-select">Toolset:</label>
                         <select id="toolset-select" class="form-control"></select>
+                        <p id='toolset-select-help' class="help-block" for="toolset-select">Select the toolset you want
+                            to use.</p>
                     </div>
 
                     <div class="form-group">
                         <label for="tool-select">Tool:</label>
                         <select id="tool-select" class="form-control"></select>
+                        <p id='tool-select-help' class="help-block" for="tool-select">Select the tool you want to
+                            use.</p>
                     </div>
-                    <p class="help-block">Select the tool you want to use.</p>
+
                 </div>
                 <div class="modal-footer ">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
@@ -124,24 +128,41 @@
         });
 
         $('#add-task-btn').click(function () { {# refresh toolset list on modal activate #}
+            $('#form-error').hide();
             ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
                 $('#toolset-select').prop('selectedIndex', -1)
             })
         });
-
-        $('#toolset-select').change(function () {
-            var url_mask = "{% url 'ajax_refresh_select_tool' pk=911 %}".replace(/911/, $('#toolset-select').val());
+        var tool_help_texts;
+        var toolset_select = $('#toolset-select');
+        toolset_select.change(function () {
+            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, $('#toolset-select').val());
             ajaxGet(url_mask, function (content) {
-                $('#tool-select').prop('selectedIndex', -1)
+                $('#tool-select').prop('selectedIndex', -1);
+                tool_help_texts = content.tool_help_texts
+
             });
         });
 
+
+        var tool_select = $('#tool-select');
+        tool_select.change(function () {
+            $('#tool-select-help').html(tool_help_texts[$(tool_select)[0].selectedIndex])
+        });
+
         var redirectToSelectedTool = function () {
-            if ($('#tool-select').val() != null) {
-                var url_mask = "{% url 'ajax_refresh_select_tool' pk=911 %}".replace(/911/, data[0]);
-                {#                todo : dynamic url for tool#}
+            if (!((tool_select.val() == null | tool_select.val() === '' | toolset_select.val() === null | toolset_select.val() === ''))) {
+
+                window.location = "{% url 'skylab_tool_view' toolset_simple_name='toolset_name_placeholder' tool_simple_name='tool_name_placeholder' %}".replace(/toolset_name_placeholder/, $('#toolset-select').val()).replace(/tool_name_placeholder/, tool_select.val());
+            } else {
+                $('#form-error').show()
             }
-        }
+        };
+
+
+        $('#form-error').find('.close').on('click', function (e) {
+            $(this).parent().hide();
+        });
 
 
     </script>

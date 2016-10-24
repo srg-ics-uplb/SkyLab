@@ -209,10 +209,22 @@ def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
 
 
-def tool_view(request, toolset_p2ctool_name, tool_simple_name):
-	print (toolset_p2ctool_name, tool_simple_name)
-	tool = Tool.objects.get(simple_name=tool_simple_name)
-	toolset = ToolSet.objects.get(p2ctool_name=toolset_p2ctool_name)
+def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_pk=None, tool_pk=None):
+	try:
+		if toolset_simple_name and tool_simple_name:
+			tool = Tool.objects.get(simple_name=tool_simple_name)
+			toolset = ToolSet.objects.get(simple_name=toolset_simple_name)
+		elif toolset_pk and tool_pk:
+			tool = Tool.objects.get(pk=tool_pk)
+			toolset = ToolSet.objects.get(pk=toolset_pk)
+		else:
+			return Http404()
+
+	except Tool.DoesNotExist:
+		return Http404("Tool does not exist")
+	except ToolSet.DoesNotExist:
+		return Http404("Tool does not exist")
+
 	mod = importlib.import_module('{0}.views'.format(toolset.package_name))
 	cls = getattr(mod, tool.view_name)
 	return cls.as_view()(request)
@@ -223,23 +235,30 @@ def tool_view(request, toolset_p2ctool_name, tool_simple_name):
 
 @login_required
 @ajax
-def refresh_select_tool_from_toolset(request, pk):
-	# pk = request.POST['pk']
-	tools = Tool.objects.filter(toolset_id=pk)
-	select_items = ''
-	item_template = '<option value="{value}">{item_name}</option>'
+def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = request.POST['pk']
+	print toolset_simple_name
+	try:
+		toolset = ToolSet.objects.get(simple_name=toolset_simple_name)
+		tools = Tool.objects.filter(toolset=toolset)
+		select_items = ''
+		item_template = '<option value="{value}">{item_name}</option>'
+		tool_help_texts = []
 
-	for tool in tools:
-		select_items += item_template.format(value=tool.id, item_name=tool.display_name)
+		for tool in tools:
+			select_items += item_template.format(value=tool.simple_name, item_name=tool.display_name)
+			tool_help_texts.append(tool.short_description)
 
-	data = {
-		'inner-fragments': {
-			'#tool-select': select_items
+		data = {
+			'inner-fragments': {
+				'#tool-select': select_items,
+				'#toolset-select-help': toolset.short_description
+			},
+			'tool_help_texts': tool_help_texts
 		}
 
-	}
-
-	return data
+		return data
+	except ToolSet.DoesNotExist:
+		return Http404()
 
 
 @login_required
@@ -250,7 +269,7 @@ def refresh_select_toolset(request):
 	select_items = ''
 	item_template = '<option value="{value}">{item_name}</option>'
 	for tool_set in toolsets:
-		select_items += item_template.format(value=tool_set.id, item_name=tool_set.display_name)
+		select_items += item_template.format(value=tool_set.simple_name, item_name=tool_set.display_name)
 
 	data = {
 		'inner-fragments': {

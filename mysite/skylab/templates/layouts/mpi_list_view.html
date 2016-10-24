@@ -48,12 +48,21 @@
         </table>
     </div>
     <div class="row">
-        <button id="add-cluster-btn" class="btn btn-success" data-toggle="modal"
+        {#         <div class="btn-group">#}
+        <a class="btn btn-primary" href="{% url 'create_mpi' %}">Create MPI cluster</a>
+        <button id="add-cluster-btn" type="button" class="btn btn-success" data-toggle="modal"
                 data-target="#enter-share-key-modal"><i class="fa fa-plus" aria-hidden="true"></i>
             Add private cluster
         </button>
+
+        {#        </div>#}
+
+        {#        <button id="add-cluster-btn" class="btn btn-success" data-toggle="modal"#}
+        {#                data-target="#enter-share-key-modal"><i class="fa fa-plus" aria-hidden="true"></i>#}
+        {#            Add private cluster#}
+        {#        </button>#}
     </div>
-    {#  confirm delete modal   #}
+    {#  enter share key modal   #}
     <div class="modal fade" id="enter-share-key-modal" role="dialog">
         <div class="modal-dialog ">
             <div class="modal-content">

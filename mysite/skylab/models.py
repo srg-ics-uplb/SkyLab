@@ -133,13 +133,18 @@ def get_default_package_name(display_name):
 class ToolSet(models.Model):
     display_name = models.CharField(max_length=50, unique=True)
     p2ctool_name = models.CharField(max_length=50, unique=True)
-    package_name = models.CharField(max_length=50, default="No description provided")
+    simple_name = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    package_name = models.CharField(max_length=50, )
     description = models.CharField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
     created = models.DateTimeField()
 
     def __str__(self):
         return self.display_name
+
+    @property
+    def short_description(self):
+        return (self.description[:200] + '..') if len(self.description) > 200 else self.description
 
     class Meta:
         unique_together = ('display_name', 'p2ctool_name', 'package_name')
@@ -148,6 +153,9 @@ class ToolSet(models.Model):
         if self.package_name is None:
             pattern = re.compile('[\W]+')
             self.package_name = pattern.sub('', self.display_name).lower()
+
+        if self.simple_name is None:
+            self.simple_name = re.sub(r'[\s_/-]', '', self.p2ctool_name.lower())
 
         if not self.id:
             self.created = timezone.now()
@@ -173,6 +181,10 @@ class Tool(models.Model):
     description = models.CharField(max_length=300, default="No description provided")
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
     created = models.DateTimeField()
+
+    @property
+    def short_description(self):
+        return (self.description[:200] + '..') if len(self.description) > 200 else self.description
 
     class Meta:
         unique_together = ('display_name', 'executable_name', 'view_name', 'simple_name')

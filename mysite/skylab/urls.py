@@ -16,11 +16,11 @@ urlpatterns = [
         name='ajax_refresh_task_detail_view'),
     url(r'^ajax/nav-task-list-fragments$', views.refresh_nav_task_list, name='ajax_refresh_nav_task_list'),
     url(r'^ajax/mpi-privacy$', views.post_mpi_visibility, name='ajax_post_mpi_privacy_change'),
-    url(r'^ajax/post-mpi-delete', views.post_mpi_delete, name='ajax_post_mpi_delete'),
-    url(r'^ajax/post-mpi-toolset-activate', views.post_mpi_toolset_activate, name='ajax_post_mpi_toolset_activate'),
-    url(r'ajax/post-mpi-allow-user', views.post_allow_user_access_to_mpi, name='ajax_post_allow_user_access_to_mpi'),
-    url(r'ajax/refresh-select-toolset', views.refresh_select_toolset, name='ajax_refresh_select_toolset'),
-    url(r'ajax/refresh-select-tool/(?P<pk>\d+)', views.refresh_select_tool_from_toolset,
+    url(r'^ajax/post-mpi-delete$', views.post_mpi_delete, name='ajax_post_mpi_delete'),
+    url(r'^ajax/post-mpi-toolset-activate$', views.post_mpi_toolset_activate, name='ajax_post_mpi_toolset_activate'),
+    url(r'ajax/post-mpi-allow-user$', views.post_allow_user_access_to_mpi, name='ajax_post_allow_user_access_to_mpi'),
+    url(r'ajax/refresh-select-toolset$', views.refresh_select_toolset, name='ajax_refresh_select_toolset'),
+    url(r'ajax/refresh-select-tools/(?P<toolset_simple_name>[a-z]\w+)', views.refresh_select_toolset_tool_options,
         name='ajax_refresh_select_tool'),
 
     # url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
@@ -33,8 +33,10 @@ urlpatterns = [
     # url(r'^dock6/grid$', GridFormView.as_view(), name="use_dock6_grid"),
     # url(r'^quantum-espresso$', QuantumESPRESSOView.as_view(), name="use_quantum_espresso"),
 
-    url(r'^tools/(?P<toolset_p2ctool_name>[\w/-]+)/(?P<tool_simple_name>[\w/-]+)', views.tool_view,
+    url(r'^tools/(?P<toolset_simple_name>[a-z][\w/-]+)/(?P<tool_simple_name>[a-z][\w/-]+)/$', views.tool_view,
         name="skylab_tool_view"),
+    url(r'^tools/(?P<toolset_pk>\d+)/(?P<tool_pk>\d+)/$', views.tool_view, name='skylab_tool_view'),
+    # url(r'^tools/')
 
     url(r'^$', views.HomeView.as_view(), name='skylab-home'),
     url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),

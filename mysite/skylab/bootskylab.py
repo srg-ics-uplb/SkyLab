@@ -478,9 +478,9 @@ def install_toolsets():
 def add_tools_to_toolset(tools, toolset):
     for t in tools:
         display_name = t.get('display_name')
-        simple_name = t.get('simple_name', re.sub(r'\s+|\_+', '', display_name.lower()))
-        view_name = t.get('view_name', simple_name.title() + "View")  # convention format
-        executable_name = t.get('executable_name', simple_name.title() + "Executable")
+        simple_name = t.get('simple_name', re.sub(r'[\s_/-]+', '', display_name.lower()))
+        view_name = t.get('view_name', re.sub(r'[\s_/-]+', '', display_name.title()) + "View")  # convention format
+        executable_name = t.get('executable_name', display_name.title() + "Executable")
         description = t.get("description", "No description provided")
 
         Tool.objects.update_or_create(simple_name=simple_name,
