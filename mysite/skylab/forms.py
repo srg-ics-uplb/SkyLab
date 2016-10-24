@@ -70,14 +70,16 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 
 	def label_from_instance(self, obj):
 		if self.toolset is not None:
-			status = ""
-			tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
+			try:
+				tool_activation = ToolActivation.objects.get(mpi_cluster=obj, toolset=self.toolset)
 
-			if tool_activation.status == 2:
-				status = "Installed"
-			elif tool_activation.status == 1:
-				status = "Queued for installation"
-			elif tool_activation.status == 0:
-				status = "Not installed"
-			return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
-																self.toolset.display_name, status)
+				if tool_activation.status == 2:
+					status = "Installed"
+				elif tool_activation.status == 1:
+					status = "Queued for installation"
+				elif tool_activation.status == 0:
+					status = "Not installed"
+				return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
+																	self.toolset.display_name, status)
+			except ToolActivation.DoesNotExist:
+				pass

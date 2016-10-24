@@ -10,13 +10,14 @@ from django.views.generic import FormView
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.gamess.forms import GamessForm
 
-class GAMESSView(LoginRequiredMixin, FormView):
+
+class GamessView(LoginRequiredMixin, FormView):
     template_name = "modules/gamess/use_gamess.html"
     form_class = GamessForm
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(GAMESSView, self).get_form_kwargs()
+        kwargs = super(GamessView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
 
@@ -47,4 +48,4 @@ class GAMESSView(LoginRequiredMixin, FormView):
 
 
         self.kwargs['id'] = task.id
-        return super(GAMESSView, self).form_valid(form)
+        return super(GamessView, self).form_valid(form)

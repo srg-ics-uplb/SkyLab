@@ -28,6 +28,7 @@ def get_sentinel_user():
 
 def generate_share_key(N=5):
     """
+    Generate string [A-Z0-9]{N}
     :param N:
     :return: string of capital letters and numbers with length n
     """
@@ -132,7 +133,7 @@ def get_default_package_name(display_name):
 class ToolSet(models.Model):
     display_name = models.CharField(max_length=50, unique=True)
     p2ctool_name = models.CharField(max_length=50, unique=True)
-    package_name = models.CharField(max_length=50, default=None, unique=True, blank=True)
+    package_name = models.CharField(max_length=50, default="No description provided")
     description = models.CharField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
     created = models.DateTimeField()
@@ -155,26 +156,26 @@ class ToolSet(models.Model):
         super(ToolSet, self).save(*args, **kwargs)
 
 
-def get_default_tool_view_name(display_name):
-    return display_name + "View"
-
-
-def get_default_tool_executable_name(display_name):
-    return display_name + "Executable"
+# def get_default_tool_view_name(display_name):
+#     return display_name + "View"
+#
+#
+# def get_default_tool_executable_name(display_name):
+#     return display_name + "Executable"
 
 @python_2_unicode_compatible
 class Tool(models.Model):
     display_name = models.CharField(max_length=50,
                                     unique=True)  # e.g. format is display_name = ToolName, executable_name=ToolNameExecutable. view_name = ToolNameExecutable
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
-    #todo: simple_name = models.CharField(max_length=50, default=)
+    simple_name = models.CharField(max_length=50, blank=True)
     view_name = models.CharField(max_length=50, blank=True)
-    description = models.CharField(max_length=300, null=True, blank=True)
+    description = models.CharField(max_length=300, default="No description provided")
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
     created = models.DateTimeField()
 
     class Meta:
-        unique_together = ('display_name', 'executable_name', 'view_name')
+        unique_together = ('display_name', 'executable_name', 'view_name', 'simple_name')
 
     def __str__(self):
         return self.display_name
@@ -183,14 +184,16 @@ class Tool(models.Model):
         # if self.simple_name is None:
         #     self.simple_name = self.display_name.lower().replace(' ','')
 
-        if not self.id:
+        if not self.id:  # on instance created
             self.created = timezone.now()
+            # if not self.simple_name:
+            #     self.simple_name = re.sub(r'\s+|\_+','-',self.display_name).lower()
 
         super(Tool, self).save(*args, **kwargs)
 
-    @property
-    def simple_name(self):
-        return self.display_name.lower().replace(' ', '-')
+        # @property
+        # def simple_name(self):
+        #     return self.display_name.lower().replace(' ', '-')
 
 def get_sentinel_mpi():
     return MPICluster.objects.get_or_create(cluster_name="deleted cluster", defaults={'status': 5})[0]
@@ -230,7 +233,8 @@ class Task(models.Model):
             # Create tasklog stating task is created
             self.change_status(status_code=100, status_msg="Task created")
 
-    def get_simple_status_msg(self):
+    @property
+    def simple_status_msg(self):
         status_msgs = {
             000: "Unknown",
             100: "Initializing",
@@ -252,7 +256,7 @@ class Task(models.Model):
         status_code = kwargs.get('status_code', 000)
         status_msg = kwargs.get('status_msg')
         self.status_code = status_code
-        self.status_msg = self.get_simple_status_msg
+        self.status_msg = self.simple_status_msg
         self.save()
         TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
 

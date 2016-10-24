@@ -3,17 +3,23 @@ from skylab.models import ToolSet
 
 
 def insert_to_db():
-    toolset_name = 'AutoDock Vina'
-    package_name = __name__.replace('.install', '')
-    p2ctool_name = 'vina'
-    toolset_description = 'AutoDock Vina is an open-source program for doing molecular docking.'
-    toolset_source_url = 'http://vina.scripps.edu/'
+    toolset_dict = {
+        'display_name': 'AutoDock Vina',
+        'package_name': __name__.replace('.install', ''),
+        'p2ctool_name': 'vina',
+        'description': 'AutoDock Vina is an open-source program for doing molecular docking.',
+        'source_url': 'http://vina.scripps.edu/'
+    }
 
-    toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
-                                                        p2ctool_name=p2ctool_name,
-                                                        defaults={'display_name': toolset_name,
-                                                                  'description': toolset_description,
-                                                                  'source_url': toolset_source_url})
+    toolset, created = ToolSet.objects.update_or_create(package_name=toolset_dict['package_name'],
+                                                        p2ctool_name=toolset_dict['p2ctool_name'],
+                                                        defaults={'display_name': toolset_dict['display_name'],
+                                                                  'description': toolset_dict.get('description',
+                                                                                                  'No description provided'),
+                                                                  'source_url': toolset_dict.get('source_url',
+                                                                                                 'No link provided')
+                                                                  }
+                                                        )
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [

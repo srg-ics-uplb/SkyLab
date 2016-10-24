@@ -4,8 +4,7 @@
 
 
 {% block title %}{{ block.super }}Task {{ task.id }}{% endblock %}
-{% block head %}
-    {{ block.super }}
+{% block css_imports %}
     <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
 {% endblock %}
 
@@ -136,14 +135,12 @@
     </div>
 {% endblock %}
 
-{% block js_imports %}
+{% block js %}
     {{ block.super }}
     <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dist/bootstrap-slider.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dependencies/js/modernizr.js' %}"></script>
-{% endblock %}
 
-{% block js %}
     {# insert ajax-request. replace input and output files list with the received content    #}
     <script type="text/javascript">
         function addModel(item) {

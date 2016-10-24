@@ -12,14 +12,14 @@ from skylab.models import MPICluster, Task, SkyLabFile
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
 
 
-class QuantumESPRESSOView(LoginRequiredMixin, TemplateView):
+class QuantumEspressoView(LoginRequiredMixin, TemplateView):
     template_name = "modules/quantum espresso/use_quantum_espresso.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
 
     def get_context_data(self, **kwargs):
-        context = super(QuantumESPRESSOView, self).get_context_data(**kwargs)
+        context = super(QuantumEspressoView, self).get_context_data(**kwargs)
         context['select_mpi_form'] = SelectMPIFilesForm()
         context['input_formset'] = self.input_forms
 

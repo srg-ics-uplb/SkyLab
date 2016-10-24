@@ -477,12 +477,18 @@ def install_toolsets():
 
 def add_tools_to_toolset(tools, toolset):
     for t in tools:
-        Tool.objects.update_or_create(display_name=t.get('display_name'),
+        display_name = t.get('display_name')
+        simple_name = t.get('simple_name', re.sub(r'\s+|\_+', '', display_name.lower()))
+        view_name = t.get('view_name', simple_name.title() + "View")  # convention format
+        executable_name = t.get('executable_name', simple_name.title() + "Executable")
+        description = t.get("description", "No description provided")
+
+        Tool.objects.update_or_create(simple_name=simple_name,
                                       defaults={
-                                          'executable_name': t.get("executable_name",
-                                                            t["display_name"].replace(' ', '') + 'Executable'),
-                                          'description': t.get("description", None),
-                                          'toolset': toolset,
-                                          'view_name': t.get("view_name",
-                                                             t["display_name"].title().replace(' ', '') + 'View')
+                                          'display_name': display_name,
+                                          'executable_name': executable_name,
+                                          'view_name': view_name,
+                                          'description': description,
+                                          'toolset': toolset
+
                                       })

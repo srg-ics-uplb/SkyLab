@@ -1,3 +1,4 @@
+import importlib
 import os
 
 from django.conf import settings
@@ -16,7 +17,7 @@ from django_ajax.decorators import ajax
 from sendfile import sendfile
 
 from forms import CreateMPIForm
-from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet
+from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet, Tool
 
 
 def has_read_permission(request, task_id):
@@ -108,8 +109,10 @@ class CreateMPIView(LoginRequiredMixin, FormView):
 		mpi_cluster.allowed_users.add(self.request.user)
 		mpi_cluster.save()
 
-		for toolset in form.cleaned_data['toolsets']:
-			ToolActivation.objects.update_or_create(toolset=toolset, mpi_cluster=mpi_cluster, defaults={'status': 1})
+		if form.cleaned_data['toolsets']:
+			for toolset in form.cleaned_data['toolsets']:
+				ToolActivation.objects.update_or_create(toolset=toolset, mpi_cluster=mpi_cluster,
+														defaults={'status': 1})
 
 		toolsets = ToolSet.objects.all()
 
@@ -175,7 +178,7 @@ class TaskListView(LoginRequiredMixin, ListView):
 
 	def get_queryset(self):
 		qs = super(TaskListView, self).get_queryset()
-		return qs.filter(user=self.request.user)
+		return qs.filter(user=self.request.user).order_by('-updated')
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -204,6 +207,57 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 
 def index(request):
 	return HttpResponse("Hello, world. You're at the skylab index.")
+
+
+def tool_view(request, toolset_p2ctool_name, tool_simple_name):
+	print (toolset_p2ctool_name, tool_simple_name)
+	tool = Tool.objects.get(simple_name=tool_simple_name)
+	toolset = ToolSet.objects.get(p2ctool_name=toolset_p2ctool_name)
+	mod = importlib.import_module('{0}.views'.format(toolset.package_name))
+	cls = getattr(mod, tool.view_name)
+	return cls.as_view()(request)
+
+
+# pass
+
+
+@login_required
+@ajax
+def refresh_select_tool_from_toolset(request, pk):
+	# pk = request.POST['pk']
+	tools = Tool.objects.filter(toolset_id=pk)
+	select_items = ''
+	item_template = '<option value="{value}">{item_name}</option>'
+
+	for tool in tools:
+		select_items += item_template.format(value=tool.id, item_name=tool.display_name)
+
+	data = {
+		'inner-fragments': {
+			'#tool-select': select_items
+		}
+
+	}
+
+	return data
+
+
+@login_required
+@ajax
+def refresh_select_toolset(request):
+	toolsets = ToolSet.objects.all()
+
+	select_items = ''
+	item_template = '<option value="{value}">{item_name}</option>'
+	for tool_set in toolsets:
+		select_items += item_template.format(value=tool_set.id, item_name=tool_set.display_name)
+
+	data = {
+		'inner-fragments': {
+			'#toolset-select': select_items,
+		}
+	}
+	return data
 
 
 @login_required
@@ -304,7 +358,21 @@ def refresh_nav_task_list(request):
 	list_items = []
 	if tasks:
 
-		task_item_template = '<li><a href="{task_url}"><div><p><strong>Task {task_id} <small>({tool_name})</small></strong><span class="pull-right text-{progress_bar_type}">{task_status_msg}</span></p><div class="progress progress-striped {active}"><div class="progress-bar progress-bar-{progress_bar_type}" role="progressbar" aria-valuenow="{task_completion_rate}aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%"><span class="sr-only">{task_status_msg}</span></div></div></div></a></li>'
+		task_item_template = '<li>' \
+							 '<a href="{task_url}">' \
+							 '<div>' \
+							 '<p>' \
+							 '<strong>Task {task_id} <small>({tool_name})</small></strong>' \
+							 '<span class="pull-right text-{progress_bar_type}">{task_status_msg}</span>' \
+							 '</p>' \
+							 '<div class="progress progress-striped {active}">' \
+							 '<div class="progress-bar progress-bar-{progress_bar_type}" role="progressbar" aria-valuenow="{task_completion_rate}aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%">' \
+							 '<span class="sr-only">{task_status_msg}</span>' \
+							 '</div>' \
+							 '</div>' \
+							 '</div>' \
+							 '</a>' \
+							 '</li>'
 		for task in tasks:  # build <li class="divider"></li>.join(list_items)
 			task_id = task.id
 			task_url = reverse('task_detail_view', kwargs={'pk': task_id})
@@ -312,7 +380,7 @@ def refresh_nav_task_list(request):
 			task_completion_rate = task.completion_rate
 			active = 'active' if task_completion_rate < 100 else ''
 
-			task_status_msg = task.get_simple_status_msg()
+			task_status_msg = task.simple_status_msg
 
 			if task.status_code < 200:
 				progress_bar_type = 'info'
@@ -328,8 +396,10 @@ def refresh_nav_task_list(request):
 														task_status_msg=task_status_msg, active=active,
 														progress_bar_type=progress_bar_type))
 
+		task_list_url = reverse('task_list_view')
 		list_items.append(  # link to task list view
-			'<li><a class="text-center" href="#"><strong>See All Tasks</strong><i class="fa fa-angle-right"></i></a></li>')
+			'<li><a class="text-center" href="{url}"><strong>See All Tasks</strong><i class="fa fa-angle-right"></i></a></li>'.format(
+				url=task_list_url))
 	else:
 		list_items.append('<li><div><p class="text-center text-muted">No tasks created</p></div></li>')
 
@@ -357,13 +427,13 @@ def refresh_task_detail_view(request, pk=None):
 
 		if task.status_code < 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-info pull-right">' + task.get_simple_status_msg() + '</span>'
+			status_msg = '<span id="task-status" class="text-info pull-right">' + task.simple_status_msg + '</span>'
 		elif task.status_code == 200:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-success pull-right">' + task.get_simple_status_msg() + '</span>'
+			status_msg = '<span id="task-status" class="text-success pull-right">' + task.simple_status_msg + '</span>'
 		elif task.status_code >= 400:
 			progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.get_simple_status_msg() + '</span>'
+			status_msg = '<span id="task-status" class="text-danger pull-right">' + task.simple_status_msg + '</span>'
 		# progress_bar
 
 		data = {

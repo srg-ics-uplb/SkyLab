@@ -26,11 +26,10 @@ class Dock6FormView(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
 
-        cluster_size = cluster.cluster_size
         tool = Tool.objects.get(display_name="Dock 6")
 
         # -n cluster_size
-        command = "mpiexec -n {0:d} -f {1:s} dock6.mpi ".format(cluster_size, settings.MPIEXEC_NODES_FILE)
+        command = "mpiexec -n {0:d} -f {1:s} dock6.mpi ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
 
         # command = "mpiexec -np 4 dock6.mpi "
         task = Task.objects.create(

@@ -1,11 +1,5 @@
 from django.conf.urls import include, url
 
-from skylab.modules.autodock4.views import AutodockView, AutogridView
-from skylab.modules.dock6.views import Dock6FormView, GridFormView
-from skylab.modules.gamess.views import GAMESSView
-from skylab.modules.quantumespresso.views import QuantumESPRESSOView
-from skylab.modules.ray.views import RayView
-from skylab.modules.vina.views import VinaView, VinaSplitView
 from . import views
 
 urlpatterns = [
@@ -24,20 +18,26 @@ urlpatterns = [
     url(r'^ajax/mpi-privacy$', views.post_mpi_visibility, name='ajax_post_mpi_privacy_change'),
     url(r'^ajax/post-mpi-delete', views.post_mpi_delete, name='ajax_post_mpi_delete'),
     url(r'^ajax/post-mpi-toolset-activate', views.post_mpi_toolset_activate, name='ajax_post_mpi_toolset_activate'),
-    url(r'akax/post-mpi-allow-user', views.post_allow_user_access_to_mpi, name='ajax_post_allow_user_access_to_mpi'),
+    url(r'ajax/post-mpi-allow-user', views.post_allow_user_access_to_mpi, name='ajax_post_allow_user_access_to_mpi'),
+    url(r'ajax/refresh-select-toolset', views.refresh_select_toolset, name='ajax_refresh_select_toolset'),
+    url(r'ajax/refresh-select-tool/(?P<pk>\d+)', views.refresh_select_tool_from_toolset,
+        name='ajax_refresh_select_tool'),
 
-    url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
-    url(r'^ray$', RayView.as_view(), name='use_ray'),
-    url(r'^vina/vina$', VinaView.as_view(), name="use_vina"),
-    url(r'^vina/vina-split$', VinaSplitView.as_view(), name="use_vina_split"),
-    url(r'^autodock/autodock$', AutodockView.as_view(), name="use_autodock"),
-    url(r'^autodock/autogrid$', AutogridView.as_view(), name="use_autogrid"),
-    url(r'^dock6/dock6$', Dock6FormView.as_view(), name="use_dock6_dock6"),
-    url(r'^dock6/grid$', GridFormView.as_view(), name="use_dock6_grid"),
-    url(r'^quantum-espresso$', QuantumESPRESSOView.as_view(), name="use_quantum_espresso"),
+    # url(r'^gamess$', GAMESSView.as_view(), name='use_gamess'),
+    # url(r'^ray$', RayView.as_view(), name='use_ray'),
+    # url(r'^vina/vina$', VinaView.as_view(), name="use_vina"),
+    # url(r'^vina/vina-split$', VinaSplitView.as_view(), name="use_vina_split"),
+    # url(r'^autodock/autodock$', AutodockView.as_view(), name="use_autodock"),
+    # url(r'^autodock/autogrid$', AutogridView.as_view(), name="use_autogrid"),
+    # url(r'^dock6/dock6$', Dock6FormView.as_view(), name="use_dock6_dock6"),
+    # url(r'^dock6/grid$', GridFormView.as_view(), name="use_dock6_grid"),
+    # url(r'^quantum-espresso$', QuantumESPRESSOView.as_view(), name="use_quantum_espresso"),
+
+    url(r'^tools/(?P<toolset_p2ctool_name>[\w/-]+)/(?P<tool_simple_name>[\w/-]+)', views.tool_view,
+        name="skylab_tool_view"),
 
     url(r'^$', views.HomeView.as_view(), name='skylab-home'),
-    url(r'^create-mpi-cluster$', views.CreateMPIView.as_view(), name='create_mpi'),
+    url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
     # skip logout confirmation
     # url(r'^accounts/logout/$', logout, {'next_page': '/'}),
     url(r'^accounts/', include('allauth.urls')),

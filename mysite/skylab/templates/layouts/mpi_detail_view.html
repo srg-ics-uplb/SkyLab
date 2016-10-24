@@ -2,8 +2,7 @@
 {% load staticfiles %}
 
 {% block title %}{{ block.super }}{{ mpi_cluster.cluster_name }}{% endblock %}
-{% block head %}
-    {{ block.super }}
+{% block css_imports %}
     <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
     <link rel="stylesheet" href="{% static 'bootstrap-switch-master/dist/css/bootstrap3/bootstrap-switch.min.css' %}">
 {% endblock %}
@@ -140,98 +139,94 @@
 
 {% endblock %}
 
-{% block js_imports %}
+{% block js %}
     {{ block.super }}
     <script type="text/javascript"
             src="{% static 'bootstrap-switch-master/dist/js/bootstrap-switch.min.js' %}"></script>
-{% endblock %}
+    <script>
+        {# if cluster is public hide share key column        #}
+        mpi_info_table = $('#mpi-info-table');
+        {%  if mpi_cluster.is_public %}
+            mpi_info_table.find('th:nth-child(6)').hide();
+            mpi_info_table.find('td:nth-child(6)').hide();
+        {% endif %}
 
-{% block js %}
+        visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
 
-        <script>
-            {# if cluster is public hide share key column        #}
-            mpi_info_table = $('#mpi-info-table');
-            {%  if mpi_cluster.is_public %}
+        visibility_switch.bootstrapSwitch();
+        {% if not user == mpi_cluster.creator %}
+            visibility_switch.bootstrapSwitch('disabled', true);
+        {% endif %}
+        {# init as bootstrap switch #}
+        visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
+            {# if cluster is public hide share key column, otherwise, show       #}
+            if (state == true) {
                 mpi_info_table.find('th:nth-child(6)').hide();
                 mpi_info_table.find('td:nth-child(6)').hide();
-            {% endif %}
+            } else {
+                mpi_info_table.find('th:nth-child(6)').show();
+                mpi_info_table.find('td:nth-child(6)').show();
+            }
 
-            visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
-
-            visibility_switch.bootstrapSwitch();
-            {% if not user == mpi_cluster.creator %}
-                visibility_switch.bootstrapSwitch('disabled', true);
-            {% endif %}
-            {# init as bootstrap switch #}
-            visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
-                {# if cluster is public hide share key column, otherwise, show       #}
-                if (state == true) {
-                    mpi_info_table.find('th:nth-child(6)').hide();
-                    mpi_info_table.find('td:nth-child(6)').hide();
-                } else {
-                    mpi_info_table.find('th:nth-child(6)').show();
-                    mpi_info_table.find('td:nth-child(6)').show();
-                }
-
-                {# tell server about the change            #}
-                ajaxPost('{% url 'ajax_post_mpi_privacy_change' %}', {
-                    'is_public': state,
-                    'pk':{{mpi_cluster.id}}
-                }, function (content) {
-                    //onSuccess
-                    // do nothing
-                });
-
+            {# tell server about the change            #}
+            ajaxPost('{% url 'ajax_post_mpi_privacy_change' %}', {
+                'is_public': state,
+                'pk':{{mpi_cluster.id}}
+            }, function (content) {
+                //onSuccess
+                // do nothing
             });
 
-            {# delete cluster via ajax post, update html            #}
-            var deleteCluster = function () {
-                ajaxPost('{% url 'ajax_post_mpi_delete' %}', {
-                    'pk':{{mpi_cluster.id}}
-                }, function (content) {
-                    //onSuccess
-                    // do nothing
-                    $('#delete-cluster-btn').hide();
-                    $('#mpi-info-ip').html(content.cluster_ip);
-                    mpi_status_cell = $('#mpi-info-status');
-                    mpi_status_cell.html(content.status_msg);
-                    mpi_status_cell.removeClass();
+        });
 
-                    switch (content.status) {
-                        case 2:
-                            mpi_status_cell.addClass('text-success');
-                            break;
-                        case 4:
-                            mpi_status_cell.addClass('text-danger');
-                            break;
-                        default:
-                            mpi_status_cell.addClass('text-info');
-                    }
-                    mpi_status_cell.addClass();
-                    $('#mpi-info-deletion-txt').html('(Scheduled for deletion)')
-                });
-            };
+        {# delete cluster via ajax post, update html            #}
+        var deleteCluster = function () {
+            ajaxPost('{% url 'ajax_post_mpi_delete' %}', {
+                'pk':{{mpi_cluster.id}}
+            }, function (content) {
+                //onSuccess
+                // do nothing
+                $('#delete-cluster-btn').hide();
+                $('#mpi-info-ip').html(content.cluster_ip);
+                mpi_status_cell = $('#mpi-info-status');
+                mpi_status_cell.html(content.status_msg);
+                mpi_status_cell.removeClass();
 
-            {# activate toolset via ajax post, update html #}
-            $('.toolset-activate-btn').on('click', function () {
-                button = $(this);
-                ajaxPost('{% url 'ajax_post_mpi_toolset_activate' %}', {
-                    'mpi_pk':{{mpi_cluster.id}},
-                    'toolset_pk': $(this).data('toolset-pk')
-                }, function (content) {
-                    button.hide();
+                switch (content.status) {
+                    case 2:
+                        mpi_status_cell.addClass('text-success');
+                        break;
+                    case 4:
+                        mpi_status_cell.addClass('text-danger');
+                        break;
+                    default:
+                        mpi_status_cell.addClass('text-info');
+                }
+                mpi_status_cell.addClass();
+                $('#mpi-info-deletion-txt').html('(Scheduled for deletion)')
+            });
+        };
 
-                    button.siblings('span').html(content.status_msg);
-                    button.siblings('span').removeClass();
-                    switch (content.status) {
-                        case 2:
-                            button.siblings('span').addClass('text-success');
-                            break;
-                        default:
-                            button.siblings('span').addClass('text-info');
-                    }
-                })
+        {# activate toolset via ajax post, update html #}
+        $('.toolset-activate-btn').on('click', function () {
+            button = $(this);
+            ajaxPost('{% url 'ajax_post_mpi_toolset_activate' %}', {
+                'mpi_pk':{{mpi_cluster.id}},
+                'toolset_pk': $(this).data('toolset-pk')
+            }, function (content) {
+                button.hide();
+
+                button.siblings('span').html(content.status_msg);
+                button.siblings('span').removeClass();
+                switch (content.status) {
+                    case 2:
+                        button.siblings('span').addClass('text-success');
+                        break;
+                    default:
+                        button.siblings('span').addClass('text-info');
+                }
             })
-        </script>
+        })
+    </script>
 
 {% endblock %}

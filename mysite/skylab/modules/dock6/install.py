@@ -3,30 +3,36 @@ from skylab.models import ToolSet
 
 
 def insert_to_db():
-    toolset_name = 'Dock 6'
-    package_name = __name__.replace('.install', '')
-    p2ctool_name = 'dock6'
-    toolset_description = 'AutoDock is a suite of automated docking tools. It is designed to predict how small molecules, ' \
-                          'such as substrates or drug candidates, bind to a receptor of known 3D structure.'
-    toolset_source_url = 'http://autodock.scripps.edu/'
+    toolset_dict = {
+        'display_name': 'Dock 6',
+        'package_name': __name__.replace('.install', ''),
+        'p2ctool_name': 'dock6',
+        'description': 'The new features of DOCK 6 include: additional scoring options during minimization; '
+                       'DOCK 3.5 scoring-including Delphi electrostatics, ligand conformational entropy corrections, ',
+        'ligand desolvation, receptor desolvation ...'
+        'source_url': 'http://dock.compbio.ucsf.edu/DOCK_6/index.htm'
+    }
 
-    toolset, created = ToolSet.objects.update_or_create(package_name=package_name,
-                                                        p2ctool_name=p2ctool_name,
-                                                        defaults={'display_name': toolset_name,
-                                                                  'description': toolset_description,
-                                                                  'source_url': toolset_source_url})
+    toolset, created = ToolSet.objects.update_or_create(package_name=toolset_dict['package_name'],
+                                                        p2ctool_name=toolset_dict['p2ctool_name'],
+                                                        defaults={'display_name': toolset_dict['display_name'],
+                                                                  'description': toolset_dict.get('description',
+                                                                                                  'No description provided'),
+                                                                  'source_url': toolset_dict.get('source_url',
+                                                                                                 'No link provided')
+                                                                  }
+                                                        )
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'Dock 6',
-         # 'executable_name': 'Dock6Executable',
-         # 'view_name':'Dock6View',
-         'description': 'Pre-calculates grids to be used by AutoDock',
+         'executable_name': 'Dock6Executable',
+         'view_name': 'Dock6FormView'
          },
         {'display_name': 'Grid',
-         # 'executable_name': 'GridExecutable',
-         # 'view_name':'GridView',
-         'description': 'Performs the docking of the ligand to a set of grids describing the target protein',
+         'executable_name': 'GridExecutable',
+         'view_name': 'GridFormView',
+
          },
     ]
 

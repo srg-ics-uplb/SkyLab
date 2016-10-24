@@ -2,14 +2,14 @@
 {% load staticfiles %}
 
 {% block title %}{{ block.super }}Toolsets{% endblock %}
-{% block head %}
-    {{ block.super }}
+
+{% block css_imports %}
     <link rel="stylesheet" href="{% static 'dataTables/css/dataTables.bootstrap.min.css' %}">
 {% endblock %}
 
 {% block content %}
     <div class="row">
-        <h1>Toolsets</h1>
+        <h1 class="text-center">Toolsets</h1>
     </div>
     <div class="row">
         <div class="list-group">

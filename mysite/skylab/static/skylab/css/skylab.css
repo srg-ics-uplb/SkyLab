@@ -6,6 +6,12 @@
     cursor: pointer;
 }
 
+#task-list-table {
+    cursor: pointer;
+}
+
+
+
 .nav .breadcrumb {
 	margin: 0 7px;
 }
