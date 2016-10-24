@@ -38,7 +38,7 @@
         </div>
 
     <div class="row">
-        <button id="add-task-btn" class="btn btn-success" data-toggle="modal"
+        <button id="add-task-btn" class="btn btn-primary" data-toggle="modal"
                 data-target="#create-task-modal"><i class="fa fa-plus" aria-hidden="true"></i>
             Create new task
         </button>
@@ -47,19 +47,20 @@
     <div class="modal fade" id="create-task-modal" role="dialog">
         <div class="modal-dialog ">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-primary">
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Create New Task</h4>
+                    <h4 class="modal-title ">Create New Task</h4>
                 </div>
-                <div id="modal-allow-user-to-mpi" class="modal-body">
+                <div class="modal-body">
                     <div class="alert alert-danger fade in" id="form-error" style="display:none;">
                         <button type="button" class="close">×</button>
                         Please select a toolset, then select a tool.
                     </div>
                     <div class="form-group">
-                        <label for="toolset-select">Toolset:</label>
-                        <select id="toolset-select" class="form-control"></select>
-                        <p id='toolset-select-help' class="help-block" for="toolset-select">Select the toolset you want
+                        <label for="create-task-toolset-select">Toolset:</label>
+                        <select id="create-task-toolset-select" class="form-control"></select>
+                        <p id="create-task-toolset-select-help" class="help-block" for="create-task-toolset-select">
+                            Select the toolset you want
                             to use.</p>
                     </div>
 
@@ -130,13 +131,15 @@
         $('#add-task-btn').click(function () { {# refresh toolset list on modal activate #}
             $('#form-error').hide();
             ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
-                $('#toolset-select').prop('selectedIndex', -1)
+                $('#create-task-toolset-select').prop('selectedIndex', -1);
+                $('#tool-select').prop('selectedIndex', -1);
             })
         });
         var tool_help_texts;
-        var toolset_select = $('#toolset-select');
+        var toolset_select = $('#create-task-toolset-select');
         toolset_select.change(function () {
-            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, $('#toolset-select').val());
+
+            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, toolset_select.val());
             ajaxGet(url_mask, function (content) {
                 $('#tool-select').prop('selectedIndex', -1);
                 tool_help_texts = content.tool_help_texts
@@ -153,7 +156,7 @@
         var redirectToSelectedTool = function () {
             if (!((tool_select.val() == null | tool_select.val() === '' | toolset_select.val() === null | toolset_select.val() === ''))) {
 
-                window.location = "{% url 'skylab_tool_view' toolset_simple_name='toolset_name_placeholder' tool_simple_name='tool_name_placeholder' %}".replace(/toolset_name_placeholder/, $('#toolset-select').val()).replace(/tool_name_placeholder/, tool_select.val());
+                window.location = "{% url 'skylab_tool_view' toolset_simple_name='toolset_name_placeholder' tool_simple_name='tool_name_placeholder' %}".replace(/toolset_name_placeholder/, toolset_select.val()).replace(/tool_name_placeholder/, tool_select.val());
             } else {
                 $('#form-error').show()
             }

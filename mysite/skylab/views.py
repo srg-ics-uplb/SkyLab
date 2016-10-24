@@ -251,7 +251,7 @@ def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = r
 		data = {
 			'inner-fragments': {
 				'#tool-select': select_items,
-				'#toolset-select-help': toolset.short_description
+				'#create-task-toolset-select-help': toolset.short_description
 			},
 			'tool_help_texts': tool_help_texts
 		}
@@ -273,7 +273,7 @@ def refresh_select_toolset(request):
 
 	data = {
 		'inner-fragments': {
-			'#toolset-select': select_items,
+			'#create-task-toolset-select': select_items,
 		}
 	}
 	return data
@@ -294,7 +294,7 @@ def post_allow_user_access_to_mpi(request):
 		try:
 			cluster = MPICluster.objects.get(share_key=share_key)  # give user access to cluster
 			cluster.allowed_users.add(request.user)
-
+			data['cluster_pk'] = cluster.id
 			user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
 			cluster_is_public = Q(is_public=True)
 			qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
@@ -421,6 +421,9 @@ def refresh_nav_task_list(request):
 				url=task_list_url))
 	else:
 		list_items.append('<li><div><p class="text-center text-muted">No tasks created</p></div></li>')
+		list_items.append(  # link to task list view
+			'<li><a class="text-center " href="#"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong class="text-success">Create New Task </strong></a></li>'
+		)
 
 	data = {
 		'inner-fragments': {
