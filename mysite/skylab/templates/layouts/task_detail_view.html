@@ -70,20 +70,19 @@
             <br>
             <div id="appdiv" class="row"></div>
             <div id="jsmol-options-div" class="row">
-                <div class="form-group">
+                <div class="form-inline">
                     <label for="jsmol_file_list">File</label>
                     <select id="jsmol_file_list" class="form-control"></select>
                 </div>
+                <div class="form-inline">
 
-                <div class="form-group">
                     <label for="platformSpeed">Display quality: </label>
                     <input id="platformSpeed" class="form-control" data-slider-id='platformSpeedSlider' type="range"
                            data-slider-min="1"
                            data-slider-max="8" data-slider-step="1" data-slider-value="8"/>
+
                 </div>
-
-                <div class="form-group">
-
+                <div class="form-inline">
                     <label>Display as:</label>
                     <label class="radio-inline"><input type="radio" name="displayAs"
                                                        value="select *;cartoons off;spacefill only">Spacefill</label>
@@ -98,9 +97,9 @@
                                                        value="select protein or nucleic;cartoons only; set cartoonFancy true">Cartoon
                         (fancy)</label>
 
-                </div>
 
-                <div class="form-group">
+                </div>
+                <div class="form-inline">
                     <label>Color Scheme:</label>
                     <label class="radio-inline"><input type="radio" name="color" value="color property atomno">Atom no.</label>
                     <label class="radio-inline"><input type="radio" name="color" value="color cpk">CPK</label>
@@ -109,28 +108,24 @@
                                                        value="color structure">Structure</label>
                 </div>
 
-                <div class="form-group">
+                <div class="form-inline">
                     <label>Isosurface:</label>
                     <label class="radio-inline"><input type="radio" name="isosurface" value="select *;isosurface vdw">vdW</label>
                     <label class="radio-inline"><input type="radio" name="isosurface"
                                                        value="if ({atomno < 10}.partialcharge == 0){calculate partialcharge};isosurface vdw map mep">MEP</label>
                 </div>
 
-                <div id="isosurface_options_div" class="form-group">
-                    <label>Isosurface options: </label>
+                <div id="isosurface_options_div" class="form-inline">
+                    <label for="name">Isosurface options: </label>
                     <label class="radio-inline"><input type="radio" name="isosurface-options"
                                                        value="isosurface translucent">Translucent</label>
                     <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface opaque">Opaque</label>
                     <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface delete">Off</label>
+
+
                 </div>
 
-                <div class="form-group">
-                    <label>Labels:</label>
-                    <label class="radio-inline"><input type="radio" name="displayLabel"
-                                                       value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
-                    <label class="radio-inline"><input type="radio" name="displayLabel"
-                                                       value="select *;labels off">Off</label>
-                </div>
+
             </div>
             </div>
 
@@ -241,7 +236,7 @@
 
         var Info = {
             width: "100%",
-            height: "100%",
+            height: 400,
             debug: false,
             color: "0x468499",
             addSelectionOptions: false,
