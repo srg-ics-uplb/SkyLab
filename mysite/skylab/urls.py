@@ -1,4 +1,5 @@
 from django.conf.urls import include, url
+from django.views.generic import RedirectView
 
 from . import views
 
@@ -41,7 +42,9 @@ urlpatterns = [
     url(r'^$', views.HomeView.as_view(), name='skylab-home'),
     url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
     # skip logout confirmation
-    # url(r'^accounts/logout/$', logout, {'next_page': '/'}),
+    url(r'^accounts/login/$', RedirectView.as_view(url="/skylab/accounts/google/login/?process=login", permanent=False),
+        name="account_login"),
+    url(r'^accounts/signup/$', RedirectView.as_view(pattern_name="account_login", permanent=False)),
     url(r'^accounts/', include('allauth.urls')),
 
     url(r'^files/task/(?P<task_id>\d+)/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_skylabfile,

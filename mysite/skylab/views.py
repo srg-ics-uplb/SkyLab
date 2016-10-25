@@ -250,7 +250,7 @@ def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = r
 
 		data = {
 			'inner-fragments': {
-				'#tool-select': select_items,
+				'#create-task-tool-select': select_items,
 				'#create-task-toolset-select-help': toolset.short_description
 			},
 			'tool_help_texts': tool_help_texts
@@ -417,12 +417,15 @@ def refresh_nav_task_list(request):
 
 		task_list_url = reverse('task_list_view')
 		list_items.append(  # link to task list view
+			'<li><span class="btn btn-link btn-block" data-toggle="modal" data-target="#create-task-modal"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong class="text-success">Create New Task </strong></span></li>'
+		)
+		list_items.append(  # link to task list view
 			'<li><a class="text-center" href="{url}"><strong>See All Tasks</strong><i class="fa fa-angle-right"></i></a></li>'.format(
 				url=task_list_url))
 	else:
 		list_items.append('<li><div><p class="text-center text-muted">No tasks created</p></div></li>')
 		list_items.append(  # link to task list view
-			'<li><a class="text-center " href="#"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong class="text-success">Create New Task </strong></a></li>'
+			'<li><span class="btn btn-link btn-block" data-toggle="modal" data-target="#create-task-modal"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong class="text-success">Create New Task </strong></span></li>'
 		)
 
 	data = {

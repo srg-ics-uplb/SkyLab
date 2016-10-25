@@ -10,14 +10,6 @@
     <link rel="stylesheet" href="{% static 'skylab/css/skylab.css' %}">
     {% block css_imports %}
     {% endblock %}
-    {#    <link rel="stylesheet" href="{% static 'metisMenu/dist/metisMenu.min.css' %}">#}
-    {#    <link rel="stylesheet" href="{% static 'sb-admin-2/css/sb-admin-2.css' %}">#}
-    <!-- Timeline CSS -->
-    {#    <link href="../dist/css/timeline.css" rel="stylesheet">#}
-
-    <!-- Custom CSS -->
-
-
 
     {% block css %}{% endblock css %}
 </head>
@@ -51,28 +43,21 @@
                             <i class="fa fa-tasks fa-fw"></i> Tasks <i class="fa fa-caret-down"></i>
                         </a>
                         <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
-                            <li>
-                                <div>
-                                    <p class="text-center text-muted">
-                                        No tasks created
-                                    </p>
-                                </div>
-                            </li>
                         </ul>
                         <!-- /.dropdown-tasks -->
                     </li>
 
                     {# todo: user thumbnail, dropdown - logout #}
 
-                        <li>
-                        <a href="{% url 'account_logout' %}"  {# onclick="logout()" #}>
+                    <li>
+                        <a id="logout-button" href="#" class="btn btn-link" {# onclick="logout()" #}>
                             {# calls logout function that logouts google account then skylab account #}
                             <i class="fa fa-sign-out fa-fw"></i> Logout
                         </a>
-                        </li>
+                    </li>
                 {% else %}
                     <li>
-                        <a href="/skylab/accounts/google/login/?process=login">
+                        <a href="{% url 'account_login' %}">
                             <i class="fa fa-sign-in fa-fw"></i> Login
                         </a>
                     </li>
@@ -87,27 +72,113 @@
 <div class="container">
     <br>
         {% block content %}{% endblock content %}
+    {# create task modal #}
+    <div class="modal fade" id="create-task-modal" role="dialog">
+        <div class="modal-dialog ">
+            <div class="modal-content">
+                <div class="modal-header bg-primary">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title ">Create New Task</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger fade in" id="create-task-modal-error" style="display:none;">
+                        <button type="button" class="close">×</button>
+                        Please select a toolset, then select a tool.
+                    </div>
+                    <div class="form-group">
+                        <label for="create-task-toolset-select">Toolset:</label>
+                        <select id="create-task-toolset-select" class="form-control"></select>
+                        <p id="create-task-toolset-select-help" class="help-block" for="create-task-toolset-select">
+                            Select the toolset you want
+                            to use.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="create-task-tool-select">Tool:</label>
+                        <select id="create-task-tool-select" class="form-control"></select>
+                        <p id='create-task-tool-select-help' class="help-block" for="create-task-tool-select">Select the
+                            tool you want to
+                            use.</p>
+                    </div>
+
+                </div>
+                <div class="modal-footer ">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button id='create-task-modal-ok' type="button" class="btn btn-primary">Ok
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="{% static 'jquery/js/jquery-1.12.4.min.js' %}"></script>
 <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
 <script src="{% static 'bootstrap-3.3.7-dist/js/npm.js' %}"></script>
-
 <script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
 {#    LOGOUTS GOOGLE ACCOUNT ON SKYLAB ACCOUNT LOGOUT. REMOVE THIS FUNCTION TO PRESERVE OAUTH WORKFLOW#}
 
 {% if user.is_authenticated %}
     <script type="text/javascript">
-        var logout = function () {
-
-            location.href = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue={% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}{% url 'account_logout' %}";
-        };
+        {# logout via ajax post #}
+        $("body").bind("ajaxSend", function (elm, xhr, s) {
+            if (s.type == "POST") {
+                xhr.setRequestHeader('X-CSRF-Token', '{{ csrf_token }}');
+            }
+        });
+        $('#logout-button').on('click', function () {
+            $.post("{% url 'account_logout' %}",
+                    {'csrfmiddlewaretoken': '{{csrf_token}}'},
+                    function (msg) {
+                        window.location = "{% url 'skylab-home' %}"
+                    });
+        });
 
         var navTasksOnClick = function () {
             ajaxGet('{% url 'ajax_refresh_nav_task_list' %}', function (content) {
                 {#       todo: process content         #}
             })
+        };
+
+        {# begin create task modal #}
+        $('#create-task-modal').on('shown.bs.modal', function () { {# refresh toolset list on modal activate #}
+            $('#create-task-modal-error').hide();
+            ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
+                $('#create-task-toolset-select').prop('selectedIndex', -1);
+                $('#create-task-tool-select').prop('selectedIndex', -1);
+            })
+        });
+
+        var create_tasks_tool_help_texts;
+        var create_tasks_toolset_select = $('#create-task-toolset-select');
+        create_tasks_toolset_select.change(function () {
+
+            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, create_tasks_toolset_select.val());
+            ajaxGet(url_mask, function (content) {
+                $('#create-task-tool-select').prop('selectedIndex', -1);
+                create_tasks_tool_help_texts = content.tool_help_texts
+
+            });
+        });
+
+        var tool_select = $('#create-task-tool-select');
+        tool_select.change(function () {
+            $('#create-task-tool-select-help').html(create_tasks_tool_help_texts[$(tool_select)[0].selectedIndex])
+        });
+
+        $('#create-task-modal-ok').on('click', function () {
+            if (!((tool_select.val() == null | tool_select.val() === '' | create_tasks_toolset_select.val() === null | create_tasks_toolset_select.val() === ''))) {
+
+                window.location = "{% url 'skylab_tool_view' toolset_simple_name='toolset_name_placeholder' tool_simple_name='tool_name_placeholder' %}".replace(/toolset_name_placeholder/, create_tasks_toolset_select.val()).replace(/tool_name_placeholder/, tool_select.val());
+            } else {
+                $('#create-task-modal-error').show()
         }
+        });
+
+        $('#create-task-modal-error').find('.close').on('click', function (e) {
+            $(this).parent().hide();
+        });
+        {# end create task modal #}
 
     </script>
 {% endif %}

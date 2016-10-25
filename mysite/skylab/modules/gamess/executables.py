@@ -24,7 +24,7 @@ class GamessExecutable(P2CToolGeneric):
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  #fetch input files for this task
         sftp = self.shell._open_sftp_client()
-        sftp.chdir(self.working_dir)  #cd /mirror/task_xx
+        sftp.chdir(self.working_dir)  # cd /mirror/task_xx/input
 
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)

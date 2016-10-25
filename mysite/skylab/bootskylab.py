@@ -228,10 +228,10 @@ class MPIThread(threading.Thread):
         retries = 0
         exit_loop = False
         while not exit_loop:
-            command = "sudo ifconfig eth0 mtu 1440"
+            command = "sudo ifconfig eth0 mtu 1454"
             ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
             ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-            self.logger.debug(self.log_prefix + 'Set mtu to 1440')
+            self.logger.debug(self.log_prefix + 'Set mtu to 1454')
 
             try:
                 # update p2c-tools
@@ -401,11 +401,9 @@ class MPIThread(threading.Thread):
                         current_task.refresh_from_db()  # refresh instance
                         task_log_prefix = '[Task {0} ({1})] : '.format(current_task.id, current_task.tool.display_name)
                         self.logger.info('{0}Processing {1}'.format(self.log_prefix, task_log_prefix))
-
                         mod = importlib.import_module('{0}.executables'.format(current_task.tool.toolset.package_name))
 
                         cls = getattr(mod, current_task.tool.executable_name)
-                        # cls()
                         executable_obj = cls(shell=self.cluster_shell, task=current_task, logger=self.logger,
                                              log_prefix=self.log_prefix + task_log_prefix)
                         # additional_dirs = ['/mirror/scr']

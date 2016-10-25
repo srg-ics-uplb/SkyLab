@@ -208,9 +208,9 @@ LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
 # ACCOUNT_LOGOUT_REDIRECT_URL = ""
 # #TODO: redirect to logged out page
-# ACCOUNT_USERNAME_REQUIRED = False
-# ACCOUNT_EMAIL_REQUIRED = False
-ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_REQUIRED = True
+# ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
 JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
