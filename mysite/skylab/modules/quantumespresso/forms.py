@@ -41,7 +41,8 @@ class SelectMPIFilesForm(forms.Form):
         q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="quantum-espresso")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(required=False, queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 

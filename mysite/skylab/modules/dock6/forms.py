@@ -43,6 +43,7 @@ class GridForm(forms.Form):
         toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
@@ -108,6 +109,7 @@ class Dock6Form(forms.Form):
         toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
         self.helper = FormHelper()

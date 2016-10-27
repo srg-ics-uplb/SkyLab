@@ -35,6 +35,7 @@ class SelectMPIFilesForm(forms.Form):
         toolset = ToolSet.objects.get(p2ctool_name="ray")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+                                                         toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 

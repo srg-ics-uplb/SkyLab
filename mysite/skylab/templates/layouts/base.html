@@ -110,7 +110,10 @@
             </div>
         </div>
     </div>
+
+
 </div>
+
 
 <script src="{% static 'jquery/js/jquery-1.12.4.min.js' %}"></script>
 <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
@@ -143,10 +146,19 @@
         {# begin create task modal #}
         $('#create-task-modal').on('shown.bs.modal', function () { {# refresh toolset list on modal activate #}
             $('#create-task-modal-error').hide();
+            $("#jsmol-container-div").fadeOut("fast", function () {
+                // Animation complete.
+            });
             ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
                 $('#create-task-toolset-select').prop('selectedIndex', -1);
                 $('#create-task-tool-select').prop('selectedIndex', -1);
             })
+        });
+
+        $("#create-task-modal").on("hidden.bs.modal", function () {
+            $("#jsmol-container-div").fadeIn("fast", function () {
+                // Animation complete.
+            });
         });
 
         var create_tasks_tool_help_texts;

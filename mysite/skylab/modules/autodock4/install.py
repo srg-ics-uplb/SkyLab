@@ -17,7 +17,8 @@ def insert_to_db():
                                                                   'description': toolset_dict.get('description',
                                                                                                   'No description provided'),
                                                                   'source_url': toolset_dict.get('source_url',
-                                                                                                 'No link provided')
+                                                                                                 'No link provided'),
+                                                                  'package_name': toolset_dict.get('package_name')
                                                                   }
                                                         )
 
