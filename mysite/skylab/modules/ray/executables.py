@@ -92,6 +92,7 @@ class RayExecutable(P2CToolGeneric):
 
         sftp = self.shell._open_sftp_client()
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.remove(remote_zip_filepath)
         sftp.close()
 
         # attach transferred file to database

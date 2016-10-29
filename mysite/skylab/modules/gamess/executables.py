@@ -167,6 +167,7 @@ class GamessExecutable(P2CToolGeneric):
 
         self.shell.run(["zip", "-r", zip_filename, "scr"])  # zip scr folder
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.remove(remote_zip_filepath)  # todo : mirror to other execs
         sftp.close()
 
         # register newly transferred file as skylabfile

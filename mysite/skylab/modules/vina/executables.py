@@ -97,6 +97,7 @@ class VinaExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+        sftp.remove(remote_zip_filepath)
         sftp.close()
 
         # attach transferred file to database
@@ -205,6 +206,7 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+        sftp.remove(remote_zip_filepath)
         sftp.close()
 
         # attach transferred file to database

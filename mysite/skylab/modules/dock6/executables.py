@@ -122,6 +122,7 @@ class GridExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+        sftp.remove(remote_zip_filepath)
         sftp.close()
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
