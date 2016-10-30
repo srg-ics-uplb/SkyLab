@@ -33,7 +33,8 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
         return context
 
     def post(self, request, *args, **kwargs):
-        select_mpi_form = SelectMPIFilesForm(request.POST)
+        form_class = self.get_form_class()
+        select_mpi_form = self.get_form(form_class)
         input_formset = self.input_formset(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and input_formset.is_valid():

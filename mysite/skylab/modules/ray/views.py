@@ -32,7 +32,8 @@ class RayView(LoginRequiredMixin, FormView):
         return context
 
     def post(self, request, *args, **kwargs):
-        select_mpi_form = SelectMPIFilesForm(request.POST)
+        form_class = self.get_form_class()
+        select_mpi_form = self.get_form(form_class)
         input_formset = self.input_formset(request.POST, request.FILES)
         other_parameter_form = OtherParameterForm(request.POST, request.FILES)
 

@@ -17,11 +17,9 @@ class SelectMPIFilesForm(forms.Form):
 
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.pop('user')
-        print self.user
+        self.user = kwargs.pop('user')  # get user from form kwargs
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
-        # print self.user
-        # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
+
         user_allowed = Q(allowed_users=self.user)
         cluster_is_public = Q(is_public=True)
 
@@ -42,23 +40,20 @@ class SelectMPIFilesForm(forms.Form):
         # self.helper.form_method = 'post'
         # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
-
-
             Div(
                 Field('mpi_cluster'),
                 css_class="col-sm-12"
             ),
-
             Div(
                 Div('param_input_file'),
                 css_class='row-fluid col-sm-12'
             )
-
         )
 
     def clean(self):
         cluster = self.cleaned_data['mpi_cluster']
         print cluster.cluster_name
+        #todo: implement clean
 
 
 class InputParameterForm(forms.Form):
