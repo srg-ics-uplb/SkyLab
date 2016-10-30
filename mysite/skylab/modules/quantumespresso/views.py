@@ -117,7 +117,7 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             return redirect('task_detail_view', pk=task.id)
         else:
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
-                'select_mpi_form': select_mpi_form,
+                'form': select_mpi_form,
                 'input_formset': input_formset,
             })
             # todo fetch: ontologyterms.txt from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo for -gene-ontology

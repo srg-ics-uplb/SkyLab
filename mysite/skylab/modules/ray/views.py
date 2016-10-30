@@ -187,7 +187,7 @@ class RayView(LoginRequiredMixin, FormView):
             # return redirect(reverse('task_detailview', kwargs={'pk': task.id}))
         else:
             return render(request, 'modules/ray/use_ray.html', {
-                'select_mpi_form': select_mpi_form,
+                'form': select_mpi_form,
                 'other_parameter_form': other_parameter_form,
                 'input_formset': input_formset,
             })

@@ -42,10 +42,5 @@ class GamessView(LoginRequiredMixin, FormView):
         task.task_data = json.dumps({'command_list': command_list})
         task.save()
 
-
-
-
-
-
         self.kwargs['id'] = task.id
         return super(GamessView, self).form_valid(form)

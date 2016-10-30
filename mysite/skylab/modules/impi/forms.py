@@ -10,7 +10,7 @@ from skylab.modules.impi.validators import jpeg_file_extension_validator
 
 
 class SelectMPIFilesForm(forms.Form):
-    param_input_file = forms.FileField(label="Image file ", validators=[jpeg_file_extension_validator], required=False,
+    param_input_file = forms.FileField(label="Image file ", validators=[jpeg_file_extension_validator],
                                        help_text="Only supports JPEG format (.jpeg, .jpg)")
 
     # , validators=[in_file_extension_validator],
@@ -49,11 +49,6 @@ class SelectMPIFilesForm(forms.Form):
                 css_class='row-fluid col-sm-12'
             )
         )
-
-    def clean(self):
-        cluster = self.cleaned_data['mpi_cluster']
-        print cluster.cluster_name
-        #todo: implement clean
 
 
 class InputParameterForm(forms.Form):
@@ -95,10 +90,10 @@ class InputParameterForm(forms.Form):
     def clean(self):
         if self.cleaned_data:
             operation = self.cleaned_data.get("param_operation", None)
-            value = self.cleaned_data.get('value', None)
+            value = self.cleaned_data.get('param_value', None)
 
             if operation:
-                if operation == 3 or operation == 4:
+                if operation == '3' or operation == '4':
                     if not value:
                         raise forms.ValidationError('Brightness/Contrast requires additional input value',
                                                     code='no_additional_value_provided')

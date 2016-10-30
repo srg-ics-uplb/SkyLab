@@ -43,7 +43,11 @@
 {% block js %}
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
     <script type="text/javascript">
+        $('.alert-block').addClass("col-sm-12");
+
         {# for dynamic formset add/remove        #}
+        var rowClass = $('.row');
+
         $(function () {
             $('.form-container').formset({
                 prefix: '{{ input_formset.prefix }}',
@@ -52,9 +56,27 @@
                 addCssClass: 'btn btn-success',
                 deleteCssClass: 'btn btn-danger'
             });
+
+            {# on load hide/show elements #}
+            $('select').each(function () {
+                if (match = $(this).attr('name').match(/form-(\d+)-param_operation/)) {
+                    var param_value_div_id = '#div_id_form-' + match[1] + '-param_value';
+                    var inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';
+                    var param_operation = $(this).val();
+                    $(param_value_div_id).removeClass('hidden');
+
+                    if (param_operation == 3 || param_operation == 4) {
+                        $(param_value_div_id).show();
+                    }
+                    else {
+                        $(param_value_div_id).hide();
+                    }
+                }
+            });
         });
 
-        $('.row').on('change', "select", function () {
+        {# on dropdown val change       #}
+        rowClass.on('change', "select", function () {
             if (match = $(this).attr('name').match(/form-(\d+)-param_operation/)) {
                 var param_value_div_id = '#div_id_form-' + match[1] + '-param_value';
                 var inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';

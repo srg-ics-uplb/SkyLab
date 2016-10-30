@@ -3,7 +3,6 @@ import os.path
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.urlresolvers import reverse
-from django.shortcuts import render
 from django.utils.text import get_valid_filename
 from django.views.generic import FormView
 
@@ -21,18 +20,14 @@ class VinaView(LoginRequiredMixin, FormView):
         kwargs['user'] = self.request.user
         return kwargs
 
-    def form_invalid(self, form):
-        return render(self.request, 'modules/vina/use_vina.html', {
-            'form': form,
-        })
-
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs['task_id']})
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
 
-        exec_string_template = "mkdir -p {outpath}; vina "
+        # exec_string_template = "mkdir -p {outpath}; vina " #todo: test if runs properly
+        exec_string_template = "vina "
         tool = Tool.objects.get(display_name="Vina")
         task = Task.objects.create(
             mpi_cluster=cluster, tool=tool, user=self.request.user

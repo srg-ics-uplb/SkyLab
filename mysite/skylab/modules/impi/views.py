@@ -35,9 +35,16 @@ class ImpiView(LoginRequiredMixin, FormView):
         if select_mpi_form.is_valid() and input_formset.is_valid():
             pass
             # todo: implement task creation
+            for input_form in input_formset:
+                operation = input_form.cleaned_data.get('param_operation')
+                if operation:
+                    if operation == '3' or operation == '4':
+                        print('Check value')
+                    else:
+                        print("Don't check value")
             return redirect('task_detail_view', pk=0)
         else:
-            return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
-                'select_mpi_form': select_mpi_form,
+            return render(request, 'modules/impi/use_impi.html', {
+                'form': select_mpi_form,
                 'input_formset': input_formset,
             })
