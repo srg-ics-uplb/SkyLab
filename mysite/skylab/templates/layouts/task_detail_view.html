@@ -83,6 +83,13 @@
 
                 </div>
                 <div class="form-inline">
+                    <label>Labels:</label>
+                    <label class="radio-inline"><input type="radio" name="displayLabel"
+                                                       value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
+                    <label class="radio-inline"><input type="radio" name="displayLabel"
+                                                       value="select *;labels off">Off</label>
+                </div>
+                <div class="form-inline">
                     <label>Display as:</label>
                     <label class="radio-inline"><input type="radio" name="displayAs"
                                                        value="select *;cartoons off;spacefill only">Spacefill</label>

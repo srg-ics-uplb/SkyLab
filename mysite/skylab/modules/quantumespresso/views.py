@@ -18,6 +18,12 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
 
+    def get_form_kwargs(self):
+        # pass "user" keyword argument with the current user to your form
+        kwargs = super(QuantumEspressoView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(QuantumEspressoView, self).get_context_data(**kwargs)
         context['select_mpi_form'] = SelectMPIFilesForm()
@@ -33,8 +39,8 @@ class QuantumEspressoView(LoginRequiredMixin, TemplateView):
         if select_mpi_form.is_valid() and input_formset.is_valid():
             # do something with the cleaned_data on the formsets.
             # print select_mpi_form.cleaned_data.get('mpi_cluster')
-            # cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
-            cluster_name = MPICluster.objects.get(pk=31)
+            cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
+
             cluster_size = MPICluster.objects.get(cluster_name=cluster_name).cluster_size
 
             # -n cluster_size

@@ -82,4 +82,7 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 				return "{0} (nodes : {1}) ({2} status: {3})".format(obj.cluster_name, obj.cluster_size,
 																	self.toolset.display_name, status)
 			except ToolActivation.DoesNotExist:
-				pass
+				return "{0} (nodes : {1}) ({2})".format(obj.cluster_name, obj.cluster_size,
+														self.toolset.display_name)
+		else:
+			return "{0} (nodes : {1}) ({2})".format(obj.cluster_name, obj.cluster_size, self.toolset.display_name)

@@ -16,6 +16,11 @@ class RayView(LoginRequiredMixin, TemplateView):
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
 
+    def get_form_kwargs(self):
+        # pass "user" keyword argument with the current user to your form
+        kwargs = super(RayView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
 
     def get_context_data(self, **kwargs):
         context = super(RayView, self).get_context_data(**kwargs)

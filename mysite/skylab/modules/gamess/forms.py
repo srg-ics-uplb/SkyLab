@@ -21,6 +21,7 @@ class GamessForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
+        print self.user
         super(GamessForm, self).__init__(*args, **kwargs)
 
         user_allowed = Q(allowed_users=self.user)

@@ -1,0 +1,75 @@
+{% extends 'layouts/base.html' %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+{% load staticfiles %}
+
+{% block content %}
+
+    <div class='row'>
+        <div class='col-xs-10 col-xs-offset-1 '>
+
+
+            <form id="ray-form" action="" method="post" enctype="multipart/form-data">
+
+                {#                <div class="well">#}
+                <h1 class="text-center">Impi</h1>
+                <hr>
+                {#                    <div class="panel-heading">#}
+                {#                        <h3 class="panel-title">Quantum Espresso</h3>#}
+                {#                    </div>#}
+                {#                    <div class="panel-body">#}
+                {% crispy form %}
+
+
+                {{ input_formset.management_form }}
+                <div id="input-formset-container">
+                    {% for form in input_formset.forms %}
+                        {% crispy form %}
+                    {% endfor %}
+                </div>
+                <hr>
+                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
+                {#                    </div>#}
+                {#                </div>#}
+            </form>
+
+
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block js %}
+    <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
+    <script type="text/javascript">
+        {# for dynamic formset add/remove        #}
+        $(function () {
+            $('.form-container').formset({
+                prefix: '{{ input_formset.prefix }}',
+                addText: '<i class="fa fa-plus" aria-hidden="true"></i> Add operation',
+                deleteText: '<i class="fa fa-times" aria-hidden="true"></i>',
+                addCssClass: 'btn btn-success',
+                deleteCssClass: 'btn btn-danger'
+            });
+        });
+
+        $('.row').on('change', "select", function () {
+            if (match = $(this).attr('name').match(/form-(\d+)-param_operation/)) {
+                var param_value_div_id = '#div_id_form-' + match[1] + '-param_value';
+                var inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';
+                var param_operation = $(this).val();
+                $(param_value_div_id).removeClass('hidden');
+
+                if (param_operation == 3 || param_operation == 4) {
+                    $(param_value_div_id).show();
+                }
+                else {
+                    $(param_value_div_id).hide();
+                }
+            }
+        });
+    </script>
+
+
+{% endblock %}

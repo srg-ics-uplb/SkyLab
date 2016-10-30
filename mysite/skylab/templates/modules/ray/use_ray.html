@@ -64,31 +64,30 @@
         $(function () {
             $('.form-container').formset({
                 prefix: '{{ input_formset.prefix }}',
-                addText: 'Add input parameter',
+                addText: '<i class="fa fa-plus" aria-hidden="true"></i> Add input parameter',
+                deleteText: '<i class="fa fa-times" aria-hidden="true"></i>',
                 addCssClass: 'btn btn-success',
-                deleteCssClass: 'btn btn-danger',
-
-
+                deleteCssClass: 'btn btn-danger'
             });
         });
 
         {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
         parameter = $('select[name=form-0-parameter]').val();
-        inp_file1_div_id = '#div_id_form-0-input_file1';
+        param_value_div_id = '#div_id_form-0-input_file1';
         inp_file2_div_id = '#div_id_form-0-input_file2';
 
         input_file1_label = 'id_form-0-input_file1';
         input_file2_label = 'id_form-0-input_file2';
-        $(inp_file1_div_id).removeClass('hidden');
+        $(param_value_div_id).removeClass('hidden');
         $(inp_file2_div_id).removeClass('hidden');
 
         if (parameter == '') {
             $(inp_file2_div_id).hide();
-            $(inp_file1_div_id).hide();
+            $(param_value_div_id).hide();
             $(inp_file2_div_id).hide();
         }
         else {
-            $(inp_file1_div_id).show();
+            $(param_value_div_id).show();
             if (parameter === "-p") {
                 $(inp_file2_div_id).show();
 
@@ -108,21 +107,21 @@
 
         $('.row').on('change', "select", function () {
             if (match = $(this).attr('name').match(/form-(\d+)-parameter/)) {
-                inp_file1_div_id = '#div_id_form-' + match[1] + '-input_file1';
+                param_value_div_id = '#div_id_form-' + match[1] + '-input_file1';
                 inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';
                 parameter = $(this).val();
                 input_file1_label = 'id_form-' + match[1] + '-input_file1';
                 input_file2_label = 'id_form-' + match[1] + '-input_file2';
-                $(inp_file1_div_id).removeClass('hidden');
+                $(param_value_div_id).removeClass('hidden');
                 $(inp_file2_div_id).removeClass('hidden');
 
                 if (parameter == '') {
                     $(inp_file2_div_id).hide();
-                    $(inp_file1_div_id).hide();
+                    $(param_value_div_id).hide();
                     $(inp_file2_div_id).hide();
                 }
                 else {
-                    $(inp_file1_div_id).show();
+                    $(param_value_div_id).show();
                     if (parameter === "-p") {
                         $(inp_file2_div_id).show();
 

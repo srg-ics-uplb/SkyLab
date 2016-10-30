@@ -14,10 +14,15 @@ from skylab.modules.vina.forms import VinaForm, VinaSplitForm
 class VinaView(LoginRequiredMixin, TemplateView):
     template_name = "modules/vina/use_vina.html"
 
+    def get_form_kwargs(self):
+        # pass "user" keyword argument with the current user to your form
+        kwargs = super(VinaView, self).get_form_kwargs()
+        kwargs['user'] = self.request.user
+        return kwargs
+
     def get_context_data(self, **kwargs):
         context = super(VinaView, self).get_context_data(**kwargs)
         context['vina_form'] = VinaForm()
-        context['user'] = self.request.user
         return context
 
     def post(self, request, *args, **kwargs):

@@ -68,13 +68,6 @@ class SelectMPIFilesForm(forms.Form):
 
         )
 
-        # def clean(self):
-        #     if self.cleaned_data:
-        #         if self.cleaned_data['param_mini_ranks']:
-        #             if not self.cleaned_data["param_mini_ranks"]:
-        #                 raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
-        #                                             code="mini_ranks_no_value_set")
-
 
 class InputParameterForm(forms.Form):
     EXECUTABLE_CHOICES = (  # input parameter args
