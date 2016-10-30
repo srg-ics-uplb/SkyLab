@@ -33,11 +33,10 @@ class ImpiView(LoginRequiredMixin, FormView):
 
         if select_mpi_form.is_valid() and input_formset.is_valid():
             pass
-
+            # todo: implement task creation
             return redirect('task_detail_view', pk=0)
         else:
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
                 'select_mpi_form': select_mpi_form,
                 'input_formset': input_formset,
             })
-            # todo fetch: ontologyterms.txt from http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo for -gene-ontology

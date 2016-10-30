@@ -81,7 +81,7 @@ class VinaForm(forms.Form):
 
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.get('user')
+        self.user = kwargs.pop('user')
         super(VinaForm, self).__init__(*args, **kwargs)
 
         user_allowed = Q(allowed_users=self.user)

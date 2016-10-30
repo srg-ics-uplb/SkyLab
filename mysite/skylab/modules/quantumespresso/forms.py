@@ -31,7 +31,7 @@ class SelectMPIFilesForm(forms.Form):
             return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.get('user')
+        self.user = kwargs.pop('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         user_allowed = Q(allowed_users=self.user)

@@ -4,17 +4,19 @@ from django.conf import settings
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
-from django.views.generic import TemplateView
+from django.views.generic import FormView
 
 from skylab.models import MPICluster, Task, SkyLabFile, Tool
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
 
 
-class RayView(LoginRequiredMixin, TemplateView):
+class RayView(LoginRequiredMixin, FormView):
     template_name = "modules/ray/use_ray.html"
     input_formset = formset_factory(InputParameterForm, min_num=1, extra=0, max_num=10, validate_max=True,
                                     validate_min=False, can_delete=True)
     input_forms = input_formset()
+    form_class = SelectMPIFilesForm
+
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
@@ -24,7 +26,6 @@ class RayView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(RayView, self).get_context_data(**kwargs)
-        context['select_mpi_form'] = SelectMPIFilesForm()
         context['input_formset'] = self.input_forms
         context['other_parameter_form'] = OtherParameterForm()
         context['user'] = self.request.user

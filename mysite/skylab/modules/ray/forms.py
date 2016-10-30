@@ -24,7 +24,7 @@ class SelectMPIFilesForm(forms.Form):
                                           widget=forms.NumberInput(attrs={'placeholder': 'default: 1'}))
 
     def __init__(self, *args, **kwargs):
-        self.user = kwargs.get('user')
+        self.user = kwargs.pop('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
         user_allowed = Q(allowed_users=self.user)
