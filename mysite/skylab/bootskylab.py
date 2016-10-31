@@ -56,7 +56,6 @@ class MPIThreadManager(object):
                 t = MPIThread(cluster, self)
                 self.threadHash[cluster.id] = t
                 t.start()
-                self.logger.debug("Spawned thread for " + cluster.cluster_name)
 
         post_save.connect(receiver=self.receive_mpi_cluster_from_post_save_signal, sender=MPICluster,
                           dispatch_uid="receive_mpi_from_post_save_signal")

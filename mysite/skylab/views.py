@@ -467,8 +467,6 @@ def refresh_task_detail_view(request, pk=None):
 
         for data in output_image_urls:
             carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
-            carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
-            carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
 
         jsmol_file_absolute_uris = task.get_dict_jsmol_files_uris(request)
 

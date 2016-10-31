@@ -95,8 +95,12 @@
 .carousel-cell img {
     display: block;
     height: 200px;
-    margin: 0 auto; /* it centers any block level element */
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 0px;
     width: auto;
+    max-width: 95%;
+    overflow: hidden;
 
 }
 

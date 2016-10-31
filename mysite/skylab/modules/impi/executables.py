@@ -18,6 +18,7 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
     def __init__(self, **kwargs):
         super(ImpiExecutable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'output')  # this is where the commands will be executed
+        self.output_files = []
 
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
@@ -69,15 +70,20 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
                     for parameter in command_list:
                         exec_shell.stdin_write(str(parameter) + "\n")
+                        time.sleep(3)
+                    self.logger.debug(self.log_prefix + 'Running exit operation')
                     exec_shell.stdin_write('0\n')
 
                     # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
                     if default_output_filename != new_output_filename:
                         sftp.rename(default_output_filename, new_output_filename)
+                        self.output_files.append(new_output_filename)
 
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
+                except IOError as err:
+                    self.logger.error(self.log_prefix + 'IOError: ' + err.message)
 
                 except spur.RunProcessError as err:
                     if err.return_code == -1:  # no return code received
@@ -125,10 +131,14 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + "Opened SFTP client")
         remote_path = os.path.join(self.remote_task_dir, 'output')
+        sftp.chdir(remote_path)
 
         # retrieve then delete produced output files
-        remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
-        for remote_file in remote_files:
+
+        # hangs on this command, used workaround instead
+        # remote_files = sftp.listdir()  # list dirs and files in remote path
+
+        for remote_file in self.output_files:
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
