@@ -47,7 +47,7 @@ urlpatterns = [
     url(r'^accounts/signup/$', RedirectView.as_view(pattern_name="account_login", permanent=False)),
     url(r'^accounts/', include('allauth.urls')),
 
-    url(r'^files/task/(?P<task_id>\d+)/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_skylabfile,
+    url(r'^task/(?P<task_id>\d+)/files/(?P<type>.+)/(?P<filename>.*\..*)$', views.serve_skylabfile,
         name="skylab_file_url"),
 
 ]  # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

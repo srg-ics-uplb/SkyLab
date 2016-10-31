@@ -461,9 +461,21 @@ def refresh_task_detail_view(request, pk=None):
             status_msg = '<span id="task-status" class="text-danger pull-right">' + task.simple_status_msg + '</span>'
         # progress_bar
 
+        output_image_urls = task.get_output_image_files_urls()
+        carousel_cells = []
+        carousel_cell_format = '<div class="carousel-cell text-center"><img class="carousel-cell-image"  src="{url}" alt="{filename}"/><h4 class="caption">{filename}</h4></div>'
+
+        for data in output_image_urls:
+            carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
+            carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
+            carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
+
+        jsmol_file_absolute_uris = task.get_dict_jsmol_files_uris(request)
+
         data = {
             'inner-fragments': {
                 '#task-output-files-list': task_output_file_list,
+                '#output-carousel-div': carousel_cells,
             },
             'fragments': {
                 '#task-view-progress-bar': progress_bar,
@@ -472,7 +484,10 @@ def refresh_task_detail_view(request, pk=None):
             'status_code': task.status_code,
             'progress': progress_bar,
             # 'has_jsmol_file': task.has_jsmol_file,
-            'uri_dict': task.get_dict_jsmol_files_uris(request),
+            'uri_dict': jsmol_file_absolute_uris,
+            'jsmol_display': bool(jsmol_file_absolute_uris),
+            'carousel_display': bool(carousel_cells)
 
         }
+
         return data

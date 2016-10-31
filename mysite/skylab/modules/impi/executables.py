@@ -71,10 +71,6 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                         exec_shell.stdin_write(str(parameter) + "\n")
                     exec_shell.stdin_write('0\n')
 
-                    remote_files = sftp.listdir()  # list dirs and files in remote path
-                    for remote_file in remote_files:
-                        self.logger.debug(self.log_prefix + remote_file)
-
                     # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
                     if default_output_filename != new_output_filename:

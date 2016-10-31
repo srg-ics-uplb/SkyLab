@@ -321,6 +321,20 @@ class Task(models.Model):
     def jsmol_input_files(self):
         return self.input_files.filter(render_with_jsmol=True)
 
+    def get_output_image_files_urls(self):
+        output_images_urls = []
+
+        for f in self.output_files.all():
+            ext = os.path.splitext(f.filename)[1]
+            if ext.lower() in ['.jpg', '.jpeg', '.bmp', '.gif', '.png']:
+                output_images_urls.append(
+                    {
+                        'url': f.get_direct_url(),
+                        'filename': f.filename
+                    }
+                )
+        return output_images_urls
+
     def get_output_files_urls(self):
         output_files_urls_dict = []
 
@@ -380,6 +394,11 @@ class SkyLabFile(models.Model):
 
     def __str__(self):
         return self.filename
+
+    def get_direct_url(self):
+        return reverse('skylab_file_url',
+                       kwargs={'task_id': self.task_id, 'type': 'output' if self.type == 2 else 'input',
+                               'filename': self.filename})
 
     def save(self, *args, **kwargs):
         if not self.upload_path:

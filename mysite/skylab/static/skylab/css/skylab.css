@@ -89,3 +89,47 @@
 .list-group > a:hover, .list-group > a:focus {
 	color: #0645AD;
 }
+
+/** { box-sizing: border-box; }*/
+
+.carousel-cell img {
+    display: block;
+    height: 200px;
+    margin: 0 auto; /* it centers any block level element */
+    width: auto;
+
+}
+
+@media screen and ( min-width: 768px ) {
+    .carousel-cell img {
+        height: 400px;
+    }
+}
+
+/*.caption {*/
+/*bottom: 0;*/
+/*min-height: 80px;*/
+/*left: 0;*/
+/*position: absolute;*/
+/*width: 100%;*/
+/*z-index: 2;*/
+/*}*/
+
+.caption {
+    text-align: center;
+}
+
+.slick-prev:before, .slick-next:before {
+    color: gray !important;
+}
+
+.carousel-container {
+    margin: auto;
+    padding: 20px;
+
+}
+
+
+
+
+

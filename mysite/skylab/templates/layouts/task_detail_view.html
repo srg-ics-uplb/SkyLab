@@ -6,6 +6,8 @@
 {% block title %}{{ block.super }}Task {{ task.id }}{% endblock %}
 {% block css_imports %}
     <link rel="stylesheet" href="{% static 'bootstrap-slider/dist/css/bootstrap-slider.min.css' %}">
+    <link rel="stylesheet" href="{% static 'slick/slick.css' %}">
+    <link rel="stylesheet" href="{% static 'slick/slick-theme.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -65,79 +67,111 @@
             {#            </ul>#}
         </div>
             {#    JSmol container        #}
-        <div id="jsmol-container-div"
-             class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0 hidden">
-            <br>
-            <div id="appdiv" class="row"></div>
-            <div id="jsmol-options-div" class="row">
-                <div class="form-inline">
-                    <label for="jsmol_file_list">File</label>
-                    <select id="jsmol_file_list" class="form-control"></select>
+        <div class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0">
+            <div class="row">
+                <div class="carousel-container">
+                    <div id="output-carousel-div" class="single-item">
+
+                        <div class="carousel-cell">
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/orange-tree.jpg"
+                                 alt="orange tree"/>
+                            <h4 class="caption">Orange Tree</h4>
+                        </div>
+                        <div class="carousel-cell">
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/submerged.jpg" alt="submerged"/>
+                        </div>
+                        <div class="carousel-cell">
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/look-out.jpg" alt="look-out"/>
+                        </div>
+                        <div class="carousel-cell">
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/one-world-trade.jpg"
+                                 alt="One World Trade"/>
+                        </div>
+                        <div class="carousel-cell">
+                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/drizzle.jpg" alt="drizzle"/>
+                        </div>
                 </div>
-                <div class="form-inline">
-
-                    <label for="platformSpeed">Display quality: </label>
-                    <input id="platformSpeed" class="form-control" data-slider-id='platformSpeedSlider' type="range"
-                           data-slider-min="1"
-                           data-slider-max="8" data-slider-step="1" data-slider-value="8"/>
-
                 </div>
-                <div class="form-inline">
-                    <label>Labels:</label>
-                    <label class="radio-inline"><input type="radio" name="displayLabel"
-                                                       value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
-                    <label class="radio-inline"><input type="radio" name="displayLabel"
-                                                       value="select *;labels off">Off</label>
-                </div>
-                <div class="form-inline">
-                    <label>Display as:</label>
-                    <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select *;cartoons off;spacefill only">Spacefill</label>
-                    <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select *;cartoons off;wireframe -0.1">Wire</label>
-                    <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select *;cartoons off;spacefill 23%;wireframe 0.15">Ball &
-                        Stick</label>
-                    <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select protein or nucleic;cartoons only; set cartoonFancy false">Cartoon</label>
-                    <label class="radio-inline"><input type="radio" name="displayAs"
-                                                       value="select protein or nucleic;cartoons only; set cartoonFancy true">Cartoon
-                        (fancy)</label>
-
-
-                </div>
-                <div class="form-inline">
-                    <label>Color Scheme:</label>
-                    <label class="radio-inline"><input type="radio" name="color" value="color property atomno">Atom no.</label>
-                    <label class="radio-inline"><input type="radio" name="color" value="color cpk">CPK</label>
-                    <label class="radio-inline"><input type="radio" name="color" value="color amino">Amino</label>
-                    <label class="radio-inline"><input type="radio" name="color"
-                                                       value="color structure">Structure</label>
-                </div>
-
-                <div class="form-inline">
-                    <label>Isosurface:</label>
-                    <label class="radio-inline"><input type="radio" name="isosurface" value="select *;isosurface vdw">vdW</label>
-                    <label class="radio-inline"><input type="radio" name="isosurface"
-                                                       value="if ({atomno < 10}.partialcharge == 0){calculate partialcharge};isosurface vdw map mep">MEP</label>
-                </div>
-
-                <div id="isosurface_options_div" class="form-inline">
-                    <label for="name">Isosurface options: </label>
-                    <label class="radio-inline"><input type="radio" name="isosurface-options"
-                                                       value="isosurface translucent">Translucent</label>
-                    <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface opaque">Opaque</label>
-                    <label class="radio-inline"><input type="radio" name="isosurface-options" value="isosurface delete">Off</label>
-
-
-                </div>
-
-
-            </div>
             </div>
 
+            <div id="jsmol-container-div" class="hidden">
+                <br>
+                <div id="appdiv" class="row"></div>
+                <div id="jsmol-options-div" class="row">
+                    <div class="form-inline">
+                        <label for="jsmol_file_list">File</label>
+                        <select id="jsmol_file_list" class="form-control"></select>
+                    </div>
+                    <div class="form-inline">
+
+                        <label for="platformSpeed">Display quality: </label>
+                        <input id="platformSpeed" class="form-control" data-slider-id='platformSpeedSlider' type="range"
+                               data-slider-min="1"
+                               data-slider-max="8" data-slider-step="1" data-slider-value="8"/>
+
+                    </div>
+                    <div class="form-inline">
+                        <label>Labels:</label>
+                        <label class="radio-inline"><input type="radio" name="displayLabel"
+                                                           value="if (_fileType == &quot;Pdb&quot;){select *.CA;label %n%r}else{select *;label %a};select *;">On</label>
+                        <label class="radio-inline"><input type="radio" name="displayLabel"
+                                                           value="select *;labels off">Off</label>
+                    </div>
+                    <div class="form-inline">
+                        <label>Display as:</label>
+                        <label class="radio-inline"><input type="radio" name="displayAs"
+                                                           value="select *;cartoons off;spacefill only">Spacefill</label>
+                        <label class="radio-inline"><input type="radio" name="displayAs"
+                                                           value="select *;cartoons off;wireframe -0.1">Wire</label>
+                        <label class="radio-inline"><input type="radio" name="displayAs"
+                                                           value="select *;cartoons off;spacefill 23%;wireframe 0.15">Ball
+                            &
+                            Stick</label>
+                        <label class="radio-inline"><input type="radio" name="displayAs"
+                                                           value="select protein or nucleic;cartoons only; set cartoonFancy false">Cartoon</label>
+                        <label class="radio-inline"><input type="radio" name="displayAs"
+                                                           value="select protein or nucleic;cartoons only; set cartoonFancy true">Cartoon
+                            (fancy)</label>
+
+
+                    </div>
+                    <div class="form-inline">
+                        <label>Color Scheme:</label>
+                        <label class="radio-inline"><input type="radio" name="color" value="color property atomno">Atom
+                            no.</label>
+                        <label class="radio-inline"><input type="radio" name="color" value="color cpk">CPK</label>
+                        <label class="radio-inline"><input type="radio" name="color" value="color amino">Amino</label>
+                        <label class="radio-inline"><input type="radio" name="color"
+                                                           value="color structure">Structure</label>
+                    </div>
+
+                    <div class="form-inline">
+                        <label>Isosurface:</label>
+                        <label class="radio-inline"><input type="radio" name="isosurface"
+                                                           value="select *;isosurface vdw">vdW</label>
+                        <label class="radio-inline"><input type="radio" name="isosurface"
+                                                           value="if ({atomno < 10}.partialcharge == 0){calculate partialcharge};isosurface vdw map mep">MEP</label>
+                    </div>
+
+                    <div id="isosurface_options_div" class="form-inline">
+                        <label for="name">Isosurface options: </label>
+                        <label class="radio-inline"><input type="radio" name="isosurface-options"
+                                                           value="isosurface translucent">Translucent</label>
+                        <label class="radio-inline"><input type="radio" name="isosurface-options"
+                                                           value="isosurface opaque">Opaque</label>
+                        <label class="radio-inline"><input type="radio" name="isosurface-options"
+                                                           value="isosurface delete">Off</label>
+
+
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
 
     </div>
+
 {% endblock %}
 
 {% block js %}
@@ -145,6 +179,7 @@
     <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dist/bootstrap-slider.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dependencies/js/modernizr.js' %}"></script>
+    <script type="text/javascript" src="{% static 'slick/slick.min.js' %}"></script>
 
     {# insert ajax-request. replace input and output files list with the received content    #}
     <script type="text/javascript">
@@ -160,24 +195,56 @@
         $('#isosurface_options_div').hide();
         Models = [];
 
+        function getSliderSettings() {
+            return {
+                dots: true,
+                accessiblity: true,
+                lazyLoad: 'ondemand'
+            }
+        }
+
+        $(function () {
+            $('.single-item').slick({
+                dots: true,
+                accessiblity: true,
+                lazyLoad: 'ondemand'
+
+                {#            setting-name: setting-value#}
+            });
+        });
+
+
+
         var retrieveCurrentStatus = function () {
             ajaxGet('{% url 'ajax_refresh_task_detail_view' pk=task.id %}', function (content) {
                 //onSuccess
                 {#                alert(content.status_code);#}
                 statusCode = content.status_code;
 
-                print;
                 if (statusCode == 200 || statusCode == 401) {
                     clearInterval(statusRefresher);
-
-                    if (statusCode == 200 && content.uri_dict.length > 0) { //if successful and there is at least one jsmol readable file
+                    if (statusCode == 200 && (content.jsmol_display == true || content.carousel_display == true)) {
+                        {#                    if (statusCode == 200 && content.uri_dict.length > 0) { //if successful and there is at least one jsmol readable file#}
                         content.uri_dict.forEach(addModel);
                         {#                        {% for absolute_uri in jsmol_files_absolute_uris %}#}
                         {#                            Models.push(["{{ absolute_uri.uri }}","{{ absolute_uri.filename }}"]); // Models.push([absolute_uri, filename])#}
                         {#                        {% endfor %}#}
 
-                        $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info));
+                        var task_detail_div = $('#task-detail-div');
+                        {#            task_detail_div.addClass("col-xs-6");#}
+                        task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");
+                        task_detail_div.addClass("col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0");
+                        if (content.jsmol_display == true) {
+                            $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info));
+                        }
+
                     }
+                }
+
+                if (content.carousel_display == true) {
+                    var slick_carousel = $('.single-item');
+                    slick_carousel.slick('unslick');
+                    slick_carousel.slick(getSliderSettings())
                 }
             })
         };
@@ -215,10 +282,10 @@
 
             var loadFile = 'load "' + $("#jsmol_file_list").find("option:first").val() + '"';
             Jmol.script(jmolApplet0, loadFile);
-            var task_detail_div = $('#task-detail-div');
+            {#            var task_detail_div = $('#task-detail-div');#}
             {#            task_detail_div.addClass("col-xs-6");#}
-            task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");
-            task_detail_div.addClass("col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0");
+            {#            task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");#}
+            {#            task_detail_div.addClass("col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0");#}
 
             var jsmol_container_div = $('#jsmol-container-div');
             jsmol_container_div.removeClass('hidden');
@@ -260,15 +327,12 @@
             {#            console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"#}
         };
 
-        $(document).ready(function () {
 
-
-        });
 
         {# these are conveniences that mimic behavior of Jmol.js#}
 
         {#        function jmolCheckbox(script1, script0, text, ischecked) {#}
-        {#            Jmol.jmolCheckbox(jmolApplet0, script1, script0, text, ischecked)#}
+        {#            Jmol.jmolCheckbox(jmolApplet0, first['url']script1, script0, text, ischecked)#}
         {#        }#}
         {#        function jmolButton(script, text) {#}
         {#            Jmol.jmolButton(jmolApplet0, script, text)#}
