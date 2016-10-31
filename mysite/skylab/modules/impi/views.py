@@ -1,10 +1,13 @@
 from __future__ import print_function
 
+import json
+
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import formset_factory
 from django.shortcuts import render, redirect
 from django.views.generic import FormView
 
+from skylab.models import Tool, Task, SkyLabFile
 from skylab.modules.impi.forms import InputParameterForm, SelectMPIFilesForm
 
 
@@ -27,21 +30,49 @@ class ImpiView(LoginRequiredMixin, FormView):
         context['input_formset'] = self.input_forms
         return context
 
+
     def post(self, request, *args, **kwargs):
         form_class = self.get_form_class()
         select_mpi_form = self.get_form(form_class)
         input_formset = self.input_formset(request.POST, request.FILES)
 
+
         if select_mpi_form.is_valid() and input_formset.is_valid():
-            pass
-            # todo: implement task creation
+            cluster = select_mpi_form.cleaned_data['mpi_cluster']
+            tool = Tool.objects.get(simple_name='impi')
+
+            command_list = []
             for input_form in input_formset:
                 operation = input_form.cleaned_data.get('param_operation')
+                # command = {}
                 if operation:
+                    # command['operation'] = operation
+                    command_list.append(operation)
                     if operation == '3' or operation == '4':
-                        print('Check value')
-                    else:
-                        print("Don't check value")
+                        value = input_form.cleaned_data.get('param_value')
+                        command_list.append(value)
+                        # command['value'] = value
+                        # command_list.append(command)
+
+            task = Task.objects.create(
+                mpi_cluster=cluster, tool=tool, user=self.request.user
+            )
+            input_filenames = []
+            for f in select_mpi_form.cleaned_data['input_files']:
+                SkyLabFile.objects.create(type=1, file=f, task=task)
+                input_filenames.append(f.name)
+
+            task_data = json.dumps(
+                {
+                    'command_list': command_list,
+                    'input_filenames': input_filenames
+                }
+            )
+
+            task.refresh_from_db()
+            task.task_data = json.dumps(task_data)
+            task.save()
+
             return redirect('task_detail_view', pk=0)
         else:
             return render(request, 'modules/impi/use_impi.html', {

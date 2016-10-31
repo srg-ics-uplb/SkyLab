@@ -3,15 +3,16 @@ from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from multiupload.fields import MultiFileField
 
 from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster, ToolSet
-from skylab.modules.impi.validators import jpeg_file_extension_validator
+from skylab.modules.impi.validators import impi_files_validator
 
 
 class SelectMPIFilesForm(forms.Form):
-    param_input_file = forms.FileField(label="Image file ", validators=[jpeg_file_extension_validator],
-                                       help_text="Only supports JPEG format (.jpeg, .jpg)")
+    input_files = MultiFileField(label="Image file(s) ", validators=[impi_files_validator],
+                                 help_text="Only supports JPEG format (.jpeg, .jpg)")
 
     # , validators=[in_file_extension_validator],
 
@@ -45,7 +46,7 @@ class SelectMPIFilesForm(forms.Form):
                 css_class="col-sm-12"
             ),
             Div(
-                Div('param_input_file'),
+                Div('input_files'),
                 css_class='row-fluid col-sm-12'
             )
         )

@@ -26,7 +26,7 @@ class GamessView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
-        tool = Tool.objects.get(display_name="GAMESS")
+        tool = Tool.objects.get(simple_name='gamess')
         task = Task.objects.create(
             mpi_cluster=cluster, tool=tool, user=self.request.user
         )
