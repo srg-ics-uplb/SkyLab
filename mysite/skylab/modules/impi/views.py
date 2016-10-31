@@ -62,18 +62,17 @@ class ImpiView(LoginRequiredMixin, FormView):
                 SkyLabFile.objects.create(type=1, file=f, task=task)
                 input_filenames.append(f.name)
 
-            task_data = json.dumps(
-                {
+            task_data = {
                     'command_list': command_list,
                     'input_filenames': input_filenames
-                }
-            )
+            }
+
 
             task.refresh_from_db()
             task.task_data = json.dumps(task_data)
             task.save()
 
-            return redirect('task_detail_view', pk=0)
+            return redirect('task_detail_view', pk=task.id)
         else:
             return render(request, 'modules/impi/use_impi.html', {
                 'form': select_mpi_form,

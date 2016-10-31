@@ -38,9 +38,11 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
-        task = json.loads(self.task.task_data)
-        command_list = task.get('command_list')  # load json array
-        input_filenames = task.get('input_filenames')
+        task_data = json.loads(self.task.task_data)
+        command_list = task_data['command_list']  # load json array
+        input_filenames = task_data['input_filenames']
+
+        default_output_filename = 'test_out.jpg'
 
         export_path = "/mirror/impi"
         env_command = "export PATH=$PATH:{0};".format(export_path)
@@ -66,11 +68,17 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                     )
 
                     for parameter in command_list:
-                        exec_shell.stdin_write(parameter + "\n")
+                        exec_shell.stdin_write(str(parameter) + "\n")
                     exec_shell.stdin_write('0\n')
 
+                    remote_files = sftp.listdir()  # list dirs and files in remote path
+                    for remote_file in remote_files:
+                        self.logger.debug(self.log_prefix + remote_file)
+
                     # rename output file : (default output file: test_out.jpg)
-                    sftp.rename('test_out.jpg', os.path.splitext(os.path.basename(filename))[0] + '_out.jpg')
+                    new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
+                    if default_output_filename != new_output_filename:
+                        sftp.rename(default_output_filename, new_output_filename)
 
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
