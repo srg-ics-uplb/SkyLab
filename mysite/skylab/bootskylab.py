@@ -291,7 +291,10 @@ class MPIThread(threading.Thread):
             retries = 0
             exit_loop = False
             while not exit_loop:
-                command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
+                if toolset.p2ctool_name == 'quantum-espresso':
+                    command = 'sudo apt-get install quantum-espresso'
+                else:
+                    command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
                 try:
                     tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
                     tool_activator.stdin_write(settings.CLUSTER_PASSWORD + "\n")
