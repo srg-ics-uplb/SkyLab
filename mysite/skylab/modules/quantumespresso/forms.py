@@ -6,10 +6,11 @@ from crispy_forms.layout import Layout, Div, Field
 from django import forms
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from multiupload.fields import MultiFileField
 
 from skylab.forms import MPIModelChoiceField
 from skylab.models import MPICluster, ToolSet
-from validators import in_file_extension_validator
+from validators import in_files_validator
 
 
 class SelectMPIFilesForm(forms.Form):
@@ -23,7 +24,8 @@ class SelectMPIFilesForm(forms.Form):
             # "^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}([a-zA-Z0-9]+(_[a-zA-Z0-9]+)?$"
 
             # description = [field1-][field2-]field3-[field4-]field5[_field6]
-            for upf_file in pseudopotentials.split(' '):
+
+            for upf_file in pseudopotentials.replace(' ', '').split(' '):
                 p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
                 if not p:
                     raise forms.ValidationError("Invalid UPF file : {0}".format(upf_file))
@@ -75,7 +77,7 @@ class InputParameterForm(forms.Form):
         ('pw.x', 'pw.x'),
     )
     param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
-    param_input_file = forms.FileField(label="Input file (.in)", validators=[in_file_extension_validator],
+    param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
                                        required=False,
                                        help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
@@ -92,30 +94,9 @@ class InputParameterForm(forms.Form):
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
                 Div(Field('param_executable', css_class='parameter'), css_class='col-xs-5'),
-                Div(Field('param_input_file'), css_class='col-xs-5 col-xs-offset-1'),
+                Div(Field('param_input_files'), css_class='col-xs-5 col-xs-offset-1'),
 
                 css_class='row-fluid col-sm-12 form-container'
             ),
         )
 
-    def clean(self):
-        if self.cleaned_data:
-            executable = self.cleaned_data["param_executable"]
-            input_file1 = self.cleaned_data.get('input_file1')
-
-            # print parameter, input_file1
-
-            # if parameter == '-p':  # -p needs two input files
-            #
-            #     if not input_file1 or not input_file2:
-            #         raise forms.ValidationError(
-            #             '-p parameter requires two input files',
-            #             code='-p_incomplete_input_files'
-            #         )
-            #
-            # elif parameter == '-i' or parameter == '-s':  # -i and -s needs one input file
-            #     if not input_file1:
-            #         raise forms.ValidationError(
-            #             '%s parameter requires one input file' % parameter,
-            #             code='%s_incomplete_input_files' % parameter
-            #         )

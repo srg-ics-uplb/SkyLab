@@ -7,10 +7,20 @@
     <link rel="stylesheet" href="{% static 'dataTables/css/dataTables.bootstrap.min.css' %}">
 {% endblock %}
 
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li class="active">
+        MPI Clusters
+    </li>
+{% endblock %}
+
 {% block content %}
     <div class="row">
         <h1 class="text-center">MPI Clusters</h1>
     </div>
+
 
     <div class="row">
         <table id="mpi-table"

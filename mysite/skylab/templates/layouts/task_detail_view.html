@@ -10,6 +10,18 @@
     <link rel="stylesheet" href="{% static 'slick/slick-theme.css' %}">
 {% endblock %}
 
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li>
+        <a href="{% url 'task_list_view' %}">Tasks</a>
+    </li>
+    <li class="active">
+        Task {{ task.id }}
+    </li>
+{% endblock %}
+
 {% block content %}
     <div class='row'>
         <div id="task-detail-div"
@@ -68,31 +80,12 @@
         </div>
             {#    JSmol container        #}
         <div class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0">
-            <div class="row">
-                <div class="carousel-container">
-                    <div id="output-carousel-div" class="single-item">
 
-                        <div class="carousel-cell">
-                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/orange-tree.jpg"
-                                 alt="orange tree"/>
-                            <h4 class="caption">Orange Tree</h4>
-                        </div>
-                        <div class="carousel-cell">
-                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/submerged.jpg" alt="submerged"/>
-                        </div>
-                        <div class="carousel-cell">
-                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/look-out.jpg" alt="look-out"/>
-                        </div>
-                        <div class="carousel-cell">
-                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/one-world-trade.jpg"
-                                 alt="One World Trade"/>
-                        </div>
-                        <div class="carousel-cell">
-                            <img src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/82/drizzle.jpg" alt="drizzle"/>
-                        </div>
-                </div>
+            <div class="carousel-container" class="row">
+                <div id="output-carousel-div" class="single-item">
                 </div>
             </div>
+
 
             <div id="jsmol-container-div" class="hidden">
                 <br>
@@ -242,6 +235,7 @@
                 }
 
                 if (content.carousel_display == true) {
+                    $('#car');
                     var slick_carousel = $('.single-item');
                     slick_carousel.slick('unslick');
                     {#                    slick_carousel.slick(getSliderSettings())#}

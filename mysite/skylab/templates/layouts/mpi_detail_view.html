@@ -7,6 +7,16 @@
     <link rel="stylesheet" href="{% static 'bootstrap-switch-master/dist/css/bootstrap3/bootstrap-switch.min.css' %}">
 {% endblock %}
 
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li>
+        <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
+    </li>
+    <li class="active">{{ mpi_cluster.cluster_name }}</li>
+{% endblock %}
+
 {% block content %}
     <div class='row'>
         <div id="task-info-div"

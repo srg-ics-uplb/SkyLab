@@ -57,7 +57,7 @@ class GridForm(forms.Form):
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_file', css_class='col-xs-5'),
+                    Div('param_input_files', css_class='col-xs-5'),
                     Div('param_other_files', css_class='col-xs-5 col-xs-offset-1 '),
                     css_class='row-fluid col-sm-12'
                 ),
@@ -122,7 +122,7 @@ class Dock6Form(forms.Form):
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_file', css_class='col-xs-5'),
+                    Div('param_input_files', css_class='col-xs-5'),
                     Div('param_other_files', css_class='col-xs-5 col-xs-offset-1'),
                     css_class='row-fluid col-sm-12'
                 ),

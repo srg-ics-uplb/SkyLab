@@ -94,7 +94,7 @@ class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executabl
 		self.logger.debug(self.log_prefix + 'Clear or create task folder')
 		# clear or create task folder
 		self.shell.run(
-			['sh', '-c', clear_or_create.format(self.working_dir)])
+            ['sh', '-c', clear_or_create.format(self.remote_task_dir)])
 
 		# create task subdirectories
 		self.logger.debug(self.log_prefix + 'Create task subdirs')

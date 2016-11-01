@@ -7,6 +7,15 @@
     <link rel="stylesheet" href="{% static 'dataTables/css/dataTables.bootstrap.min.css' %}">
 {% endblock %}
 
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li class="active">
+        Tasks
+    </li>
+{% endblock %}
+
 {% block content %}
     <div class="row">
         <h1 class="text-center">Tasks</h1>

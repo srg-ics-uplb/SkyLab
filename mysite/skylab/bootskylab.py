@@ -158,7 +158,7 @@ class MPIThread(threading.Thread):
 
         # get tasks that are not finished yet
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(status_code=200).exclude(
-            status_code=401)  # status 400 is not terminal, 401 is
+            status_code=401).order_by('created')  # status 400 is not terminal, 401 is
 
         for task in tasks:
             self.add_task_to_queue(task.priority, task)
@@ -196,6 +196,12 @@ class MPIThread(threading.Thread):
                                            missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
         self.test_cluster_connection(init=True)
 
+        # fix for unresponsive ssh from srg.ics
+        command = "sudo ifconfig eth0 mtu 1454"
+        ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+        ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+        self.logger.debug(self.log_prefix + 'Set mtu to 1454')
+
     def test_cluster_connection(self, init=False):
         retries = 0
         exit_loop = False
@@ -226,10 +232,7 @@ class MPIThread(threading.Thread):
         retries = 0
         exit_loop = False
         while not exit_loop:
-            command = "sudo ifconfig eth0 mtu 1454"
-            ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
-            ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-            self.logger.debug(self.log_prefix + 'Set mtu to 1454')
+
 
             try:
                 # update p2c-tools
@@ -292,7 +295,7 @@ class MPIThread(threading.Thread):
             exit_loop = False
             while not exit_loop:
                 if toolset.p2ctool_name == 'quantum-espresso':
-                    command = 'sudo apt-get install quantum-espresso'
+                    command = 'sudo apt-get install quantum-espresso -y'
                 else:
                     command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
                 try:
@@ -480,7 +483,7 @@ def add_tools_to_toolset(tools, toolset):
         display_name = t.get('display_name')
         simple_name = t.get('simple_name', re.sub(r'[\s_/-]+', '', display_name.lower()))
         view_name = t.get('view_name', re.sub(r'[\s_/-]+', '', display_name.title()) + "View")  # convention format
-        executable_name = t.get('executable_name', display_name.title() + "Executable")
+        executable_name = t.get('executable_name', re.sub(r'[\s_/-]+', '', display_name.title()) + "Executable")
         description = t.get("description", "No description provided")
 
         Tool.objects.update_or_create(simple_name=simple_name,

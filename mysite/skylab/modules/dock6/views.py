@@ -39,7 +39,7 @@ class Dock6FormView(LoginRequiredMixin, FormView):
 
         cluster = form.cleaned_data['mpi_cluster']
 
-        input_file = form.cleaned_data['param_input_file']
+        input_file = form.cleaned_data['param_input_files']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
         command += u"-i {0:s} ".format(input_file.name)
@@ -81,7 +81,7 @@ class GridFormView(LoginRequiredMixin, FormView):
         )
         self.kwargs['id'] = task.id
 
-        input_file = form.cleaned_data['param_input_file']
+        input_file = form.cleaned_data['param_input_files']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
         command += "-i %s " % input_file.name

@@ -15,29 +15,49 @@ from skylab.modules.basetool import P2CToolGeneric
 class QuantumEspressoExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         super(QuantumEspressoExecutable, self).__init__(**kwargs)
-        self.pseudo_dir = os.path.join(self.remote_task_dir, 'pseudo')
+        self.pseudo_dir = os.path.join(self.remote_task_dir, 'pseudodir')
         self.tmp_dir = os.path.join(self.remote_task_dir, 'tempdir')
         self.network_pseudo_download_url = "http://www.quantum-espresso.org/wp-content/uploads/upf_files/"
+        # suggestion is to download all pseudopotentials and host them in a webserver for faster retrieval
 
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
-        sftp.chdir(self.working_dir)  # cd /mirror/task_xx/input
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        sftp.chdir(os.path.join(self.remote_task_dir, 'input'))  # cd /mirror/task_xx/input
 
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
-        sftp.close()
+
 
         pseudopotentials = json.loads(self.task.task_data).get("pseudopotentials", None)
         if pseudopotentials:
+            pseudopotential_urls = []
+            # command = 'curl '
             for pseudo_file in pseudopotentials:
-                command = 'wget ' + os.path.join(self.network_pseudo_download_url, pseudo_file)
-                download_shell = self.shell.run(["sh", "-c", command], cwd=self.pseudo_dir)
+                url = os.path.join(self.network_pseudo_download_url, pseudo_file)
+                pseudopotential_urls.append(url)
+                # command += '-O ' + url
+                # command = 'curl -O ' + url
+                # self.logger.debug(self.log_prefix + 'Downloading '+ url)
+                # self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
+                #self.logger.debug(self.log_prefix + 'Downloaded file')
+
+            self.logger.debug(self.log_prefix + 'Downloading pseudopotentials')
+            command = 'printf "{urls}" > urls.txt && wget -i urls.txt'.format(urls='\n'.join(pseudopotential_urls))
+            self.logger.debug(self.log_prefix + 'Command: ' + command)
+            download_shell = self.shell.run(["sh", "-c", command], cwd=self.pseudo_dir)
+            self.logger.debug(self.log_prefix + download_shell.output)
+            self.logger.debug(self.log_prefix + 'Downloaded pseudopotentials')
+
+        sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         # change export path QE will be installed via p2c-tools
@@ -105,55 +125,58 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                 self.task.change_status(status_msg='Tool execution successful',
                                         status_code=153)
 
+    def handle_output_files(self, **kwargs):
+        self.task.change_status(status_msg='Retrieving output files', status_code=154)
+        self.logger.debug(self.log_prefix + 'Sending output files to server')
+        media_root = getattr(settings, "MEDIA_ROOT")
 
-def handle_output_files(self, **kwargs):
-    self.task.change_status(status_msg='Retrieving output files', status_code=154)
-    self.logger.debug(self.log_prefix + 'Sending output files to server')
-    media_root = getattr(settings, "MEDIA_ROOT")
+        local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
+        local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
 
-    local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
-    local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
+        sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        remote_path = os.path.join(self.remote_task_dir, 'output')
 
-    sftp = self.shell._open_sftp_client()
-    remote_path = os.path.join(self.remote_task_dir, 'output')
+        # retrieve then delete produced output files
+        remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
-    # retrieve then delete produced output files
-    remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
-    for remote_file in remote_files:
-        remote_filepath = os.path.join(remote_path, remote_file)
-        if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
+                local_filepath = os.path.join(local_path, remote_file)
 
-            local_filepath = os.path.join(local_path, remote_file)
+                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                sftp.get(remote_filepath, local_filepath)  # transfer file
+                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                sftp.remove(remote_filepath)  # delete file after transfer
 
-            self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-            sftp.get(remote_filepath, local_filepath)  # transfer file
-            self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-            sftp.remove(remote_filepath)  # delete file after transfer
+                # register newly transferred file as skylabfile
+                # at the very least pw.x output files seems to be compatible with jsmol
+                new_file = SkyLabFile.objects.create(type=2, task=self.task, render_with_jsmol=True)
+                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                                  remote_file)  # manual assignment to model filefield
+                new_file.save()  # save changes
 
-            # register newly transferred file as skylabfile
-            # at the very least pw.x output files seems to be compatible with jsmol
-            new_file = SkyLabFile.objects.create(type=2, task=self.task, render_with_jsmol=True)
-            new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                              remote_file)  # manual assignment to model filefield
-            new_file.save()  # save changes
+        sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
-    self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
+        self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
-    if not self.task.status_code == 400:
-        self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
-    else:
-        self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
+        if not self.task.status_code == 400:
+            self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
+        else:
+            self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
 
-    self.logger.info(self.log_prefix + 'Done. Output files sent')
+        self.logger.info(self.log_prefix + 'Done. Output files sent')
 
-
-def run_tool(self, **kwargs):
-    self.task.change_status(status_msg='Task started', status_code=150)
-    task_remote_subdirs = ['input', 'output', 'pseudodir', 'tempdir']
-    self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
-    self.handle_input_files()
-    self.run_commands()
-    self.handle_output_files()
+    def run_tool(self, **kwargs):
+        self.task.change_status(status_msg='Task started', status_code=150)
+        task_remote_subdirs = ['input', 'output', 'pseudodir', 'tempdir']
+        self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
+        self.handle_input_files()
+        # self.run_commands()
+        # self.handle_output_files()
 
 # import json
 # import os.path

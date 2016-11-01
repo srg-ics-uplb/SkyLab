@@ -127,7 +127,7 @@ class P2CToolGeneric(object):
 # 		super(Impi, self).__init__(tool_name="impi", mpi_cluster_name=mpi_cluster_name, mpi_cluster_size=mpi_cluster_size, auto_destroy=auto_destroy)
 #
 # 	def handle_input_files(self, **kwargs):
-#         input_file = kwargs.get('param_input_file', "Lenna.jpg")
+#         input_file = kwargs.get('param_input_files', "Lenna.jpg")
 # 		with self.cluster_shell.open("/mirror/impi/" + input_file, "wb") as remote_file:
 # 			with open(input_file,"rb") as local_file:
 # 				shutil.copyfileobj(local_file, remote_file)
@@ -135,7 +135,7 @@ class P2CToolGeneric(object):
 # 			remote_file.close()
 #
 # 	def run_tool(self, **kwargs):
-# 		input_file = kwargs.get('param_input_file', "Lenna.jpg")
+# 		input_file = kwargs.get('param_input_files', "Lenna.jpg")
 # 		output_file = kwargs.get('output_file', "custom_out.jpg")
 # 		parameters = kwargs.get('parameters', [])
 # 		self.create_mpi_cluster()

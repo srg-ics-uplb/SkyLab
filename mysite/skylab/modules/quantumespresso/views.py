@@ -61,35 +61,36 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
 
             # in form clean pseudopotentials field returns json dict
             task_data = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
-            scf_output_files = []
+            # scf_output_files = []
             for form in input_formset:
                 executable = form.cleaned_data.get('param_executable')
                 if executable:  # ignore blank parameter value
 
-                    input_file = form.cleaned_data["param_input_file"]
-                    # filepath = create_input_skylab_file(task, 'input', input_file)
-                    instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
-                    # filepath = instance.file.name
-                    if executable == "pw.x":
-                        # TODO: parse input file and check if calculation is not found or calculation = 'scf'
-                        pass
+                    input_files = form.cleaned_data.get("param_input_files", [])
+                    if input_files:
+                        for input_file in input_files:
+                            instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
-                    # if True:  scf_output_files.append(os.path.splitext(input_file.name)[0])
+                            # if executable == "pw.x":
+                            #     # TODO: parse input file and check if calculation is not found or calculation = 'scf'
+                            #     pass
+                            # neb.x -inp filename.in
+                            # ph.x can be run using images #not supported
 
-                    # neb.x -inp filename.in
-                    # ph.x can be run using images #not supported
+                            if executable == "neb.x":
+                                command_list.append(
+                                    '{0} {1} {2} -inp input/{3} > output/{4}.out'.format(para_prefix, executable,
+                                                                                         para_postfix,
+                                                                                         input_file.name,
+                                                                                         os.path.splitext(
+                                                                                             input_file.name)[0]))
 
-                    if executable == "neb.x":
-                        command_list.append(
-                            '{0} {1} {2} -inp input/{3} > output/{4}.out'.format(para_prefix, executable, para_postfix,
-                                                                                 input_file.name,
-                                                                                 os.path.splitext(input_file.name)[0]))
+                            else:
+                                command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
+                                    para_prefix, executable, para_postfix, input_file.name,
+                                    os.path.splitext(input_file.name)[0]))
 
-                    else:
-                        command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
-                        para_prefix, executable, para_postfix, input_file.name, os.path.splitext(input_file.name)[0]))
-
-            task_data['scf_output_files'] = scf_output_files
+            # task_data['scf_output_files'] = scf_output_files
             task_data['command_list'] = command_list
             task.task_data = json.dumps(task_data)
             task.save()

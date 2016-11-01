@@ -24,6 +24,11 @@ class GamessView(LoginRequiredMixin, FormView):
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
+    def get_context_data(self, **kwargs):
+        context = super(GamessView, self).get_context_data(**kwargs)
+        context['tool'] = Tool.objects.get(simple_name='gamess')
+        return context
+
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
         tool = Tool.objects.get(simple_name='gamess')
