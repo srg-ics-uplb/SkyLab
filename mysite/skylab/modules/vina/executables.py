@@ -1,6 +1,7 @@
 import json
 import math
 import os.path
+import stat
 import time
 
 import spur
@@ -87,24 +88,54 @@ class VinaExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Sending output files to server')
         media_root = getattr(settings, "MEDIA_ROOT")
 
-        zip_filename = self.task.task_dirname + "-output.zip"
-        local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
-        remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
-
-        self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
+        local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
+        local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
 
         sftp = self.shell._open_sftp_client()
-        self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
-        self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
-        sftp.remove(remote_zip_filepath)
-        sftp.close()
+        remote_path = os.path.join(self.remote_task_dir, 'output')
 
-        # attach transferred file to database
-        new_file = SkyLabFile.objects.create(type=2, task=self.task)
-        new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                          zip_filename)
-        new_file.save()
+        # retrieve then delete produced output files
+        remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
+
+                local_filepath = os.path.join(local_path, remote_file)
+
+                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                sftp.get(remote_filepath, local_filepath)  # transfer file
+                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                sftp.remove(remote_filepath)  # delete file after transfer
+
+                # register newly transferred file as skylabfile
+                new_file = SkyLabFile.objects.create(type=2, task=self.task,
+                                                     render_with_jsmol=True)  # gamess output file can be rendered with jsmol
+                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                                  remote_file)  # manual assignment to model filefield
+                new_file.save()  # save changes
+
+        # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
+        # Transfer via zip.
+        # zip_filename = self.task.task_dirname + "-output.zip"
+        # local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
+        # remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
+        #
+        # self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
+        #
+        # sftp = self.shell._open_sftp_client()
+        # self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
+        # sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        # self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+        # sftp.remove(remote_zip_filepath)
+        # sftp.close()
+        #
+        # # attach transferred file to database
+        # new_file = SkyLabFile.objects.create(type=2, task=self.task)
+        # new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+        #                                   zip_filename)
+        # new_file.save()
+
+
 
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
@@ -194,26 +225,53 @@ class VinaSplitExecutable(P2CToolGeneric):
         for f in SkyLabFile.objects.filter(task=self.task, type=1):
             input_file = f.filename
             sftp.remove(input_file)
+
+        local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
+        local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
+
+        remote_path = os.path.join(self.remote_task_dir, 'output')
+        # retrieve then delete produced output files
+        remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+        for remote_file in remote_files:
+            remote_filepath = os.path.join(remote_path, remote_file)
+            if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
+
+                local_filepath = os.path.join(local_path, remote_file)
+
+                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                sftp.get(remote_filepath, local_filepath)  # transfer file
+                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                sftp.remove(remote_filepath)  # delete file after transfer
+
+                # register newly transferred file as skylabfile
+                new_file = SkyLabFile.objects.create(type=2, task=self.task,
+                                                     render_with_jsmol=True)  # gamess output file can be rendered with jsmol
+                new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                                  remote_file)  # manual assignment to model filefield
+                new_file.save()  # save changes
+
         sftp.close()
 
-        zip_filename = self.task.task_dirname + "-output.zip"
-        local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
-        remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
-
-        self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
-
-        sftp = self.shell._open_sftp_client()
-        self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
-        self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
-        sftp.remove(remote_zip_filepath)
-        sftp.close()
-
-        # attach transferred file to database
-        new_file = SkyLabFile.objects.create(type=2, task=self.task)
-        new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                          zip_filename)
-        new_file.save()
+        # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
+        # Transfer via zip.
+        # zip_filename = self.task.task_dirname + "-output.zip"
+        # local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
+        # remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
+        #
+        # self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
+        #
+        # sftp = self.shell._open_sftp_client()
+        # self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
+        # sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        # self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+        # sftp.remove(remote_zip_filepath)
+        # sftp.close()
+        #
+        # # attach transferred file to database
+        # new_file = SkyLabFile.objects.create(type=2, task=self.task)
+        # new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+        #                                   zip_filename)
+        # new_file.save()
 
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 

@@ -34,6 +34,7 @@ urlpatterns = [
     # skip logout confirmation
     url(r'^accounts/login/$', RedirectView.as_view(url="/skylab/accounts/google/login/?process=login", permanent=False),
         name="account_login"),
+    url(r'^logout_redirect$', views.logout_success, name='logout_redirect'),
     url(r'^accounts/signup/$', RedirectView.as_view(pattern_name="account_login", permanent=False)),
     url(r'^accounts/', include('allauth.urls')),
 

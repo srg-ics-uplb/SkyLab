@@ -1,4 +1,3 @@
-
 {% extends 'layouts/base.html' %}
 {% load crispy_forms_tags %}
 {% load staticfiles %}
@@ -8,6 +7,11 @@
 {% block navbar_breadcrumb %}{% endblock %}
 
 {% block content %}
+
+    <div class="alert alert-info fade in">
+        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+        You have successfully logged out.
+    </div>
 
 
 

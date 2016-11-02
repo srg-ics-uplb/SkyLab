@@ -9,7 +9,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
@@ -81,7 +81,7 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	connection.close()
 
 
-class HomeView(LoginRequiredMixin, TemplateView):
+class HomeView(TemplateView):
     template_name = "layouts/home.html"
 
 
@@ -217,6 +217,9 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
     slug_url_kwarg = 'toolset_simple_name'
     slug_field = 'simple_name'
 
+
+def logout_success(request):
+    return render(request, 'layouts/log_out_success.html')
 
 def index(request):
     return HttpResponse("Hello, world. You're at the skylab index.")

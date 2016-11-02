@@ -408,6 +408,8 @@ class SkyLabFile(models.Model):
             self.upload_path = "input" if self.type == 1 else "output"
         if self.file:
             self.filename = os.path.basename(self.file.name)
+            if os.path.splitext(self.filename)[1].lower() in settings.JSMOL_SUPPORTED_FILE_EXT:
+                self.render_with_jsmol = True
 
         super(SkyLabFile, self).save(*args, **kwargs)
 

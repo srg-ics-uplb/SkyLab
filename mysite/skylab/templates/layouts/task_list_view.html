@@ -8,12 +8,15 @@
 {% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li class="active">
-        Tasks
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li class="active">
+            Tasks
+        </li>
+    </ol>
+
 {% endblock %}
 
 {% block content %}
@@ -30,6 +33,7 @@
                     <th>Tool</th>
                     <th>MPI Cluster</th>
                     <th>Task status</th>
+                    <th>Date created</th>
                     <th>Last updated</th>
                 </tr>
                 </thead>
@@ -40,7 +44,8 @@
                         <td>{{ task.tool }} ({{ task.tool.toolset.display_name }})</td>
                         <td>{{ task.mpi_cluster.cluster_name }}</td>
                         <td>{{ task.simple_status_msg }}</td>
-                        <td>{{ task.updated }}</td>
+                        <td>{{ task.created |date:'m/d/Y P' }}</td>
+                        <td>{{ task.updated |date:'m/d/Y P' }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -97,46 +102,54 @@
 {% block js %}
     <script type="text/javascript" src="{% static 'dataTables/js/jquery.dataTables.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'dataTables/js/dataTables.bootstrap.min.js' %}"></script>
+
     <script>
-        $(document).ready(function () {
+        $(function () {
             $(".clickable-row").click(function () { {# make table row clickable #}
                 window.location = $(this).data("href");
                 {# go to task detail view #}
             });
-        });
 
-        var table = $('#task-list-table').DataTable({
-            "columnDefs": [
-                {
-                    "targets": [3], {# status column #}
-                    "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}
 
-                        $(td).removeClass();
-                        switch (cellData) {
-                            case "Online":
-                                $(td).addClass('text-success');
-                                break;
-                            case "Connection error":
-                                $(td).addClass('text-danger');
-                                break;
-                            default:
-                                $(td).addClass('text-info');
+            var table = $('#task-list-table').DataTable({
+                "order": [],
+                "columnDefs": [
+                    {
+                        "targets": [3], {# status column #}
+                        "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}
+
+                            $(td).removeClass();
+                            switch (cellData) {
+                                case "Online":
+                                    $(td).addClass('text-success');
+                                    break;
+                                case "Connection error":
+                                    $(td).addClass('text-danger');
+                                    break;
+                                default:
+                                    $(td).addClass('text-info');
+                            }
+
                         }
-
                     }
+
+                ],
+                "createdRow": function (row, data, dataIndex) { {# on row created #}
+                    $(row).addClass('clickable-row');
+
+                    {# make row clickable #}
+                    {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
+                    var url_mask = "{% url 'task_detail_view' pk=911 %}".replace(/911/, data[0]);
+                    {# parse url #}
+                    $(row).attr('data-href', url_mask);
                 }
-
-            ],
-            "createdRow": function (row, data, dataIndex) { {# on row created #}
-                $(row).addClass('clickable-row');
-
-                {# make row clickable #}
-                {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
-                var url_mask = "{% url 'task_detail_view' pk=911 %}".replace(/911/, data[0]);
-                {# parse url #}
-                $(row).attr('data-href', url_mask);
-            }
+            });
         });
+
+        {#        datatable moment init#}
+
+
+
 
         {#        $('#create-task-modal').on('shown.bs.modal', function() { {# refresh toolset list on modal activate #}
         {#            $('#create-task-modal-error').hide();#}

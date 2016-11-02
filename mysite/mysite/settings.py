@@ -160,6 +160,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
+
+
 STATIC_URL = '/static/'
 
 # We'll use a bit of Python to tell it to use a directory called "static" in our project's main directory:
@@ -214,6 +216,10 @@ ACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
 JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
+# https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/
+JSMOL_SUPPORTED_FILE_EXT = [
+    '.pdbqt', '.mol2', '.pdb', '.mol', '.xyz', '.csf'
+]
 
 TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
 REMOTE_BASE_DIR = '/mirror'

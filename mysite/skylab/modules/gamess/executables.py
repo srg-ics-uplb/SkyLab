@@ -17,7 +17,6 @@ class GamessExecutable(P2CToolGeneric):
         super(GamessExecutable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'input')  # this is where the commands will be executed
 
-    # TODO: self.input_dir = self.task_dir + "/input" in __init__
     def handle_input_files(self, **kwargs):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')

@@ -8,12 +8,14 @@
 {% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li class="active">
-        MPI Clusters
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li class="active">
+            MPI Clusters
+        </li>
+    </ol>
 {% endblock %}
 
 {% block content %}
@@ -35,6 +37,7 @@
                 <th>Tasks queued</th>
                 <th>Status</th>
                 <th>Visibility</th>
+
             </tr>
             </thead>
             <tbody id="mpi-table-body">

@@ -1,7 +1,7 @@
 /*body { padding-top: 70px; }*/
 
 .asteriskField {
-	color: #FF0000;
+    color: #FF0000;
 }
 
 .nav-user-img {
@@ -19,25 +19,22 @@
     cursor: pointer;
 }
 
-
-
 .nav .breadcrumb {
-	margin: 0 7px;
+    margin: 0 7px;
 }
 
 .scrollable-task-file-list {
-	height: auto;
+    height: auto;
     max-height: 360px;
-	overflow-x: hidden;
+    overflow-x: hidden;
 }
 
 @media (min-width: 768px) {
-	.nav .breadcrumb {
-		float: left;
-		margin: 7px 10px;
-	}
+    .nav .breadcrumb {
+        float: left;
+        margin: 7px 10px;
+    }
 }
-
 
 .dropdown-tasks {
     z-index: 1000;
@@ -45,7 +42,7 @@
 
 @media (min-width: 768px) {
     .navbar-right .dropdown-tasks {
-		width: 310px;
+        width: 310px;
         margin-left: -59px;
         min-width: 0;
 
@@ -62,21 +59,21 @@
 /*!*}*!*/
 
 .navbar-inverse .dropdown-menu li {
-	display: block;
+    display: block;
 
 }
 
 .navbar-inverse .dropdown-menu li:last-child {
-	margin-right: 0;
+    margin-right: 0;
 }
 
 .navbar-inverse .dropdown-menu li a {
-	padding: 3px 20px;
-	min-height: 0;
+    padding: 3px 20px;
+    min-height: 0;
 }
 
 .navbar-inverse .dropdown-menu li a div {
-	white-space: normal;
+    white-space: normal;
 }
 
 /*.navbar-static-top {*/
@@ -88,15 +85,15 @@
 /*}*/
 
 .file-select {
-	width: 200px;
+    width: 200px;
 }
 
 #platformSpeedSlider .slider-selection {
-	background: #BABABA;
+    background: #BABABA;
 }
 
 .list-group > a:hover, .list-group > a:focus {
-	color: #0645AD;
+    color: #0645AD;
 }
 
 /** { box-sizing: border-box; }*/

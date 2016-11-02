@@ -4,19 +4,21 @@
 {% block title %}{{ block.super }} Create MPI Cluster{% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li>
-        <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
-    </li>
-    <li class="active">Create MPI Cluster</li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li>
+            <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
+        </li>
+        <li class="active">Create MPI Cluster</li>
+    </ol>
 {% endblock %}
 
 {% block content %}
     <div class='row'>
-        <div class='col-sm-6 col-sm-offset-3'>
-            <h1 class="text-center">Create MPI Cluster</h1>
+        <div class='col-xs-10 col-xs-offset-1'>
+            <h1>Create MPI Cluster</h1>
             <hr>
             {% crispy form %}
             <hr>

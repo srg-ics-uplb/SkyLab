@@ -11,15 +11,17 @@
 {% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li>
-        <a href="{% url 'task_list_view' %}">Tasks</a>
-    </li>
-    <li class="active">
-        Task {{ task.id }}
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li>
+            <a href="{% url 'task_list_view' %}">Tasks</a>
+        </li>
+        <li class="active">
+            Task {{ task.id }}
+        </li>
+    </ol>
 {% endblock %}
 
 {% block content %}
@@ -322,6 +324,7 @@
 
         $('input[type=radio][name=displayAs]').change(function () {
             Jmol.script(jmolApplet0, this.value);
+            Jmol.script(jmolApplet0, $('input[type=radio][name=displayLabel]').val());
         });
 
         $('input[type=radio][name=color]').change(function () {

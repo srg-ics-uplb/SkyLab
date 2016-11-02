@@ -8,13 +8,15 @@
 {% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li>
-        <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
-    </li>
-    <li class="active">{{ mpi_cluster.cluster_name }}</li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li>
+            <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
+        </li>
+        <li class="active">{{ mpi_cluster.cluster_name }}</li>
+    </ol>
 {% endblock %}
 
 {% block content %}
@@ -36,6 +38,7 @@
                             <th>Share key</th>
                         {% endif %}
                         <th>Visibility</th>
+                        <th>Date created</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -66,6 +69,7 @@
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
                         <td><input type="checkbox" name="visibility-checkbox" data-label-text="Public"
                                    {% if mpi_cluster.is_public %}checked{% endif %}></td>
+                        <td>{{ mpi_cluster.created |date:'m/d/Y P' }}</td>
                     </tr>
                     </tbody>
                 </table>
@@ -166,21 +170,13 @@
         {# init as bootstrap switch #}
         visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
             {# if cluster is public hide share key column, otherwise, show       #}
-            if (state == true) {
-                mpi_info_table.find('th:nth-child(6)').hide();
-                mpi_info_table.find('td:nth-child(6)').hide();
-            } else {
-                mpi_info_table.find('th:nth-child(6)').show();
-                mpi_info_table.find('td:nth-child(6)').show();
-            }
-
             {# tell server about the change            #}
             ajaxPost('{% url 'ajax_post_mpi_privacy_change' %}', {
                 'is_public': state,
                 'pk':{{mpi_cluster.id}}
             }, function (content) {
-                //onSuccess
-                // do nothing
+                mpi_info_table.find('th:nth-child(6)').toggle();
+                mpi_info_table.find('td:nth-child(6)').toggle();
             });
 
         });

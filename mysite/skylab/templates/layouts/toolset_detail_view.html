@@ -4,15 +4,17 @@
 {% block title %}{{ block.super }}{{ toolset.display_name }}{% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li>
-        <a href="{% url 'toolset_list_view' %}">Toolsets</a>
-    </li>
-    <li class="active">
-        {{ toolset.display_name }}
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li>
+            <a href="{% url 'toolset_list_view' %}">Toolsets</a>
+        </li>
+        <li class="active">
+            {{ toolset.display_name }}
+        </li>
+    </ol>
 {% endblock %}
 
 {% block content %}

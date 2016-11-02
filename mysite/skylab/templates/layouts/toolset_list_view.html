@@ -9,12 +9,14 @@
 
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li class="active">
-        Toolsets
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li class="active">
+            Toolsets
+        </li>
+    </ol>
 {% endblock %}
 
 {% block content %}
