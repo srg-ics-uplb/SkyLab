@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, Field, Fieldset, HTML
+from crispy_forms.layout import Layout, Div, Field, Fieldset
 from django import forms
 from django.core.urlresolvers import reverse
 from django.core.validators import MinValueValidator, MaxValueValidator
@@ -15,13 +15,11 @@ from validators import odd_number_validator, txt_file_validator, tsv_file_valida
 class SelectMPIFilesForm(forms.Form):
     param_bynode = forms.BooleanField(required=False, label="-bynode",
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion.")  # This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
-    # param_mini_ranks = forms.BooleanField(required=False, label="-mini-ranks-per-rank",
-    #                                       help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>")
     # mini-ranks max set to 4
     param_mini_ranks = forms.IntegerField(required=False, min_value=1, max_value=4, label="Mini-ranks per rank",
                                           help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>",
                                           validators=[MinValueValidator(1), MaxValueValidator(4)],
-                                          widget=forms.NumberInput(attrs={'placeholder': 'default: 1'}))
+                                          widget=forms.NumberInput(attrs={'placeholder': '1'}))
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -50,15 +48,15 @@ class SelectMPIFilesForm(forms.Form):
 
 
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-6'),
+                Field('mpi_cluster', wrapper_class='col-xs-12'),
                 css_class="row"
             ),
 
             Fieldset(
                 'MiniRanks',
                 Div(
-                    Div('param_mini_ranks', css_class='col-xs-4'),
-                    Div('param_bynode', css_class='col-xs-6 col-xs-offset-2'),
+                    Div('param_mini_ranks', css_class='col-xs-12 col-md-4'),
+                    Div('param_bynode', css_class='col-xs-12 col-xs-offset-0 col-md-6 col-md-offset-2'),
                     css_class='row-fluid col-sm-12'
                 ),
 
@@ -100,9 +98,10 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('parameter', css_class='parameter'), css_class='col-xs-2'),
-                Div(Field('input_file1', wrapper_class="hidden"), css_class='col-xs-3 col-xs-offset-1'),
-                Div(Field('input_file2', wrapper_class="hidden"), css_class='col-xs-3'),
+                Div(Field('parameter', wrapper_class='col-xs-12 col-md-6', css_class='parameter'),
+                    css_class='col-xs-12'),
+                Div(Field('input_file1', wrapper_class="hidden"), css_class='col-xs-5 col-xs-offset-1'),
+                Div(Field('input_file2', wrapper_class="hidden"), css_class='col-xs-5 '),
 
                 css_class='row-fluid col-sm-12 form-container'
             ),
@@ -136,12 +135,12 @@ class InputParameterForm(forms.Form):
 
 class OtherParameterForm(forms.Form):
     # param_kmer = forms.BooleanField(required=False, label="-k")
-    # todo: verify min_value for kmer_length, 32 is default max if not specified in compilation
+    # verify min_value for kmer_length, 32 is default max if not specified in compilation
     # source: http://blog.gmane.org/gmane.science.biology.ray-genome-assembler/month=20121101
     param_kmer_length = forms.IntegerField(validators=[odd_number_validator], max_value=32, min_value=1,
                                            required=False, label="",
                                            help_text="Value must be odd.",
-                                           widget=forms.NumberInput(attrs={'placeholder': 'default: 21'}))
+                                           widget=forms.NumberInput(attrs={'placeholder': ' 21'}))
 
     # Ray surveyor options See Documentation/Ray-Surveyor.md
     param_run_surveyor = forms.BooleanField(required=False, label="-run-surveyor",
@@ -150,7 +149,7 @@ class OtherParameterForm(forms.Form):
                                                  help_text="Reads sample graphs (generated with -write-kmers).")  # dependent on -write-kmers parameter
     subparam_graph_files = MultiFileField(required=False, min_num=1, label="Upload graph(s)",
                                           validators=[multi_graph_files_validator])
-    # todo: sampleName = task_%d % id, sampleGraphFile = output_directory/kmers.txt
+    # ?sampleName = task_%d % id, sampleGraphFile = output_directory/kmers.txt
 
     # Assembly options are skipped because documentation says (defaults work well)
     # Distributed storage engine options are skipped due to lack of knowledge with mpi ranks
@@ -166,7 +165,7 @@ class OtherParameterForm(forms.Form):
     # Taxonomic profiling with colored de Bruijn graphs
     # Computes and writes detailed taxonomic profiles. See Documentation/Taxonomy.txt for details.
     param_with_taxonomy = forms.BooleanField(required=False, label='-with-taxonomy',
-                                             help_text="Computes and writes detailed taxonomic profiles.")
+                                             help_text='Computes and writes detailed taxonomic profiles. <a href="https://github.com/sebhtml/ray/blob/master/Documentation/Taxonomy.txt">See documentation</a>')
     subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator],
                                                     label="Genome-to-Taxon")
     subparam_tree_of_life_edges_file = forms.FileField(required=False, validators=[tsv_file_validator],
@@ -175,8 +174,8 @@ class OtherParameterForm(forms.Form):
 
     # Provides an ontology and annotations. See Documentation/GeneOntology.txt
     param_gene_ontology = forms.BooleanField(required=False, label="-gene-ontology",
-                                             help_text="Provides an ontology and annotations. OntologyTerms.txt is automatically fetched from geneontology.org .")
-    # todo: The OntologyTerms.txt file is http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo
+                                             help_text='Provides an ontology and annotations. OntologyTerms.txt is automatically fetched from geneontology.org . <a href="https://github.com/sebhtml/ray/blob/master/Documentation/GeneOntology.txt">See documentation</a>')
+
 
     subparam_annotations_file = forms.FileField(required=False, validators=[txt_file_validator], label="Annotations",
                                                 help_text="The annotation file must be derived from Uniprot-GOA (http://www.ebi.ac.uk/GOA/).")
@@ -237,19 +236,19 @@ class OtherParameterForm(forms.Form):
             Fieldset(
                 'K-mer length',
                 Div(
-                    Div('param_kmer_length', css_class='col-xs-3'),
-                    css_class='row-fluid col-sm-12'
+                    Div(Field('param_kmer_length', wrapper_class='col-xs-12 col-md-4'), css_class='col-xs-12'),
+                    css_class='row-fluid col-xs-12'
                 )
             ),
             Fieldset(
                 'Ray Surveyor options',
                 Div(
-                    Div('param_run_surveyor', css_class='col-xs-6'),
+                    Div('param_run_surveyor', css_class='col-xs-12'),
                     css_class='col-sm-12'
                 ),
                 Div(
-                    Div('param_read_sample_graph', css_class='col-xs-6'),
-                    Div('subparam_graph_files', css_class='col-xs-4'),
+                    Div('param_read_sample_graph', css_class='col-xs-12 col-md-6'),
+                    Div('subparam_graph_files', css_class='col-xs-12 col-md-4'),
                     css_class='row-fluid col-sm-12'
                 ),
             ),
@@ -257,8 +256,8 @@ class OtherParameterForm(forms.Form):
 
                 'Biological abundances',
                 Div(
-                    Div('param_search', css_class='col-xs-6'),
-                    Div('subparam_search_files', css_class='col-xs-4'),
+                    Div('param_search', css_class='col-xs-12 col-md-6'),
+                    Div('subparam_search_files', css_class='col-xs-12 col-md-4'),
                     css_class='row-fluid col-sm-12'
                 ),
                 Div(
@@ -270,26 +269,24 @@ class OtherParameterForm(forms.Form):
                 'Taxonomic profiling with colored de Bruijn graphs',
                 Div(
                     Div(
-                        'param_with_taxonomy',
-                        HTML(
-                            """<a href="https://github.com/sebhtml/ray/blob/master/Documentation/Taxonomy.txt">See documentation</a>"""),
-                        css_class='col-xs-3'
+                        'param_with_taxonomy', css_class='col-xs-12'
                     ),
-                    Div('subparam_genome_to_taxon_file', css_class='col-xs-3'),
-                    Div('subparam_tree_of_life_edges_file', css_class='col-xs-3'),
-                    Div('subparam_taxon_names_file', css_class='col-xs-3'),
+                    Div(
+                        Field('subparam_genome_to_taxon_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                        Field('subparam_tree_of_life_edges_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                        Field('subparam_taxon_names_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                        css_id='param_with_taxonomy_files',
 
+                    ),
                     css_class='row-fluid col-sm-12'
                 ),
                 Div(
                     Div(
                         'param_gene_ontology',
-                        HTML(
-                            """<a href="https://github.com/sebhtml/ray/blob/master/Documentation/GeneOntology.txt">See documentation</a>"""),
-                        css_class='col-xs-5',
+                        css_class='col-xs-12 col-md-6',
 
                     ),
-                    Div('subparam_annotations_file', css_class='col-xs-4'),
+                    Div('subparam_annotations_file', css_class='col-xs-12 col-md-4'),
                     css_class='row-fluid col-sm-12'
                 )
             ),
@@ -348,7 +345,6 @@ class OtherParameterForm(forms.Form):
                                                 code='no_graphs_to_read_provided')
 
             if self.cleaned_data['param_search']:
-                print "search is triggered"
                 if not self.cleaned_data.get('subparam_search_files'):
                     raise forms.ValidationError(u'-search: No search files are provided',
                                                 code="no_search_files_provided")

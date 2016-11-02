@@ -1,5 +1,14 @@
+/*body { padding-top: 70px; }*/
+
 .asteriskField {
 	color: #FF0000;
+}
+
+.nav-user-img {
+    position: relative;
+    top: -5px;
+    float: left;
+    left: -5px;
 }
 
 #mpi-table tr {
@@ -18,7 +27,7 @@
 
 .scrollable-task-file-list {
 	height: auto;
-	max-height: 400px;
+    max-height: 360px;
 	overflow-x: hidden;
 }
 
@@ -131,6 +140,11 @@
     margin: auto;
     padding: 20px;
 
+}
+
+.user-info-dropdown > ul > li {
+    padding-right: 10px;
+    padding-right: 10px;
 }
 
 

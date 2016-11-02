@@ -15,13 +15,14 @@ Including another URLconf
 """
 from django.conf.urls import url, include
 from django.contrib import admin
-
-from skylab.views import HomeView
+from django.views.generic.base import RedirectView
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
-    url(r'skylab/', include('skylab.urls')),
-    url(r'^$', HomeView.as_view(), name='skylab-home'),
+    url(r'^skylab/', include('skylab.urls')),
+    url(r'^$', RedirectView.as_view(url='skylab/'))
+
+    # url(r'^$', HomeView.as_view(), name='skylab-home'),
 
 
 

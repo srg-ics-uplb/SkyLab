@@ -25,8 +25,8 @@
 {% block content %}
     <div class='row'>
         <div id="task-detail-div"
-             class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-offset-1 col-md-10 col-lg-10 col-lg-offset-1">
-            <h1 class="text-center">Task {{ task.id }}</h1>
+             class="col-xs-10 col-xs-offset-1">
+            <h1>Task {{ task.id }}</h1>
 
             <span class="text-muted">{{ task.tool.display_name }} @ {{ task.mpi_cluster }}</span>
             <span id="task-status">{{ task.status }}</span>
@@ -79,7 +79,7 @@
             {#            </ul>#}
         </div>
             {#    JSmol container        #}
-        <div class="col-xs-10 col-xs-offset-1 col-sm-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0">
+        <div class="col-xs-10 col-xs-offset-1 col-lg-6 col-lg-offset-0 col-md-6 col-md-offset-0">
 
             <div class="carousel-container" class="row">
                 <div id="output-carousel-div" class="single-item">
@@ -188,13 +188,7 @@
         $('#isosurface_options_div').hide();
         Models = [];
 
-        function getSliderSettings() {
-            return {
-                dots: true,
-                accessiblity: true,
-                lazyLoad: 'ondemand'
-            }
-        }
+
 
         $(function () {
             $('.single-item').slick({
@@ -225,7 +219,7 @@
 
                         var task_detail_div = $('#task-detail-div');
                         {#            task_detail_div.addClass("col-xs-6");#}
-                        task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");
+                        {#                        task_detail_div.removeClass("col-md-10 col-md-offset-1 col-lg-10 col-lg-offset-1");#}
                         task_detail_div.addClass("col-md-6 col-md-offset-0 col-lg-6 col-lg-offset-0");
                         if (content.jsmol_display == true) {
                             $("#appdiv").html(Jmol.getAppletHtml("jmolApplet0", Info));
@@ -234,12 +228,10 @@
                     }
                 }
 
-                if (content.carousel_display == true) {
-                    $('#car');
-                    var slick_carousel = $('.single-item');
-                    slick_carousel.slick('unslick');
-                    {#                    slick_carousel.slick(getSliderSettings())#}
-                }
+
+                {#                if (content.carousel_display == true) {#}
+                {#                    var slick_carousel = $('.single-item');#}
+                {#                }#}
             })
         };
         retrieveCurrentStatus();
@@ -320,27 +312,6 @@
             {#            defaultModel: "$dopamine",#}
             {#            console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"#}
         };
-
-
-
-        {# these are conveniences that mimic behavior of Jmol.js#}
-
-        {#        function jmolCheckbox(script1, script0, text, ischecked) {#}
-        {#            Jmol.jmolCheckbox(jmolApplet0, first['url']script1, script0, text, ischecked)#}
-        {#        }#}
-        {#        function jmolButton(script, text) {#}
-        {#            Jmol.jmolButton(jmolApplet0, script, text)#}
-        {#        }#}
-        {#        function jmolHtml(s) {#}
-        {#            document.write(s)#}
-        {#        }#}
-        {#        #}
-        {#        function jmolBr() {#}
-        {#            jmolHtml("<br>")#}
-        {#        }#}
-        {#        function jmolMenu(a) {#}
-        {#            Jmol.jmolMenu(jmolApplet0, a)#}
-        {#        }#}
 
     </script>
     <script type="text/javascript">

@@ -51,14 +51,14 @@ class GridForm(forms.Form):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-6'),
-                css_class="col-sm-12"
+                Field('mpi_cluster', wrapper_class='col-xs-12'),
+                css_class="col-xs-12"
             ),
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_files', css_class='col-xs-5'),
-                    Div('param_other_files', css_class='col-xs-5 col-xs-offset-1 '),
+                    Div('param_input_file', css_class='col-xs-12'),
+                    Div('param_other_files', css_class='col-xs-12 col-md-8'),
                     css_class='row-fluid col-sm-12'
                 ),
 
@@ -66,8 +66,8 @@ class GridForm(forms.Form):
             Fieldset(
                 'Output',
                 Div(
-                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-5'),
-                    css_class='row-fluid col-sm-12'
+                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-12 col-md-8'),
+                    css_class='row-fluid col-xs-12'
                 )
             ),
             Fieldset(
@@ -76,7 +76,7 @@ class GridForm(forms.Form):
                 Div(
                     Div('param_terse', css_class='col-xs-12'),
                     Div('param_verbose', css_class='col-xs-12'),
-                    css_class='row-fluid col-sm-12'
+                    css_class='row-fluid col-xs-12'
                 )
             )
         )
@@ -116,21 +116,21 @@ class Dock6Form(forms.Form):
         self.helper.form_tag = False
         self.helper.layout = Layout(
             Div(
-                Field('mpi_cluster', wrapper_class='col-xs-6'),
+                Field('mpi_cluster', wrapper_class='col-xs-12'),
                 css_class="col-sm-12"
             ),
             Fieldset(
                 'Input',
                 Div(
-                    Div('param_input_files', css_class='col-xs-5'),
-                    Div('param_other_files', css_class='col-xs-5 col-xs-offset-1'),
+                    Div('param_input_file', css_class='col-xs-12'),
+                    Div('param_other_files', css_class='col-xs-12 col-md-8'),
                     css_class='row-fluid col-sm-12'
                 ),
             ),
             Fieldset(
                 'Output',
                 Div(
-                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-5'),
+                    Div(AppendedText('param_output_prefix', '.out'), css_class='col-xs-12 col-md-8'),
                     css_class='row-fluid col-sm-12'
                 )
             ),

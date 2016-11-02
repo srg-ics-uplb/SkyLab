@@ -6,18 +6,23 @@ from django.core.urlresolvers import reverse
 from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
-from skylab.modules.autodock4.forms import AutodockForm, AutogridForm
+from skylab.modules.autodock4.forms import Autodock4Form, Autogrid4Form
 
 
-class AutodockView(LoginRequiredMixin, FormView):
+class Autodock4View(LoginRequiredMixin, FormView):
     template_name = "modules/autodock/use_autodock.html"
-    form_class = AutodockForm
+    form_class = Autodock4Form
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(AutodockView, self).get_form_kwargs()
+        kwargs = super(Autodock4View, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(Autodock4View, self).get_context_data(**kwargs)
+        context['tool'] = Tool.objects.get(simple_name='autodock4')
+        return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
@@ -29,7 +34,7 @@ class AutodockView(LoginRequiredMixin, FormView):
 
         exec_string = "autodock4 "
         task = Task.objects.create(
-            mpi_cluster=cluster, tool=Tool.objects.get(display_name='AutoDock 4'), user=self.request.user
+            mpi_cluster=cluster, tool=Tool.objects.get(simple_name='autodock4'), user=self.request.user
         )
         self.kwargs['id'] = task.id
 
@@ -67,18 +72,23 @@ class AutodockView(LoginRequiredMixin, FormView):
         task.save()
 
         # find a way to know if thread is already running
-        return super(AutodockView, self).form_valid(form)
+        return super(Autodock4View, self).form_valid(form)
 
 
-class AutogridView(LoginRequiredMixin, FormView):
+class Autogrid4View(LoginRequiredMixin, FormView):
     template_name = "modules/autodock/use_autogrid.html"
-    form_class = AutogridForm
+    form_class = Autogrid4Form
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(AutogridView, self).get_form_kwargs()
+        kwargs = super(Autogrid4View, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(Autogrid4View, self).get_context_data(**kwargs)
+        context['tool'] = Tool.objects.get(simple_name='autogrid4')
+        return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
@@ -138,4 +148,4 @@ class AutogridView(LoginRequiredMixin, FormView):
             task.task_data = json.dumps({'command_list': [exec_string]})
             task.save()
 
-        return super(AutogridView, self).form_valid(form)
+        return super(Autogrid4View, self).form_valid(form)

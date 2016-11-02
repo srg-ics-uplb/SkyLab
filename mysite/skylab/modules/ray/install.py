@@ -24,6 +24,7 @@ def insert_to_db():
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'Ray',
+         'description': 'The main executable for Ray'
          # "executable_name": "RayExecutable",
          # "view_name":"RayView",
          },

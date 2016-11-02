@@ -3,51 +3,67 @@
 {% load crispy_forms_filters %}
 {% load staticfiles %}
 
+{% block title %}
+    {{ block.super }} {{ tool.display_name }}
+{% endblock %}
+
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li>
+        <a href="{% url 'toolset_list_view' %}">Toolsets</a>
+    </li>
+    <li>
+        <a href="{% url 'toolset_detail_view' toolset_simple_name=tool.toolset.simple_name %}">{{ tool.toolset.display_name }}</a>
+    </li>
+    <li class="active">
+        {{ tool.display_name }}
+    </li>
+{% endblock %}
+
+
 {% block content %}
 <div class='row'>
-    <div class='col-sm-10 col-sm-offset-1'>
+    <div class='col-xs-10 col-xs-offset-1'>
+        <div class="row">
+            <h1>Ray</h1>
+            <form id="ray-form" action="" method="post" enctype="multipart/form-data">
 
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
+                    <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
+                </ul>
 
-        <form id="ray-form" action="" method="post" enctype="multipart/form-data">
-            <h1 class="text-center">Ray</h1>
-            {#            <hr>#}
-            <ul class="nav nav-tabs">
-                <li class="active"><a data-toggle="tab" href="#tab1">Basic Parameters</a></li>
-                <li><a data-toggle="tab" href="#tab2">Other Parameters</a></li>
-            </ul>
+                <div class="tab-content panel-body">
+                    <div id="tab1" class="tab-pane fade in active">
+                        {% crispy form %}
+                        {{ input_formset.management_form }}
 
-            <div class="tab-content">
-                <div id="tab1" class="tab-pane fade in active">
-                    {% crispy form %}
-                    {{ input_formset.management_form }}
-
-                    <legend>Input</legend>
-                    <div id="input-formset-container">
-                        {% for form in input_formset.forms %}
-                            {% crispy form %}
-                        {% endfor %}
+                        <legend>Input</legend>
+                        <div id="input-formset-container">
+                            {% for form in input_formset.forms %}
+                                {% crispy form %}
+                            {% endfor %}
+                            <hr>
+                        </div>
                         <hr>
+
+
                     </div>
-                    <hr>
+                    <div id="tab2" class="tab-pane fade col-xs-12">
+                        {% crispy other_parameter_form %}
+                        <hr>
+
+                    </div>
+
+                    <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
 
 
                 </div>
-                <div id="tab2" class="tab-pane fade col-sm-12">
-                    {% crispy other_parameter_form %}
-                    <hr>
 
-                </div>
-
-                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
-
-
-            </div>
-
-            {#            </div>#}
-            {#        </div>#}
-	</form>
-
-
+            </form>
+        </div>
     </div>
 </div>
 
@@ -59,9 +75,9 @@
         {#  edit how form_errors are displayed   #}
         {#        $('.alert-block').addClass("col-sm-12");#}
 
-
         {# for dynamic formset add/remove        #}
         $(function () {
+            {# init using django-formset js            #}
             $('.form-container').formset({
                 prefix: '{{ input_formset.prefix }}',
                 addText: '<i class="fa fa-plus" aria-hidden="true"></i> Add input parameter',
@@ -69,6 +85,24 @@
                 addCssClass: 'btn btn-success',
                 deleteCssClass: 'btn btn-danger'
             });
+
+            $('#div_id_subparam_graph_files').hide();
+            $('#div_id_subparam_search_files').hide();
+            $('#param_with_taxonomy_files').hide();
+            $('#div_id_subparam_annotations_file').hide();
+        });
+
+        $('#id_param_read_sample_graph').change(function () {
+            $('#div_id_subparam_graph_files').fadeToggle("fast")
+        });
+        $('#id_param_search').change(function () {
+            $('#div_id_subparam_search_files').fadeToggle("fast")
+        });
+        $('#id_param_with_taxonomy').change(function () {
+            $('#param_with_taxonomy_files').fadeToggle("fast")
+        });
+        $('#id_param_gene_ontology').change(function () {
+            $('#div_id_subparam_annotations_file').fadeToggle("fast")
         });
 
         {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
@@ -140,5 +174,7 @@
                 }
             }
         });
+
+
     </script>
 {% endblock %}

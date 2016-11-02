@@ -10,15 +10,20 @@ from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.dock6.forms import Dock6Form, GridForm
 
 
-class Dock6FormView(LoginRequiredMixin, FormView):
+class Dock6View(LoginRequiredMixin, FormView):
     template_name = "modules/dock6/use_dock6.html"
     form_class = Dock6Form
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(Dock6FormView, self).get_form_kwargs()
+        kwargs = super(Dock6View, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(Dock6View, self).get_context_data(**kwargs)
+        context['tool'] = Tool.objects.get(simple_name='dock6')
+        return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
@@ -55,18 +60,23 @@ class Dock6FormView(LoginRequiredMixin, FormView):
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
 
-        return super(Dock6FormView, self).form_valid(form)
+        return super(Dock6View, self).form_valid(form)
 
 
-class GridFormView(LoginRequiredMixin, FormView):
+class GridView(LoginRequiredMixin, FormView):
     template_name = "modules/dock6/use_grid.html"
     form_class = GridForm
 
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
-        kwargs = super(GridFormView, self).get_form_kwargs()
+        kwargs = super(GridView, self).get_form_kwargs()
         kwargs['user'] = self.request.user
         return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super(GridView, self).get_context_data(**kwargs)
+        context['tool'] = Tool.objects.get(simple_name='grid')
+        return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
@@ -104,4 +114,4 @@ class GridFormView(LoginRequiredMixin, FormView):
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
 
-        return super(GridFormView, self).form_valid(form)
+        return super(GridView, self).form_valid(form)

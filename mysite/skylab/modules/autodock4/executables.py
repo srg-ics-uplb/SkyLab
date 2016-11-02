@@ -12,9 +12,9 @@ from skylab.modules.basetool import P2CToolGeneric
 cluster_password = settings.CLUSTER_PASSWORD
 
 
-class AutoDock4Executable(P2CToolGeneric):
+class Autodock4Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
-        super(AutoDock4Executable, self).__init__(**kwargs)
+        super(Autodock4Executable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'workdir')
         # self.input_upload_dir = self.working_dir
 

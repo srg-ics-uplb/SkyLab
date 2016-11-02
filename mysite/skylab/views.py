@@ -81,7 +81,7 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	connection.close()
 
 
-class HomeView(TemplateView):
+class HomeView(LoginRequiredMixin, TemplateView):
     template_name = "layouts/home.html"
 
 
@@ -145,7 +145,9 @@ class MPIListView(LoginRequiredMixin, ListView):
 class MPIDetailView(LoginRequiredMixin, DetailView):
     model = MPICluster
     template_name = 'layouts/mpi_detail_view.html'
-
+    slug_url_kwarg = 'cluster_name'
+    slug_field = 'cluster_name'
+    query_pk_and_slug = True
     context_object_name = 'mpi_cluster'
 
     def get(self, request, *args, **kwargs):
@@ -160,8 +162,11 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(MPIDetailView, self).get_context_data(**kwargs)
         context['skylab_toolsets'] = ToolSet.objects.all()
-
-        context['tool_activations'] = ToolActivation.objects.filter(mpi_cluster=self.kwargs['pk'])
+        if self.kwargs.get('pk', None):
+            context['tool_activations'] = ToolActivation.objects.filter(mpi_cluster=self.kwargs['pk'])
+        elif self.kwargs.get('cluster_name', None):
+            context['tool_activations'] = ToolActivation.objects.filter(
+                mpi_cluster__cluster_name=self.kwargs['cluster_name'])
         return context
 
     def get_queryset(self):
@@ -203,6 +208,14 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         qs = super(TaskDetailView, self).get_queryset()
         return qs.filter(user=self.request.user)
+
+
+class ToolSetDetailView(LoginRequiredMixin, DetailView):
+    model = ToolSet
+    template_name = 'layouts/toolset_detail_view.html'
+    context_object_name = 'toolset'
+    slug_url_kwarg = 'toolset_simple_name'
+    slug_field = 'simple_name'
 
 
 def index(request):

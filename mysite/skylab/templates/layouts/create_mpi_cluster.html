@@ -1,6 +1,18 @@
 {% extends 'layouts/base.html' %}
 {% load crispy_forms_tags %}
 
+{% block title %}{{ block.super }} Create MPI Cluster{% endblock %}
+
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li>
+        <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
+    </li>
+    <li class="active">Create MPI Cluster</li>
+{% endblock %}
+
 {% block content %}
     <div class='row'>
         <div class='col-sm-6 col-sm-offset-3'>

@@ -27,6 +27,7 @@ class ImpiView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super(ImpiView, self).get_context_data(**kwargs)
         # context['select_mpi_form'] = SelectMPIFilesForm()
+        context['tool'] = Tool.objects.get(simple_name='impi')
         context['input_formset'] = self.input_forms
         return context
 

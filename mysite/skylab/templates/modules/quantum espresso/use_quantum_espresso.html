@@ -3,41 +3,46 @@
 {% load crispy_forms_filters %}
 {% load staticfiles %}
 
-{% block content %}
+{% block title %}
+    {{ block.super }} {{ tool.display_name }}
+{% endblock %}
 
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li>
+        <a href="{% url 'toolset_list_view' %}">Toolsets</a>
+    </li>
+    <li>
+        <a href="{% url 'toolset_detail_view' toolset_simple_name=tool.toolset.simple_name %}">{{ tool.toolset.display_name }}</a>
+    </li>
+    <li class="active">
+        {{ tool.display_name }}
+    </li>
+{% endblock %}
+
+
+{% block content %}
     <div class='row'>
         <div class='col-xs-10 col-xs-offset-1 '>
-
-
-            <form id="ray-form" action="" method="post" enctype="multipart/form-data">
-
-                {#                <div class="well">#}
-                <h1 class="text-center">Quantum Espresso</h1>
+            <div class="row">
+                <h1>{{ tool.display_name }}</h1>
                 <hr>
-                {#                    <div class="panel-heading">#}
-                {#                        <h3 class="panel-title">Quantum Espresso</h3>#}
-                {#                    </div>#}
-                {#                    <div class="panel-body">#}
-                {% crispy form %}
-
-
-                {{ input_formset.management_form }}
-                <div id="input-formset-container">
-                    {% for form in input_formset.forms %}
-                        {% crispy form %}
-                    {% endfor %}
-                </div>
-                <hr>
-                <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
-                {#                    </div>#}
-                {#                </div>#}
-            </form>
-
-
+                <form id="quantum-espresso-form" action="" method="post" enctype="multipart/form-data">
+                    {% crispy form %}
+                    {{ input_formset.management_form }}
+                    <div id="input-formset-container">
+                        {% for form in input_formset.forms %}
+                            {% crispy form %}
+                        {% endfor %}
+                    </div>
+                    <hr>
+                    <input name="submit" value="Execute" type="submit" class="btn btn-primary btn-block">
+                </form>
+            </div>
         </div>
     </div>
-
-
 {% endblock %}
 
 {% block js %}

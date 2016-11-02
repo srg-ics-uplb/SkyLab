@@ -20,7 +20,8 @@ class CreateMPIForm(forms.Form):
 	toolsets = forms.ModelMultipleChoiceField(required=False, label="Toolsets", queryset=ToolSet.objects.all(),
 											  help_text="Select toolsets to be activated. Optional",
 											  widget=forms.CheckboxSelectMultiple())
-	is_public = forms.BooleanField(required=False, label="Public")
+	is_public = forms.BooleanField(required=False, label="Public",
+								   help_text="This option makes the cluster visible to all users.")
 
 	def __init__(self, *args, **kwargs):
 		super(CreateMPIForm, self).__init__(*args, **kwargs)

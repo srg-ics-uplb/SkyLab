@@ -26,8 +26,7 @@ def insert_to_db():
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'Quantum ESPRESSO',
-         # "executable_name": "QuantumESPRESSOExecutable",
-         # "view_name":"QuantumESPRESSOView",
+         'description': 'Supports PWscf/pw.x'
          },
 
     ]

@@ -24,14 +24,14 @@ def insert_to_db():
 
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
-        {'display_name': 'AutoGrid 4',
-         'executable_name': 'AutoGrid4Executable',
-         'view_name': 'AutogridView',
-         'description': 'Pre-calculates grids to be used by AutoDock',
+        {'display_name': 'autogrid4',
+         # 'executable_name': 'AutoGrid4Executable',
+         # 'view_name': 'AutogridView',
+         'description': 'Pre-calculates grids to be used by autodock4',
          },
-        {'display_name': 'AutoDock 4',
-         'executable_name': 'AutoDock4Executable',
-         'view_name': 'AutodockView',
+        {'display_name': 'autodock4',
+         # 'executable_name': 'AutoDock4Executable',
+         # 'view_name': 'AutodockView',
          'description': 'Performs the docking of the ligand to a set of grids describing the target protein',
          },
     ]

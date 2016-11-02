@@ -7,9 +7,9 @@ def insert_to_db():
         'display_name': 'GAMESS',
         'package_name': __name__.replace('.install', ''),
         'p2ctool_name': 'gamess',
-        'description': 'The General Atomic and Molecular Electronic Structure System (GAMESS) ' \
-                       'is a general ab initio quantum chemistry package.'
-                       'plane waves, and pseudopotentials.',
+        'description': 'The General Atomic and Molecular Electronic Structure System (GAMESS) '
+                       'is a general ab initio quantum chemistry package. '
+                       'Briefly, GAMESS can compute SCF wavefunctions ranging from RHF, ROHF, UHF, GVB, and MCSCF.',
         'source_url': 'http://www.msg.ameslab.gov/gamess/'
     }
 

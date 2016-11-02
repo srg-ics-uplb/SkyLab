@@ -7,19 +7,32 @@
     <link rel="stylesheet" href="{% static 'dataTables/css/dataTables.bootstrap.min.css' %}">
 {% endblock %}
 
+
+{% block navbar_breadcrumb %}
+    <li>
+        <a href="{% url 'skylab-home' %}">Home</a>
+    </li>
+    <li class="active">
+        Toolsets
+    </li>
+{% endblock %}
+
 {% block content %}
+
+
+
+
     <div class="row">
-        <h1 class="text-center">Toolsets</h1>
-    </div>
-    <div class="row">
+        <h1>Toolsets</h1>
         <div class="list-group">
             {% for toolset in toolsets %}
-                <a href="#" class="list-group-item">
+                <a href="{% url 'toolset_detail_view' toolset_simple_name=toolset.simple_name %}"
+                   class="list-group-item">
                     <h4 class="list-group-item-heading">
                         {{ toolset.display_name }}
                     </h4>
                     <p class="list-group-item-text">
-                        {{ toolset.description }}
+                        {{ toolset.short_description }}
                     </p>
                 </a>
             {% endfor %}

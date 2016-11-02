@@ -17,7 +17,6 @@ class RayView(LoginRequiredMixin, FormView):
     input_forms = input_formset()
     form_class = SelectMPIFilesForm
 
-
     def get_form_kwargs(self):
         # pass "user" keyword argument with the current user to your form
         kwargs = super(RayView, self).get_form_kwargs()
@@ -28,7 +27,7 @@ class RayView(LoginRequiredMixin, FormView):
         context = super(RayView, self).get_context_data(**kwargs)
         context['input_formset'] = self.input_forms
         context['other_parameter_form'] = OtherParameterForm()
-        context['user'] = self.request.user
+        context['tool'] = Tool.objects.get(simple_name="ray")
         return context
 
     def post(self, request, *args, **kwargs):
@@ -38,8 +37,6 @@ class RayView(LoginRequiredMixin, FormView):
         other_parameter_form = OtherParameterForm(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and other_parameter_form.is_valid() and input_formset.is_valid():
-            # do something with the cleaned_data on the formsets.
-            # print select_mpi_form.cleaned_data.get('mpi_cluster')
             cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
             cluster = MPICluster.objects.get(cluster_name=cluster_name)
 
@@ -51,7 +48,7 @@ class RayView(LoginRequiredMixin, FormView):
             if select_mpi_form.cleaned_data['param_bynode']:
                 command += "-bynode "
 
-            tool = Tool.objects.get(display_name="Ray")
+            tool = Tool.objects.get(simple_name="ray")
             task = Task.objects.create(
                 mpi_cluster=cluster_name, tool=tool, user=self.request.user
             )

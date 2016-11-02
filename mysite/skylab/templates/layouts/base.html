@@ -22,22 +22,11 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <a class="navbar-brand" href="#">SkyLab</a>
+            <a class="navbar-brand" href="{% url 'skylab-home' %}">SkyLab</a>
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
-            <ul class="nav navbar-nav navbar-static-top">
-                <li>
-                    <ol class="breadcrumb">
-                        {% block navbar_breadcrumb %}
-                            <li class="active">Home</li>
-                        {% endblock %}
-                    </ol>
-                    </li>
 
-            </ul>
-
-            {# top-right navbar        #}
-            <p class="navbar-text">Signed in as {{ user.first_name }} {{ user.last_name }}</p>
+            {#    top-right navbar        #}
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'mpi_list_view' %}"><i class="fa fa-cloud fa-fw"></i> MPI Clusters </a></li>
@@ -51,14 +40,27 @@
                         <!-- /.dropdown-tasks -->
                     </li>
 
-                    {# todo: user thumbnail, dropdown - logout #}
+                    {% for account in user.socialaccount_set.all %}
+                        {% if account.provider == 'google' %}
+                            <li class="dropdown user-info-dropdown">
+                                <a class="dropdown-toggle" data-toggle="dropdown" href="#" class="btn btn-link"
+                                        {# onclick="logout()" #}>
+                                    {# calls logout function that logouts google account then skylab account #}
+                                    <img src="{{ account.extra_data.picture }}"
+                                         class="img-rounded nav-user-img img-responsive" alt="user_img" width="34"
+                                         height="34">
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a id="logout-button"><i class="fa fa-sign-out"></i> Logout</a>
+                                    </li>
+                                </ul>
+                            </li>
 
-                    <li>
-                        <a id="logout-button" href="#" class="btn btn-link" {# onclick="logout()" #}>
-                            {# calls logout function that logouts google account then skylab account #}
-                            <i class="fa fa-sign-out fa-fw"></i> Logout
-                        </a>
-                    </li>
+                        {% endif %}
+                    {% endfor %}
+
                 {% else %}
                     <li>
                         <a href="{% url 'account_login' %}">
@@ -74,8 +76,18 @@
     </div>
 </nav>
 <div class="container">
+
+    <div class="row">
+        <ol class="breadcrumb">
+            {% block navbar_breadcrumb %}
+                <li class="active">Home</li>
+            {% endblock %}
+        </ol>
+    </div>
+
+    {% block content %}{% endblock content %}
     <br>
-        {% block content %}{% endblock content %}
+    <br>
     {# create task modal #}
     <div class="modal fade" id="create-task-modal" role="dialog">
         <div class="modal-dialog ">
@@ -148,7 +160,9 @@
         };
 
         {# begin create task modal #}
-        $('#create-task-modal').on('shown.bs.modal', function () { {# refresh toolset list on modal activate #}
+        var create_task_modal = $('#create-task-modal');
+
+        create_task_modal.on('shown.bs.modal', function () { {# refresh toolset list on modal activate #}
             $('#create-task-modal-error').hide();
             $("#jsmol-container-div").fadeOut("fast", function () {
                 // Animation complete.
@@ -159,7 +173,7 @@
             })
         });
 
-        $("#create-task-modal").on("hidden.bs.modal", function () {
+        create_task_modal.on("hidden.bs.modal", function () {
             $("#jsmol-container-div").fadeIn("fast", function () {
                 // Animation complete.
             });

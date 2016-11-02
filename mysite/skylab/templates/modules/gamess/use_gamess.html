@@ -10,25 +10,29 @@
         <a href="{% url 'skylab-home' %}">Home</a>
     </li>
     <li>
-        <a href="{% url 'toolset_list_view' %}">Tools</a>
+        <a href="{% url 'toolset_list_view' %}">Toolsets</a>
     </li>
     <li>
-        <a href="#">sadsaczxc</a>
+        <a href="{% url 'toolset_detail_view' toolset_simple_name=tool.toolset.simple_name %}">{{ tool.toolset.display_name }}</a>
     </li>
-    <li class="active">{{ tool.display_name }}</li>
+    <li class="active">
+        {{ tool.display_name }}
+    </li>
 {% endblock %}
 
 
 {% block content %}
 <div class='row'>
-    <div class='col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-10 col-md-offset-1 col-lg-8 col-lg-offset-2'>
-
-        <h1 class="text-center">GAMESS
-            <small>(GAMESS)</small>
-        </h1>
-        <hr>
-	{% crispy form %}
-
+    <div class='col-xs-10 col-xs-offset-1'>
+        <div class="row">
+            <h1>{{ tool.display_name }}</h1>
+            <hr>
+        </div>
+        <div class="row">
+            <form id="gamess-form" action="" method="post" enctype="multipart/form-data">
+                {% crispy form %}
+            </form>
+        </div>
     </div>
 </div>
 

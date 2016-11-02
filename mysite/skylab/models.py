@@ -144,10 +144,11 @@ class ToolSet(models.Model):
 
     @property
     def short_description(self):
-        return (self.description[:200] + '..') if len(self.description) > 200 else self.description
+        return (self.description[:200] + '...') if len(self.description) > 200 else self.description
 
     class Meta:
         unique_together = ('display_name', 'p2ctool_name', 'package_name')
+        ordering = ['display_name']
 
     def save(self, *args, **kwargs):
         if self.package_name is None:
@@ -184,10 +185,12 @@ class Tool(models.Model):
 
     @property
     def short_description(self):
-        return (self.description[:200] + '..') if len(self.description) > 200 else self.description
+        return (self.description[:200] + '...') if len(self.description) > 200 else self.description
 
     class Meta:
         unique_together = ('display_name', 'executable_name', 'view_name', 'simple_name')
+        ordering = ['display_name']
+
 
     def __str__(self):
         return self.display_name

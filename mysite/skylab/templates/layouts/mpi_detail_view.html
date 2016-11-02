@@ -19,16 +19,10 @@
 
 {% block content %}
     <div class='row'>
-        <div id="task-info-div"
-             class="col-xs-10 col-xs-offset-1 col-sm-10 col-sm-offset-1 col-md-offset-1 col-md-10 col-lg-10 col-lg-offset-1">
+        <div id="mpi-info-div" class="col-xs-10 col-xs-offset-1">
             <div class="row">
-                {#                <div class="col-xs-offset-4 col-xs-4">#}
-                    <h1 class="text-center"> MPI Cluster {{ mpi_cluster.id }}</h1>
-                </div>
-
-
-            {#            </div>#}
-            <div class="row">
+                <h1>{{ mpi_cluster.cluster_name }}</h1>
+                {#                <h1> MPI Cluster {{ mpi_cluster.id }}</h1>#}
                 <table id="mpi-info-table" class="table table-bordered table-responsive">
                     <thead>
                     <tr>
@@ -79,7 +73,7 @@
 
             <div class="row">
                 <h3>Toolsets</h3>
-                <table class="table table-responsive table-bordered table-striped">
+                <table id="toolsets-table" class="table table-responsive table-bordered table-striped">
                     <thead>
                     <tr>
                         <th>Toolset</th>
@@ -125,8 +119,10 @@
                                 <h4 class="modal-title">Confirm Deletion</h4>
                             </div>
                             <div class="modal-body">
-                                <p>You are about to delete an MPI Cluster ({{ mpi_cluster.cluster_name }}), this
-                                    procedure is irreversible.</p>
+                                <p class="text-justify">You are about to schedule MPI Cluster
+                                    ({{ mpi_cluster.cluster_name }}) for deletion, this
+                                    procedure is irreversible. Cluster will be deleted after all tasks queued are
+                                    finished. </p>
                             </div>
                             <div class="modal-footer ">
 

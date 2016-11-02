@@ -26,10 +26,11 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
         kwargs['user'] = self.request.user
         return kwargs
 
+
     def get_context_data(self, **kwargs):
         context = super(QuantumEspressoView, self).get_context_data(**kwargs)
         context['input_formset'] = self.input_forms
-
+        context['tool'] = Tool.objects.get(simple_name='quantumespresso')
         context['user'] = self.request.user
         return context
 
@@ -61,7 +62,6 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
 
             # in form clean pseudopotentials field returns json dict
             task_data = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
-            # scf_output_files = []
             for form in input_formset:
                 executable = form.cleaned_data.get('param_executable')
                 if executable:  # ignore blank parameter value
@@ -70,10 +70,6 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
                     if input_files:
                         for input_file in input_files:
                             instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
-
-                            # if executable == "pw.x":
-                            #     # TODO: parse input file and check if calculation is not found or calculation = 'scf'
-                            #     pass
                             # neb.x -inp filename.in
                             # ph.x can be run using images #not supported
 
@@ -85,12 +81,11 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
                                                                                          os.path.splitext(
                                                                                              input_file.name)[0]))
 
-                            else:
+                            else:  # at least for pw.x
                                 command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
                                     para_prefix, executable, para_postfix, input_file.name,
                                     os.path.splitext(input_file.name)[0]))
 
-            # task_data['scf_output_files'] = scf_output_files
             task_data['command_list'] = command_list
             task.task_data = json.dumps(task_data)
             task.save()

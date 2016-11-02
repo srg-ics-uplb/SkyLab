@@ -484,6 +484,7 @@ def add_tools_to_toolset(tools, toolset):
         simple_name = t.get('simple_name', re.sub(r'[\s_/-]+', '', display_name.lower()))
         view_name = t.get('view_name', re.sub(r'[\s_/-]+', '', display_name.title()) + "View")  # convention format
         executable_name = t.get('executable_name', re.sub(r'[\s_/-]+', '', display_name.title()) + "Executable")
+        # description = t.get("description", "No description provided")
         description = t.get("description", "No description provided")
 
         Tool.objects.update_or_create(simple_name=simple_name,

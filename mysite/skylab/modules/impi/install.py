@@ -7,7 +7,7 @@ def insert_to_db():
         'display_name': 'Impi',
         'package_name': __name__.replace('.install', ''),
         'p2ctool_name': 'impi',
-        'description': 'Image processing tool',
+        'description': 'Image processing tool that runs in parallel via MPI',
         # 'source_url': 'http://www.quantum-espresso.org/'
     }
 

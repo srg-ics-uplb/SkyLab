@@ -7,7 +7,7 @@ def insert_to_db():
         'display_name': 'AutoDock Vina',
         'package_name': __name__.replace('.install', ''),
         'p2ctool_name': 'vina',
-        'description': 'AutoDock Vina is an open-source program for doing molecular docking.',
+        'description': 'AutoDock Vina is an open-source program for doing molecular docking. It was designed and implemented by Dr. Oleg Trott in the Molecular Graphics Lab at The Scripps Research Institute. ',
         'source_url': 'http://vina.scripps.edu/'
     }
 
@@ -24,6 +24,7 @@ def insert_to_db():
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'Vina',
+         'description': 'The main executable for AutoDock Vina'
          # 'executable_name': 'VinaExecutable',
          # 'view_name':'VinaView',
 
