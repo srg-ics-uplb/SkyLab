@@ -85,7 +85,7 @@ class MPICluster(models.Model):
         return reverse('mpi-detail', kwargs={'pk': self.pk})
 
     def __str__(self):
-        return self.cluster_name
+        return "{0} @ {1}".format(self.cluster_name, self.cluster_ip)
 
     def change_status(self, status):
         self.refresh_from_db()
@@ -99,7 +99,7 @@ class MPICluster(models.Model):
         self.updated = timezone.now()
         super(MPICluster, self).save(*args, **kwargs)
 
-
+@python_2_unicode_compatible
 class ToolActivation(models.Model):
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE)
     toolset = models.ForeignKey("ToolSet", on_delete=models.CASCADE)
@@ -108,6 +108,9 @@ class ToolActivation(models.Model):
 
     class Meta:
         unique_together = ('mpi_cluster', 'toolset')
+
+    def __str__(self):
+        return "{0} activation for {1}".format(self.toolset.display_name, self.mpi_cluster.cluster_name)
 
     def save(self, *args, **kwargs):
         self.mpi_cluster.updated = timezone.now()
@@ -228,6 +231,9 @@ class Task(models.Model):
 
     updated = models.DateTimeField()
     created = models.DateTimeField()
+
+    def __str__(self):
+        return "Task {0} {1}@{2}".format(self.id,self.tool.display_name, self.mpi_cluster.cluster_name)
 
     def save(self, *args, **kwargs):
         # Update timestamps
@@ -372,8 +378,6 @@ class Task(models.Model):
 
         return jsmol_files_absolute_uris
 
-    def __str__(self):
-        return str(self.id)
 
 
 def get_upload_path(instance, filename):
@@ -396,7 +400,7 @@ class SkyLabFile(models.Model):
 
 
     def __str__(self):
-        return self.filename
+        return str(self.filename)
 
     def get_direct_url(self):
         return reverse('skylab_file_url',
@@ -413,10 +417,6 @@ class SkyLabFile(models.Model):
 
         super(SkyLabFile, self).save(*args, **kwargs)
 
-
-#
-
-
 @python_2_unicode_compatible
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
@@ -424,9 +424,9 @@ class TaskLog(models.Model):
     timestamp = models.DateTimeField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
 
-    @property
+
     def __str__(self):
-        return "task-{0}_log_{1}".format(self.task_id, self.timestamp.ctime())
+        return "Log for Task {1} Date : {2}".format(self.task_id, self.task_id, self.timestamp.ctime())
 
     def save(self, *args, **kwargs):
         # django.utils.timezone is more reliable vs datetime.datetime.now()
@@ -434,22 +434,3 @@ class TaskLog(models.Model):
         self.task.updated = timezone.now()
         self.timestamp = timezone.now()
         super(TaskLog, self).save(*args, **kwargs)
-
-
-#
-# @python_2_unicode_compatible
-# class Tool(models.Model):
-#     tool_name = models.CharField(max_length=50)
-#     view_name = models.CharField(max_length=50)
-#     executable_name = models.CharField(max_length=50)
-#     toolset = models.ForeignKey(Toolset, on_delete=models.CASCADE)
-#     description = models.CharField(max_length=300)
-#     source_url = models.URLField(max_length=100)
-#     local_url = models.URLField(max_length=100)
-#
-#     def __str__(self):
-#         return self.tool_name
-
-
-
-

@@ -220,7 +220,7 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
 
 
 def logout_success(request):
-    messages.add_message(request, messages.SUCCESS, 'You have successfully logged out.', extra_tags='display_this')
+    messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='display_this')
     return render(request, 'layouts/home.html')
 
 def index(request):

@@ -147,9 +147,9 @@
             }
         });
 
-        var logout_google_account = function () {
-            location.href = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout_google_account?continue={% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}{% url 'skylab-home' %}";
-        };
+{#        var logout_google_account = function () {#}
+{#            location.href = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout_google_account?continue={% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}{% url 'skylab-home' %}";#}
+{#        };#}
 
         $('#logout-button').on('click', function () {
 
@@ -158,8 +158,8 @@
                     function () {
 
                     });
-            logout_google_account();
-            {#            window.location = "{% url 'logout_redirect' %}"#}
+{#            logout_google_account();#}
+            window.location = "{% url 'logout_redirect' %}"
         });
 
         var navTasksOnClick = function () {
