@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
+from django.contrib.messages import constants as messages
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -224,3 +225,7 @@ JSMOL_SUPPORTED_FILE_EXT = [
 TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
 REMOTE_BASE_DIR = '/mirror'
 MPIEXEC_NODES_FILE = '/mirror/nodes.txt'
+
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger'
+}

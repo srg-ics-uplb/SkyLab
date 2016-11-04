@@ -5,10 +5,22 @@
 
 {% block title %} {{ block.super }} Home {% endblock %}
 
+
+
+
 {% block navbar_breadcrumb %}{% endblock %}
 
 {% block content %}
-
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.extra_tags == 'display_this' %}
+                <div class="alert alert-{{ message.level_tag }} fade in">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
 
 
     <div class=" row">

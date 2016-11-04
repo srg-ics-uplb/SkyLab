@@ -64,8 +64,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         export_path = None
         # export_path = "/mirror/espresso-5.4.0/bin"
 
-        # TODO manual export env_vars not reliable
-        env_vars = {"TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir}
+        env_vars = {"TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir, "LC_ALL": 'C'}
         if export_path:
             env_vars['PATH'] = '$PATH:{0}'.format(export_path)
 
@@ -90,6 +89,13 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                     exec_shell = self.shell.run(
                         ['sh', '-c', env_command + command],  # run command with env_command
                         cwd=self.working_dir  # run at remote task dir
+                    )
+
+                    # clear tempdir
+                    command = 'rm -rf *'
+                    exec_shell = self.shell.run(
+                        ['sh', '-c', env_command + command],  # run command with env_command
+                        cwd=self.tmp_dir  # run at remote task dir
                     )
 
                     self.logger.debug(self.log_prefix + "Finished command exec")

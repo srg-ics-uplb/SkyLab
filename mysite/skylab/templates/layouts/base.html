@@ -45,8 +45,8 @@
                         {% if account.provider == 'google' %}
                             <li class="dropdown user-info-dropdown">
                                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" class="btn btn-link"
-                                        {# onclick="logout()" #}>
-                                    {# calls logout function that logouts google account then skylab account #}
+                                        {# onclick="logout_google_account()" #}>
+                                    {# calls logout_google_account function that logouts google account then skylab account #}
                                     <img src="{{ account.extra_data.picture }}"
                                          class="img-rounded nav-user-img " alt="user_img" width="34"
                                          height="34">
@@ -140,12 +140,17 @@
 
 {% if user.is_authenticated %}
     <script type="text/javascript">
-        {# logout via ajax post #}
+        {# logout_google_account via ajax post #}
         $("body").bind("ajaxSend", function (elm, xhr, s) {
             if (s.type == "POST") {
                 xhr.setRequestHeader('X-CSRF-Token', '{{ csrf_token }}');
             }
         });
+
+        var logout_google_account = function () {
+            location.href = "https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout_google_account?continue={% if request.is_secure %}https://{% else %}http://{% endif %}{{ request.get_host }}{% url 'skylab-home' %}";
+        };
+
         $('#logout-button').on('click', function () {
 
             $.post("{% url 'account_logout' %}",
@@ -153,7 +158,8 @@
                     function () {
 
                     });
-            window.location = "{% url 'logout_redirect' %}"
+            logout_google_account();
+            {#            window.location = "{% url 'logout_redirect' %}"#}
         });
 
         var navTasksOnClick = function () {

@@ -158,7 +158,8 @@ class MPIThread(threading.Thread):
 
         # get tasks that are not finished yet
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(status_code=200).exclude(
-            status_code=401).order_by('created')  # status 400 is not terminal, 401 is
+            status_code=401).order_by('priority', 'created')  # status 400 is not terminal, 401 is
+        # lower priority value are prioritized
 
         for task in tasks:
             self.add_task_to_queue(task.priority, task)

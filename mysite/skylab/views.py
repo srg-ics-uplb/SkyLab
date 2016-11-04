@@ -2,6 +2,7 @@ import importlib
 import os
 
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
@@ -21,7 +22,7 @@ from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet,
 
 
 def has_read_permission(request, task_id):
-    # TODO: query if user in toolactivity
+
     "Only show to authenticated users - extend this as desired"
     if Task.objects.get(pk=task_id).user_id == request.user.id:
         return True
@@ -219,7 +220,8 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
 
 
 def logout_success(request):
-    return render(request, 'layouts/log_out_success.html')
+    messages.add_message(request, messages.SUCCESS, 'You have successfully logged out.', extra_tags='display_this')
+    return render(request, 'layouts/home.html')
 
 def index(request):
     return HttpResponse("Hello, world. You're at the skylab index.")
