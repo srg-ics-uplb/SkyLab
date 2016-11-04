@@ -296,7 +296,9 @@ class MPIThread(threading.Thread):
             exit_loop = False
             while not exit_loop:
                 if toolset.p2ctool_name == 'quantum-espresso':
-                    command = 'sudo apt-get install quantum-espresso -y'
+                    command = 'wget http://qe-forge.org/gf/download/frsrelease/211/968/espresso-5.4.0.tar.gz &&' \
+                              'tar -xvsf espresso-5.4.0.tar.gz && cd espresso-5.4.0/  &&  ./configure  &&' \
+                              'make all'
                 else:
                     command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
                 try:

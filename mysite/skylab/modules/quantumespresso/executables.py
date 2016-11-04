@@ -61,12 +61,12 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
     def run_commands(self, **kwargs):
         # change export path QE will be installed via p2c-tools
-        export_path = None
+        # export_path = None
         # export_path = "/mirror/espresso-5.4.0/bin"
 
         env_vars = {"TMP_DIR": self.tmp_dir, "PSEUDO_DIR": self.pseudo_dir, "LC_ALL": 'C'}
-        if export_path:
-            env_vars['PATH'] = '$PATH:{0}'.format(export_path)
+        # if export_path:
+        #     env_vars['PATH'] = '$PATH:{0}'.format(export_path)
 
         env_var_command_template = 'export {key}={value};'
         env_command = ''
