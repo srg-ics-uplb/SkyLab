@@ -94,7 +94,7 @@ class GamessExecutable(P2CToolGeneric):
 
                     p = re.compile("ERROR,\s(?P<error_msg>.+)")
                     error = p.search(exec_shell.output)
-                    if error is not None:  # todo: more advanced catching
+                    if error is not None:
                         print (u'Error: {0:s}'.format(error.group('error_msg')))
                         error = True
                 else:
@@ -166,7 +166,7 @@ class GamessExecutable(P2CToolGeneric):
 
         self.shell.run(["zip", "-r", zip_filename, "scr"])  # zip scr folder
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
-        sftp.remove(remote_zip_filepath)  # todo : mirror to other execs
+        sftp.remove(remote_zip_filepath)
         sftp.close()
 
         # register newly transferred file as skylabfile

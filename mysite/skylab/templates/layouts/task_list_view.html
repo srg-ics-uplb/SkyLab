@@ -20,11 +20,8 @@
 {% endblock %}
 
 {% block content %}
-
-
     <div class='row'>
         <h1>Tasks</h1>
-
         <table id="task-list-table"
                    class="table table-hover table-responsive table-striped table-bordered dataTable">
                 <thead>
@@ -38,16 +35,6 @@
                 </tr>
                 </thead>
                 <tbody>
-{#                {% for task in tasks %}#}
-{#                    <tr>#}
-{#                        <td>{{ task.id }}</td>#}
-{#                        <td>{{ task.tool }} ({{ task.tool.toolset.display_name }})</td>#}
-{#                        <td>{{ task.mpi_cluster.cluster_name }}</td>#}
-{#                        <td>{{ task.simple_status_msg }}</td>#}
-{#                        <td>{{ task.created |date:'m/d/Y P' }}</td>#}
-{#                        <td>{{ task.updated |date:'m/d/Y P' }}</td>#}
-{#                    </tr>#}
-{#                {% endfor %}#}
                 </tbody>
             </table>
         </div>
@@ -57,45 +44,7 @@
                 data-target="#create-task-modal"><i class="fa fa-plus" aria-hidden="true"></i>
             Create new task
         </button>
-        </div>
-    {#  confirm delete modal   #}
-    {#    <div class="modal fade" id="create-task-modal" role="dialog">#}
-    {#        <div class="modal-dialog ">#}
-    {#            <div class="modal-content">#}
-    {#                <div class="modal-header bg-primary">#}
-    {#                    <button type="button" class="close" data-dismiss="modal">&times;</button>#}
-    {#                    <h4 class="modal-title ">Create New Task</h4>#}
-    {#                </div>#}
-    {#                <div class="modal-body">#}
-    {#                    <div class="alert alert-danger fade in" id="create-task-modal-error" style="display:none;">#}
-    {#                        <button type="button" class="close">×</button>#}
-    {#                        Please select a toolset, then select a tool.#}
-    {#                    </div>#}
-    {#                    <div class="form-group">#}
-    {#                        <label for="create-task-toolset-select">Toolset:</label>#}
-    {#                        <select id="create-task-toolset-select" class="form-control"></select>#}
-    {#                        <p id="create-task-toolset-select-help" class="help-block" for="create-task-toolset-select">#}
-    {#                            Select the toolset you want#}
-    {#                            to use.</p>#}
-    {#                    </div>#}
-    {##}
-    {#                    <div class="form-group">#}
-    {#                        <label for="create-task-tool-select">Tool:</label>#}
-    {#                        <select id="create-task-tool-select" class="form-control"></select>#}
-    {#                        <p id='create-task-tool-select-help' class="help-block" for="create-task-tool-select">Select the tool you want to#}
-    {#                            use.</p>#}
-    {#                    </div>#}
-    {##}
-    {#                </div>#}
-    {#                <div class="modal-footer ">#}
-    {#                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>#}
-    {#                    <button id='create-task-modal-ok' type="button" class="btn btn-primary">Ok#}
-    {#                    </button>#}
-    {#                </div>#}
-    {#            </div>#}
-    {#        </div>#}
-    {#    </div>#}
-
+    </div>
 
 {% endblock %}
 
@@ -105,7 +54,7 @@
 
     <script>
         $(function () {
-            $(".clickable-row").click(function () { {# make table row clickable #}
+            $("tbody").on('click','tr',function () { {# make table row clickable #}
                 window.location = $(this).data("href");
                 {# go to task detail view #}
             });
@@ -127,14 +76,11 @@
                                 default:
                                     $(td).addClass('text-info');
                             }
-
                         }
                     }
-
                 ],
                 "createdRow": function (row, data, dataIndex) { {# on row created #}
                     $(row).addClass('clickable-row');
-
                     {# make row clickable #}
                     {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
                     var url_mask = "{% url 'task_detail_view' pk=911 %}".replace(/911/, data[0]);
@@ -142,54 +88,16 @@
                     $(row).attr('data-href', url_mask);
                 }
             });
+
+             var refreshTaskTable = function(){ {# refresh task table #}
+                 ajaxGet('{% url 'ajax_refresh_task_list_table' %}', function (content) {
+                    table.clear();
+                    table.rows.add(content.rows).draw();
+                })
+            };
+            refreshTaskTable();
+            setInterval(refreshTaskTable, 10000); {# refresh data every 10 secs #}
         });
-
-
-        {#        datatable moment init#}
-
-
-
-
-        {#        $('#create-task-modal').on('shown.bs.modal', function() { {# refresh toolset list on modal activate #}
-        {#            $('#create-task-modal-error').hide();#}
-        {#            ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {#}
-        {#                $('#create-task-toolset-select').prop('selectedIndex', -1);#}
-        {#                $('#create-task-tool-select').prop('selectedIndex', -1);#}
-        {#            })#}
-        {#        });#}
-        {##}
-        {##}
-        {#        var create_tasks_tool_help_texts;#}
-        {#        var create_tasks_toolset_select = $('#create-task-toolset-select');#}
-        {#        create_tasks_toolset_select.change(function () {#}
-        {##}
-        {#            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, create_tasks_toolset_select.val());#}
-        {#            ajaxGet(url_mask, function (content) {#}
-        {#                $('#create-task-tool-select').prop('selectedIndex', -1);#}
-        {#                create_tasks_tool_help_texts = content.tool_help_texts#}
-        {##}
-        {#            });#}
-        {#        });#}
-        {##}
-        {##}
-        {#        var tool_select = $('#create-task-tool-select');#}
-        {#        tool_select.change(function () {#}
-        {#            $('#create-task-tool-select-help').html(create_tasks_tool_help_texts[$(tool_select)[0].selectedIndex])#}
-        {#        });#}
-        {##}
-        {#        $('#create-task-modal-ok').on('click', function(){#}
-        {#            if (!((tool_select.val() == null | tool_select.val() === '' | create_tasks_toolset_select.val() === null | create_tasks_toolset_select.val() === ''))) {#}
-        {##}
-        {#                window.location = "{% url 'skylab_tool_view' toolset_simple_name='toolset_name_placeholder' tool_simple_name='tool_name_placeholder' %}".replace(/toolset_name_placeholder/, create_tasks_toolset_select.val()).replace(/tool_name_placeholder/, tool_select.val());#}
-        {#            } else {#}
-        {#                $('#create-task-modal-error').show()#}
-        {#            }#}
-        {#        });#}
-        {##}
-        {#        $('#create-task-modal-error').find('.close').on('click', function (e) {#}
-        {#            $(this).parent().hide();#}
-        {#        });#}
-
 
     </script>
 

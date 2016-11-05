@@ -194,7 +194,7 @@ class MPIThread(threading.Thread):
     def connect_to_cluster(self):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
                                            password=settings.CLUSTER_PASSWORD,
-                                           missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
+                                           missing_host_key=spur.ssh.MissingHostKey.accept)
         self.test_cluster_connection(init=True)
 
         # fix for unresponsive ssh from srg.ics

@@ -15,7 +15,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 
 
-def get_available_tools():  # TODO: get file __path__
+def get_available_tools():
     module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules')
     dirs = [(lst, lst) for lst in os.listdir(module_path) if
             not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
@@ -47,7 +47,6 @@ class MPICluster(models.Model):
     cluster_name = models.CharField(max_length=30, unique=True)
     cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
-    # todo: share key form : (if user enters share key user is added in allowed users)
     share_key = models.CharField(default=generate_share_key, max_length=10)
     queued_for_deletion = models.BooleanField(default=False)
     toolsets = models.ManyToManyField("ToolSet", help_text="You can select multiple tools to activate",

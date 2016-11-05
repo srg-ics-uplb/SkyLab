@@ -125,7 +125,6 @@ class VinaView(LoginRequiredMixin, FormView):
         return super(VinaView, self).form_valid(form)
 
 class VinaSplitView(LoginRequiredMixin, FormView):
-    #TODO: support dynamic formsetl multiple input files; remove input, output prefix; set to created default
     template_name = "modules/vina/use_vina_split.html"
     form_class = VinaSplitForm
 
