@@ -19,11 +19,6 @@
 {% endblock %}
 
 {% block content %}
-
-
-
-
-
     <div class="row">
         <h1>MPI Clusters</h1>
         <table id="mpi-table"
@@ -41,23 +36,6 @@
             </tr>
             </thead>
             <tbody id="mpi-table-body">
-{#            {% for cluster in mpi_clusters %}#}
-                {#        <div class='row'>#}
-{#                <tr>#}
-{#                    <td>{{ cluster.id }}</td>#}
-{#                    <td>{{ cluster.cluster_name }}</td>#}
-{#                    <td>{{ cluster.total_node_count }}</td>#}
-{#                    <td>{{ cluster.cluster_ip }}</td>#}
-{#                    <td>{{ cluster.task_queued_count }}</td>#}
-{#                    <td>#}
-{#                        {{ cluster.current_simple_status_msg }} {% if cluster.queued_for_deletion %}(Scheduled for#}
-{#                        deletion){% endif %}#}
-{#                    </td>#}
-                    {#                    <td>{{ cluster.created }}</td>#}
-{#                    <td>{% if cluster.is_public %}Public {% else %} Private {% endif %} </td>#}
-{#                </tr>#}
-                {#        </div>#}
-{#            {% endfor %}#}
             </tbody>
         </table>
     </div>
@@ -153,7 +131,7 @@
                 {# make row clickable #}
                 {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
                 {#                var url_mask = "{% url 'mpi_detail_view' pk=911 %}".replace(/911/, data[0]);#}
-                var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, data[1]);
+                var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, data[0]);
                 {# parse url #}
                 $(row).attr('data-href', url_mask);
             }
@@ -170,7 +148,7 @@
 
 
         $(document).ready(function () {
-            $(".clickable-row").click(function () { {# make table row clickable #}
+            $("tbody").on('click', 'tr', function () { {# make table row clickable #}
                 window.location = $(this).data("href");
                 {# go to cluster detail view #}
             });
@@ -190,7 +168,7 @@
                     {#                    uncomment these lines if you just want to refresh table on cluster add           #}
                     {#                    table.clear();#}
                     {#                    table.rows.add(content.rows).draw();#}
-                    window.location = "{% url 'mpi_detail_view' pk=911 %}".replace(/911/, content.cluster_pk);
+                    window.location = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, content.cluster_name);
                 }
             })
         };
