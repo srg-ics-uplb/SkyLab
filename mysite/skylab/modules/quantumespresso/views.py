@@ -85,7 +85,7 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
                                                                                          os.path.splitext(
                                                                                              input_file.name)[0]))
 
-                            else:  # at least for pw.x
+                            else:  # at least for pw.x, cp.x
                                 command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
                                     para_prefix, os.path.join(remote_bin_dir,executable), para_postfix, input_file.name,
                                     os.path.splitext(input_file.name)[0]))

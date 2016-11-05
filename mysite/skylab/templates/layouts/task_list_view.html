@@ -38,16 +38,16 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for task in tasks %}
-                    <tr>
-                        <td>{{ task.id }}</td>
-                        <td>{{ task.tool }} ({{ task.tool.toolset.display_name }})</td>
-                        <td>{{ task.mpi_cluster.cluster_name }}</td>
-                        <td>{{ task.simple_status_msg }}</td>
-                        <td>{{ task.created |date:'m/d/Y P' }}</td>
-                        <td>{{ task.updated |date:'m/d/Y P' }}</td>
-                    </tr>
-                {% endfor %}
+{#                {% for task in tasks %}#}
+{#                    <tr>#}
+{#                        <td>{{ task.id }}</td>#}
+{#                        <td>{{ task.tool }} ({{ task.tool.toolset.display_name }})</td>#}
+{#                        <td>{{ task.mpi_cluster.cluster_name }}</td>#}
+{#                        <td>{{ task.simple_status_msg }}</td>#}
+{#                        <td>{{ task.created |date:'m/d/Y P' }}</td>#}
+{#                        <td>{{ task.updated |date:'m/d/Y P' }}</td>#}
+{#                    </tr>#}
+{#                {% endfor %}#}
                 </tbody>
             </table>
         </div>
@@ -109,8 +109,6 @@
                 window.location = $(this).data("href");
                 {# go to task detail view #}
             });
-
-
             var table = $('#task-list-table').DataTable({
                 "order": [],
                 "columnDefs": [
@@ -145,6 +143,7 @@
                 }
             });
         });
+
 
         {#        datatable moment init#}
 

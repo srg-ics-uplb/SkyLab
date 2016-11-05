@@ -6,18 +6,20 @@
 {% block title %} {{ block.super }} {{ tool.display_name }} {% endblock %}
 
 {% block navbar_breadcrumb %}
-    <li>
-        <a href="{% url 'skylab-home' %}">Home</a>
-    </li>
-    <li>
-        <a href="{% url 'toolset_list_view' %}">Toolsets</a>
-    </li>
-    <li>
-        <a href="{% url 'toolset_detail_view' toolset_simple_name=tool.toolset.simple_name %}">{{ tool.toolset.display_name }}</a>
-    </li>
-    <li class="active">
-        {{ tool.display_name }}
-    </li>
+    <ol class="breadcrumb">
+        <li>
+            <a href="{% url 'skylab-home' %}">Home</a>
+        </li>
+        <li>
+            <a href="{% url 'toolset_list_view' %}">Toolsets</a>
+        </li>
+        <li>
+            <a href="{% url 'toolset_detail_view' toolset_simple_name=tool.toolset.simple_name %}">{{ tool.toolset.display_name }}</a>
+        </li>
+        <li class="active">
+            {{ tool.display_name }}
+        </li>
+    </ol>
 {% endblock %}
 
 

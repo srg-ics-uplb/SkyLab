@@ -155,7 +155,9 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
         try:
             self.object = self.get_object()
         except Http404:
-            # redirect here
+            messages.add_message(request, messages.ERROR,
+                                 'Invalid URL. No matching cluster found.',
+                                 extra_tags='display_this')
             return redirect('mpi_list_view')
         context = self.get_context_data(object=self.object)
         return self.render_to_response(context)
@@ -196,6 +198,9 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
         try:
             self.object = self.get_object()
         except Http404:  # get_object() throws Http404 if does not exist
+            messages.add_message(request, messages.ERROR,
+                                 'Invalid URL. No matching task found.',
+                                 extra_tags='display_this')
             return redirect('task_list_view')  # redirect to list view
         context = self.get_context_data(object=self.object)  # pass retrieved object
         return self.render_to_response(context)
@@ -217,6 +222,18 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'toolset'
     slug_url_kwarg = 'toolset_simple_name'
     slug_field = 'simple_name'
+    query_pk_and_slug = True
+
+    def get(self, request, *args, **kwargs):
+        try:
+            self.object = self.get_object()
+        except Http404:
+            messages.add_message(request, messages.ERROR,
+                                 'Invalid URL. No matching toolset found.',
+                                 extra_tags='display_this')
+            return redirect('toolset_list_view')
+        context = self.get_context_data(object=self.object)  # pass retrieved object
+        return self.render_to_response(context)
 
 
 def logout_success(request):
@@ -226,7 +243,7 @@ def logout_success(request):
 def index(request):
     return HttpResponse("Hello, world. You're at the skylab index.")
 
-
+@login_required
 def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_pk=None, tool_pk=None):
     try:
         if toolset_simple_name and tool_simple_name:
@@ -247,8 +264,36 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
     cls = getattr(mod, tool.view_name)
     return cls.as_view()(request)
 
+@login_required
+@ajax
+def refresh_task_list_table(request):
+    pass
 
-# pass
+@login_required
+@ajax
+def refresh_mpi_list_table(request):
+    user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
+    cluster_is_public = Q(is_public=True)
+    qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
+    qs = qs.exclude(status=5)
+
+    rows = []
+    for cluster in qs:  # build array of arrays containing info for each cluster
+        rows.append([
+            # cluster.id,
+            cluster.cluster_name,
+            cluster.total_node_count,
+            cluster.cluster_ip,
+            cluster.task_queued_count,
+            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+            'Public' if cluster.is_public else 'Private',
+            cluster.created.strftime('%x %I:%M %p'),
+        ])
+
+    return {'rows':rows}
+
+
+
 
 
 @login_required
@@ -321,13 +366,14 @@ def post_allow_user_access_to_mpi(request):
             rows = []
             for cluster in qs:  # build array of arrays containing info for each cluster
                 rows.append([
-                    cluster.id,
+                    # cluster.id,
                     cluster.cluster_name,
                     cluster.total_node_count,
                     cluster.cluster_ip,
                     cluster.task_queued_count,
                     cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
-                    'Public' if cluster.is_public else 'Private'
+                    'Public' if cluster.is_public else 'Private',
+                    cluster.created.strftime('%x %I:%M %p'),
                 ])
             data['rows'] = rows
 

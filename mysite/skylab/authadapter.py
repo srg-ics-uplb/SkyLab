@@ -10,6 +10,6 @@ class UniversityAccountAdapter(DefaultSocialAccountAdapter):
         # print user_email(u)
 
         if not email.split('@')[1] == "up.edu.ph":
-            messages.add_message(request, messages.ERROR, 'You need to login using an @up.edu.ph account.',
+            messages.add_message(request, messages.ERROR, 'You need to login using an @up.edu.ph account. NOTE: Your account is still logged in with Google.',
                                  extra_tags='display_this')
             raise ImmediateHttpResponse(render(request, 'layouts/home.html'))

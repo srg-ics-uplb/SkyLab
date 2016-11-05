@@ -10,9 +10,11 @@ urlpatterns = [
     url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
     url(r'^mpi-clusters$', views.MPIListView.as_view(), name='mpi_list_view'),
     url(r'^mpi-clusters/(?P<pk>\d+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
-    url(r'^mpi-clusters/(?P<cluster_name>[a-zA-Z]\w+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
+    url(r'^mpi-clusters/(?P<cluster_name>\w+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
     url(r'^tasks$', views.TaskListView.as_view(), name='task_list_view'),
     url(r'^tasks/(?P<pk>\d+)$', views.TaskDetailView.as_view(), name='task_detail_view'),
+
+    url(r'^ajax/refresh-mpi-list-table$', views.refresh_mpi_list_table, name='ajax_refresh_mpi_list_table'),
     url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view,
         name='ajax_refresh_task_detail_view'),
     url(r'^ajax/nav-task-list-fragments$', views.refresh_nav_task_list, name='ajax_refresh_nav_task_list'),

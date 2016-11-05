@@ -15,7 +15,7 @@ from validators import in_files_validator
 
 class SelectMPIFilesForm(forms.Form):
     param_pseudopotentials = forms.CharField(label="Pseudopotentials", required=False, validators=[],
-                                             help_text="UPF files separated by spaces. (xx.UPF yy.UPF)")
+                                             help_text="UPF files separated by a comma. (xx.UPF,yy.UPF)")
 
     def clean_param_pseudopotentials(self):
         pseudopotentials = self.cleaned_data.get('param_pseudopotentials', None)
@@ -25,7 +25,7 @@ class SelectMPIFilesForm(forms.Form):
 
             # description = [field1-][field2-]field3-[field4-]field5[_field6]
 
-            for upf_file in pseudopotentials.replace(' ', '').split(' '):
+            for upf_file in pseudopotentials.replace(' ', '').split(','):
                 p = re.match("^[a-zA-Z]{1,3}\.([a-zA-Z0-9]+\-){1,4}[a-zA-Z0-9]+(_[a-zA-Z0-9]+)?\.UPF$", upf_file)
                 if not p:
                     raise forms.ValidationError("Invalid UPF file : {0}".format(upf_file))
@@ -73,8 +73,15 @@ class SelectMPIFilesForm(forms.Form):
 
 class InputParameterForm(forms.Form):
     EXECUTABLE_CHOICES = (  # input parameter args
-        ('', '---------'),
-        ('pw.x', 'pw.x'),
+        ('', '---------'), #supported tools
+        ('pw.x', 'PWscf / pw.x'),
+        ('cp.x', 'CPV / cp.x'),
+        # ('pwcond.x','pwcond.x'),
+        # ('bands.x','bands.x'),
+
+        # ('neb.x', 'neb.x'),
+        #('ph.x','ph.x'), #PHonon
+
     )
     param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
     param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
@@ -93,10 +100,10 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('param_executable', css_class='parameter'), css_class='col-xs-5'),
-                Div(Field('param_input_files'), css_class='col-xs-5 col-xs-offset-1'),
+                Div(Field('param_executable', css_class='parameter'), css_class='col-xs-12 col-md-5'),
+                Div(Field('param_input_files'), css_class='col-xs-12 col-md-5 col-md-offset-1'),
 
-                css_class='row-fluid col-sm-12 form-container'
+                css_class='row-fluid col-xs-12 form-container'
             ),
         )
 
