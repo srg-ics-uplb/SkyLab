@@ -28,6 +28,7 @@ SECRET_KEY = '34%6w9p0c(kmpgzuaqrl4fbc%=*b_!y63eoihloqjz$uh*v8&y'
 DEBUG = True
 
 ALLOWED_HOSTS = []
+#ALLOWED_HOSTS = ['10.0.3.239.xip.io','127.0.0.1','skylab.localhost.com']
 # ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
@@ -216,7 +217,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
-JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
+JSMOL_SERVER_URL = "http://jsmol.localhost.com/jsmol/php/jsmol.php"
 # https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/
 JSMOL_SUPPORTED_FILE_EXT = [
     '.pdbqt', '.mol2', '.pdb', '.mol', '.xyz', '.csf'

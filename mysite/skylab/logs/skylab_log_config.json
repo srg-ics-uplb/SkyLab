@@ -18,7 +18,7 @@
       "when": "midnight",
       "level": "INFO",
       "formatter": "simple",
-      "filename": "/home/vince/Desktop/alphaver/SkyLab/mysite/skylab/logs/mpi_threads_info.log",
+      "filename": "skylab/logs/mpi_threads_info.log",
       "backupCount": 14,
       "encoding": "utf8"
     },
@@ -27,7 +27,7 @@
       "when": "midnight",
       "level": "DEBUG",
       "formatter": "simple",
-      "filename": "/home/vince/Desktop/alphaver/SkyLab/mysite/skylab/logs/mpi_threads_debug.log",
+      "filename": "skylab/logs/mpi_threads_debug.log",
       "backupCount": 14,
       "encoding": "utf8"
     },
@@ -36,7 +36,7 @@
       "when": "midnight",
       "level": "ERROR",
       "formatter": "simple",
-      "filename": "/home/vince/Desktop/alphaver/SkyLab/mysite/skylab/logs/mpi_threads_error.log",
+      "filename": "skylab/logs/mpi_threads_error.log",
       "backupCount": 14,
       "encoding": "utf8"
     }
