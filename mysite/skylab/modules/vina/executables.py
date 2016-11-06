@@ -172,7 +172,7 @@ class VinaSplitExecutable(P2CToolGeneric):
         command_list = json.loads(self.task.task_data)['command_list']  # load json array
 
         error = False
-        for command in command_list:
+        for command in command_list:  # todo: make vina_split view support dynamic formset
             retries = 0
             exit_loop = False
 

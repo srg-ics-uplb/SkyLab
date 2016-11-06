@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import Http404
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
@@ -20,14 +21,14 @@ from forms import CreateMPIForm
 from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet, Tool
 
 
-# for strict file access implementation
-# def has_read_permission(request, task_id):
-#
-#     "Only show to authenticated users - extend this as desired"
-#     if Task.objects.get(pk=task_id).user_id == request.user.id:
-#         return True
-#     else:
-#         return False
+def has_read_permission(request, task_id):
+
+    "Only show to authenticated users - extend this as desired"
+    if Task.objects.get(pk=task_id).user_id == request.user.id:
+        return True
+    else:
+        return False
+
 
 # def display_private_file_content(request, path, filename):
 # 	if has_read_permission(request, path):
@@ -53,6 +54,33 @@ def serve_skylabfile(request, task_id, type, filename):
     fullpath = os.path.join(settings.MEDIA_ROOT, requested_file.file.name)
 
     return sendfile(request, fullpath, attachment=True)
+
+
+# if has_read_permission(request, task_id):
+# 	return sendfile(request, file.file.url, attachment=True)
+# else:  # if user fails test return 403
+# 	return HttpResponseForbidden()
+
+# def send_mpi_message(routing_key, body):
+# 	connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
+#
+# 	channel = connection.channel()
+#
+# 	channel.exchange_declare(exchange='topic_logs',
+# 							 type='topic')
+#
+# 	channel.confirm_delivery()
+#
+# 	channel.basic_publish(exchange='topic_logs',
+# 						  routing_key=routing_key,
+# 						  body=body,
+# 						  properties=pika.BasicProperties(
+# 							  delivery_mode=2,  # make message persistent
+# 						  ))
+#
+# 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
+# 	connection.close()
+
 
 class HomeView(TemplateView):
     template_name = "layouts/home.html"
@@ -212,6 +240,8 @@ def logout_success(request):
     messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='display_this')
     return render(request, 'layouts/home.html')
 
+def index(request):
+    return HttpResponse("Hello, world. You're at the skylab index.")
 
 @login_required
 def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_pk=None, tool_pk=None):
@@ -237,20 +267,6 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 @login_required
 @ajax
 def refresh_task_list_table(request):
-    tasks = Task.objects.filter(user=request.user).order_by('-updated')
-
-    rows = []
-    for task in tasks:  # build array of arrays containing info for each cluster
-        rows.append([
-            task.id,
-            task.tool.display_name,
-            task.mpi_cluster.cluster_name,
-            task.simple_status_msg,
-            task.updated.strftime('%x %I:%M %p'),
-            task.created.strftime('%x %I:%M %p')
-        ])
-    return {'rows': rows}
-
     pass
 
 @login_required
@@ -275,6 +291,10 @@ def refresh_mpi_list_table(request):
         ])
 
     return {'rows':rows}
+
+
+
+
 
 @login_required
 @ajax
@@ -337,8 +357,7 @@ def post_allow_user_access_to_mpi(request):
         try:
             cluster = MPICluster.objects.get(share_key=share_key)  # give user access to cluster
             cluster.allowed_users.add(request.user)
-            #data['cluster_pk'] = cluster.id
-            data['cluster_name'] = cluster.cluster_name
+            data['cluster_pk'] = cluster.id
             user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
             cluster_is_public = Q(is_public=True)
             qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
