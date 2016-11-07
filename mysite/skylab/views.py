@@ -1,5 +1,6 @@
 import importlib
 import os
+import json
 
 from django.conf import settings
 from django.contrib import messages
@@ -343,14 +344,17 @@ def refresh_select_toolset(request):
     toolsets = ToolSet.objects.all()
 
     select_items = ''
-    item_template = '<option value="{value}">{item_name}</option>'
+    data = {}
+    item_template = '<option value="{value}" data-description="{description}" data-tools="{tools}">{item_name}</option>'
     for tool_set in toolsets:
-        select_items += item_template.format(value=tool_set.simple_name, item_name=tool_set.display_name)
+        tools = []
+        for tool in tool_set.subtools.all():
+            tools.append({'display_name':tool.display_name, 'simple_name':tool.simple_name, 'desc':tool.short_description})
+        data[tool_set.simple_name] = tools
+        select_items += item_template.format(value=tool_set.simple_name, item_name=tool_set.display_name, description=tool_set.short_description, tools=tools)
 
-    data = {
-        'inner-fragments': {
-            '#create-task-toolset-select': select_items,
-        }
+    data['inner-fragments'] = {
+        '#create-task-toolset-select': select_items,
     }
     return data
 

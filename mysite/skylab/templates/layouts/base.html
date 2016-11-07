@@ -188,6 +188,7 @@
 
         {# begin create task modal #}
         var create_task_modal = $('#create-task-modal');
+        var tool_info;
 
         create_task_modal.on('shown.bs.modal', function () { {# refresh toolset list on modal activate #}
             $('#create-task-modal-error').hide();
@@ -197,6 +198,7 @@
             ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
                 $('#create-task-toolset-select').prop('selectedIndex', -1);
                 $('#create-task-tool-select').prop('selectedIndex', -1);
+                tool_info = content
             })
         });
 
@@ -206,21 +208,29 @@
             });
         });
 
+        {# for create task modal select event functions #}
         var create_tasks_tool_help_texts;
+        var tool_select = $('#create-task-tool-select');
         var create_tasks_toolset_select = $('#create-task-toolset-select');
         create_tasks_toolset_select.change(function () {
+            var selected_toolset = $(this).find(':selected');
+            $('#create-task-toolset-select-help').html(selected_toolset.data('description'));
 
-            var url_mask = "{% url 'ajax_refresh_select_tool' toolset_simple_name='toolset_name_placeholder' %}".replace(/toolset_name_placeholder/, create_tasks_toolset_select.val());
-            ajaxGet(url_mask, function (content) {
-                $('#create-task-tool-select').prop('selectedIndex', -1);
-                create_tasks_tool_help_texts = content.tool_help_texts
+            tool_select.html('');
+            var tools = tool_info[selected_toolset.val()];
 
-            });
+            for(var i = 0, l = tools.length; i < l; i++){
+                var tool = tools[i];
+                tool_select.append( new Option(tool['display_name'], tool['simple_name'], false) );
+                tool_select.find('option:last-child').data('description',tool['desc'])
+
+            }
+            $('#create-task-tool-select').prop('selectedIndex', -1);
+
         });
 
-        var tool_select = $('#create-task-tool-select');
         tool_select.change(function () {
-            $('#create-task-tool-select-help').html(create_tasks_tool_help_texts[$(tool_select)[0].selectedIndex])
+            $('#create-task-tool-select-help').html($(this).find(':selected').data('description'))
         });
 
         $('#create-task-modal-ok').on('click', function () {
