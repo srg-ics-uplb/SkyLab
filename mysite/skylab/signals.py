@@ -17,23 +17,26 @@ from skylab.models import SkyLabFile, Task, TaskLog, ToolSet, ToolActivation, MP
 
 
 
-@receiver(post_save, sender=ToolSet)
+# @receiver(post_save, sender=ToolSet)
 def auto_add_tool_activations_on_toolset_create(sender, instance, **kwargs):
     """" Create toolactivations for the newly created toolset for each mpi cluster that is not deleted"""
     if kwargs['created'] == True:
         for cluster in MPICluster.objects.exclude(status=5):
             ToolActivation.objects.get_or_create(mpi_cluster=cluster, toolset=instance)
+post_save.connect(auto_add_tool_activations_on_toolset_create, sender=ToolSet, dispatch_uid="auto_add_tool_activations_on_toolset_create")
 
-@receiver(post_delete, sender=Task)
+# @receiver(post_delete, sender=Task)
 def auto_delete_related_models_on_task_delete(sender, instance, **kwargs):
     """"Delete related models on task delete"""
     SkyLabFile.objects.filter(task=instance).delete()
     TaskLog.objects.filter(task=instance).delete()
 
+post_delete.connect(auto_delete_related_models_on_task_delete, sender=Task, dispatch_uid="auto_delete_related_models_on_task_delete")
+
 
 # Retrieved from http: // stackoverflow.com / questions / 16041232 / django - delete - filefield
 # These two auto-delete files from filesystem when they are unneeded:
-@receiver(post_delete, sender=SkyLabFile)
+#@receiver(post_delete, sender=SkyLabFile)
 def auto_delete_file_on_delete(sender, instance, **kwargs):
     """Deletes file from filesystem
     when corresponding `SkyLabFile` object is deleted.    """
@@ -42,8 +45,10 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         if os.path.isfile(instance.file.path):
             os.remove(instance.file.path)
 
+post_delete.connect(auto_delete_file_on_delete, sender=SkyLabFile, dispatch_uid="auto_delete_file_on_delete")
 
-@receiver(pre_save, sender=SkyLabFile)
+
+#@receiver(pre_save, sender=SkyLabFile)
 def auto_delete_file_on_change(sender, instance, **kwargs):
     """Deletes file from filesystem
     when corresponding `SkyLabFile` object is changed.
@@ -61,3 +66,5 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         if not old_file == new_file:
             if os.path.isfile(old_file.path):
                 os.remove(old_file.path)
+
+pre_save.connect(auto_delete_file_on_change, sender=SkyLabFile, dispatch_uid="auto_delete_file_on_change")

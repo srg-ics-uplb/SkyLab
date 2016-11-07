@@ -39,7 +39,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'crispy_forms',
-    'skylab',
+    'skylab.apps.SkylabConfig',
     'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
