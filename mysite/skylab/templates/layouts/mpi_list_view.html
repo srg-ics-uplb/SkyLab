@@ -153,7 +153,7 @@
                 {# make row clickable #}
                 {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
                 {#                var url_mask = "{% url 'mpi_detail_view' pk=911 %}".replace(/911/, data[0]);#}
-                var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, data[1]);
+                var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, data[0]);
                 {# parse url #}
                 $(row).attr('data-href', url_mask);
             }
@@ -170,7 +170,7 @@
 
 
         $(document).ready(function () {
-            $(".clickable-row").click(function () { {# make table row clickable #}
+            $("tbody").on('click', 'tr', function () { {# make table row clickable #}
                 window.location = $(this).data("href");
                 {# go to cluster detail view #}
             });
@@ -190,7 +190,7 @@
                     {#                    uncomment these lines if you just want to refresh table on cluster add           #}
                     {#                    table.clear();#}
                     {#                    table.rows.add(content.rows).draw();#}
-                    window.location = "{% url 'mpi_detail_view' pk=911 %}".replace(/911/, content.cluster_pk);
+                    window.location = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, content.cluster_name);
                 }
             })
         };

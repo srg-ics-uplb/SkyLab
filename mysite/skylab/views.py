@@ -267,7 +267,19 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 @login_required
 @ajax
 def refresh_task_list_table(request):
-    pass
+    tasks = Task.objects.filter(user=request.user).order_by('-updated')
+    rows = []
+    for task in tasks:  # build array of arrays containing info for each cluster
+        rows.append([
+            task.id,
+            task.tool.display_name,
+            task.mpi_cluster.cluster_name,
+            task.simple_status_msg,
+            task.updated.strftime('%x %I:%M %p'),
+            task.created.strftime('%x %I:%M %p')
+        ])
+    return {'rows': rows}
+
 
 @login_required
 @ajax
@@ -357,7 +369,7 @@ def post_allow_user_access_to_mpi(request):
         try:
             cluster = MPICluster.objects.get(share_key=share_key)  # give user access to cluster
             cluster.allowed_users.add(request.user)
-            data['cluster_pk'] = cluster.id
+            data['cluster_name'] = cluster.cluster_name
             user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
             cluster_is_public = Q(is_public=True)
             qs = MPICluster.objects.filter(user_allowed | cluster_is_public)

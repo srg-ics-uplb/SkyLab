@@ -27,7 +27,7 @@ SECRET_KEY = '34%6w9p0c(kmpgzuaqrl4fbc%=*b_!y63eoihloqjz$uh*v8&y'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.9.9']
+ALLOWED_HOSTS = ['127.0.9.9','skylab.localhost.com']
 # ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
