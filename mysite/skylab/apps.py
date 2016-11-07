@@ -7,4 +7,4 @@ class SkylabConfig(AppConfig):
     name = 'skylab'
 
     def ready(self):
-        pass
+        import skylab.signals
