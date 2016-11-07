@@ -208,7 +208,8 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
     def get_context_data(self, **kwargs):
         context = super(TaskDetailView, self).get_context_data(**kwargs)
         context["jsmol_files_absolute_uris"] = context["object"].get_dict_jsmol_files_uris(self.request)
-        context["jsmol_server_url"] = settings.JSMOL_SERVER_URL
+        context["jsmol_server_root"] = settings.JSMOL_SERVER_ROOT
+
         return context
 
     def get_queryset(self):

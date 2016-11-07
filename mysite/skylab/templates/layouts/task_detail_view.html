@@ -171,7 +171,7 @@
 
 {% block js %}
     {{ block.super }}
-    <script type="text/javascript" src="{% static 'jsmol/JSmol.min.js' %}"></script>
+    <script type="text/javascript" src="{{ jsmol_server_root }}/JSmol.min.js"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dist/bootstrap-slider.min.js' %}"></script>
     <script type="text/javascript" src="{% static 'bootstrap-slider/dependencies/js/modernizr.js' %}"></script>
     <script type="text/javascript" src="{% static 'slick/slick.min.js' %}"></script>
@@ -196,9 +196,9 @@
             $('.single-item').slick({
                 dots: true,
                 accessiblity: true,
-                lazyLoad: 'ondemand'
-
-                {#            setting-name: setting-value#}
+                lazyLoad: 'ondemand',
+                autoplay: true,
+                autoplaySpeed: 2000,
             });
         });
 
@@ -231,9 +231,17 @@
                 }
 
 
-                {#                if (content.carousel_display == true) {#}
-                {#                    var slick_carousel = $('.single-item');#}
-                {#                }#}
+                if (content.carousel_display == true) {
+                    var slick_carousel = $('.single-item');
+                    slick_carousel.slick('unslick');
+                    slick_carousel.slick({
+                        dots: true,
+                        accessiblity: true,
+                        lazyLoad: 'ondemand',
+                        autoplay: true,
+                        autoplaySpeed: 2000
+                    });
+                }
             })
         };
         retrieveCurrentStatus();
@@ -303,14 +311,17 @@
             color: "0x468499",
             addSelectionOptions: false,
             use: "HTML5", {# JAVA HTML5 WEBGL are all options #}
-            j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
+            j2sPath: "{{ jsmol_server_root }}/j2s",
+            //j2sPath: "http://localhost/jsmol/j2s",
+            //j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
             script: script,
-            serverURL: "{{ jsmol_server_url }}",
+            serverURL: "{{ jsmol_server_root }}/php/jsmol.php",
             readyFunction: jmol_isReady,
+            zIndexBase: 1,
             //disableJ2SLoadMonitor: true,
             //disableInitialConsole: true,
             //allowJavaScript: true,
-            zIndexBase: 0,
+
             {#            defaultModel: "$dopamine",#}
             {#            console: "none", // default will be jmolApplet0_infodiv, but you can designate another div here or "none"#}
         };

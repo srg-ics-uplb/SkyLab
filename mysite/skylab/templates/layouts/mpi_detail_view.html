@@ -175,6 +175,7 @@
                 'is_public': state,
                 'pk':{{mpi_cluster.id}}
             }, function (content) {
+{#                todo: add progress icon#}
                 mpi_info_table.find('th:nth-child(6)').toggle();
                 mpi_info_table.find('td:nth-child(6)').toggle();
             });
