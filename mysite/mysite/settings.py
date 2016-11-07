@@ -215,7 +215,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
-JSMOL_SERVER_URL = "http://webserver.localhost.com/jsmol/php/jsmol.php"
+JSMOL_SERVER_URL = "http://localhost/jsmol/php/jsmol.php"
 # https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/
 JSMOL_SUPPORTED_FILE_EXT = [
     '.pdbqt', '.mol2', '.pdb', '.mol', '.xyz', '.csf'

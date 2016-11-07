@@ -539,7 +539,7 @@ def refresh_task_detail_view(request, pk=None):
 
         output_image_urls = task.get_output_image_files_urls()
         carousel_cells = []
-        carousel_cell_format = '<div class="carousel-cell text-center"><img class="carousel-cell-image"  src="{url}" alt="{filename}"/><h4 class="caption">{filename}</h4></div>'
+        carousel_cell_format = '<div class="carousel-cell text-center"><img class="carousel-cell-image"  data-lazy="{url}" alt="{filename}"/><h4 class="caption">{filename}</h4></div>'
 
         for data in output_image_urls:
             carousel_cells.append(carousel_cell_format.format(url=data['url'], filename=data['filename']))
