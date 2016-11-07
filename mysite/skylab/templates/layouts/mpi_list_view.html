@@ -19,11 +19,6 @@
 {% endblock %}
 
 {% block content %}
-
-
-
-
-
     <div class="row">
         <h1>MPI Clusters</h1>
         <table id="mpi-table"
@@ -41,23 +36,6 @@
             </tr>
             </thead>
             <tbody id="mpi-table-body">
-{#            {% for cluster in mpi_clusters %}#}
-                {#        <div class='row'>#}
-{#                <tr>#}
-{#                    <td>{{ cluster.id }}</td>#}
-{#                    <td>{{ cluster.cluster_name }}</td>#}
-{#                    <td>{{ cluster.total_node_count }}</td>#}
-{#                    <td>{{ cluster.cluster_ip }}</td>#}
-{#                    <td>{{ cluster.task_queued_count }}</td>#}
-{#                    <td>#}
-{#                        {{ cluster.current_simple_status_msg }} {% if cluster.queued_for_deletion %}(Scheduled for#}
-{#                        deletion){% endif %}#}
-{#                    </td>#}
-                    {#                    <td>{{ cluster.created }}</td>#}
-{#                    <td>{% if cluster.is_public %}Public {% else %} Private {% endif %} </td>#}
-{#                </tr>#}
-                {#        </div>#}
-{#            {% endfor %}#}
             </tbody>
         </table>
     </div>

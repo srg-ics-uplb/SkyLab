@@ -12,6 +12,11 @@ from skylab.models import SkyLabFile, Task, TaskLog, ToolSet, ToolActivation, MP
 #     if instance.status == 5:
 #         ToolActivation.objects.filter(mpi_cluster=instance).delete()
 
+
+
+
+
+
 @receiver(post_save, sender=ToolSet)
 def auto_add_tool_activations_on_toolset_create(sender, instance, **kwargs):
     """" Create toolactivations for the newly created toolset for each mpi cluster that is not deleted"""

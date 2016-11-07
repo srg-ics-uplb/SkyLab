@@ -166,7 +166,7 @@ class ConsumerThread(threading.Thread):
         try:
             self.cluster_shell = spur.SshShell(hostname=self.cluster_ip, username=cluster_username,
                                                password=cluster_password,
-                                               missing_host_key=spur.ssh.MissingHostKey.accept)  # TODO: test timeout
+                                               missing_host_key=spur.ssh.MissingHostKey.accept)
             self.print_to_console("Connecting to MPI Cluster")
             if create:
                 self.update_p2c()

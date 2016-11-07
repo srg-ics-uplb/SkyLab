@@ -10,7 +10,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
@@ -238,7 +238,7 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
 
 def logout_success(request):
     messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='display_this')
-    return render(request, 'layouts/home.html')
+    return redirect('skylab-home')
 
 def index(request):
     return HttpResponse("Hello, world. You're at the skylab index.")

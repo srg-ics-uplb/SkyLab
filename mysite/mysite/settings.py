@@ -210,7 +210,6 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
 # ACCOUNT_LOGOUT_REDIRECT_URL = ""
-# #TODO: redirect to logged out page
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen

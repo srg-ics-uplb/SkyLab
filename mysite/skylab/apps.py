@@ -5,3 +5,6 @@ from django.apps import AppConfig
 
 class SkylabConfig(AppConfig):
     name = 'skylab'
+
+    def ready(self):
+        pass
