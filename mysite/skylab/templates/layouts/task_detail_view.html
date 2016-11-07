@@ -30,7 +30,7 @@
              class="col-xs-10 col-xs-offset-1">
             <h1>Task {{ task.id }}</h1>
 
-            <span class="text-muted">{{ task.tool.display_name }} @ {{ task.mpi_cluster.cluster_name }}</span>
+            <span class="text-muted">{{ task.tool.display_name }} @ {{ task.mpi_cluster }}</span>
             <span id="task-status">{{ task.status }}</span>
             {# progress bars #}
             {% if task.status_code < 200 %}
@@ -157,10 +157,14 @@
                         <label class="radio-inline"><input type="radio" name="isosurface-options"
                                                            value="isosurface delete">Off</label>
 
+
                     </div>
+
+
                 </div>
             </div>
         </div>
+
     </div>
 
 {% endblock %}
@@ -186,13 +190,19 @@
         $('#isosurface_options_div').hide();
         Models = [];
 
+
+
         $(function () {
             $('.single-item').slick({
                 dots: true,
                 accessiblity: true,
                 lazyLoad: 'ondemand'
+
+                {#            setting-name: setting-value#}
             });
         });
+
+
 
         var retrieveCurrentStatus = function () {
             ajaxGet('{% url 'ajax_refresh_task_detail_view' pk=task.id %}', function (content) {
