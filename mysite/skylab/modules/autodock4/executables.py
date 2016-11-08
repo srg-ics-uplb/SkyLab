@@ -107,7 +107,7 @@ class Autodock4Executable(P2CToolGeneric):
             if remote_file in input_filenames:
                 sftp.remove(remote_filepath)  # delete after transfer
 
-        zip_filename = self.task.task_dirname + "-output.zip" % self.task.id
+        zip_filename = self.task.task_dirname + "-output.zip"
         local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (remote_dir, zip_filename))
         remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
 

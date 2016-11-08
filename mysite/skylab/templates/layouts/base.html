@@ -31,7 +31,7 @@
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'mpi_list_view' %}"><i class="fa fa-cloud fa-fw"></i> MPI Clusters </a></li>
-                    <li><a href="{% url 'toolset_list_view' %}"><i class="fa fa-gears fa-fw"></i> Tools </a></li>
+                    <li><a href="{% url 'toolset_list_view' %}"><i class="fa fa-gears fa-fw"></i> Toolsets </a></li>
                     <li class="dropdown">
                         <a class="dropdown-toggle" data-toggle="dropdown" href="#" onclick="navTasksOnClick()">
                             <i class="fa fa-tasks fa-fw"></i> Tasks <i class="fa fa-caret-down"></i>

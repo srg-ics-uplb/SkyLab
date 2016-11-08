@@ -25,9 +25,9 @@ def multi_dock6_other_resources_validator(files):
 
 def grid_other_resources_extension_validator(file):
     ext = os.path.splitext(file.name)[1]
-    valid_extensions = ['.mol2', '.pdb', '.sph']
+    valid_extensions = ['.mol2', '.pdb']
     if ext.lower() not in valid_extensions:
-        raise forms.ValidationError(u'Only .mol2, .pdb, .sph files accepted',
+        raise forms.ValidationError(u'Only .mol2, .pdb files accepted',
                                     code="dock6_invalid_input_file")
 
 

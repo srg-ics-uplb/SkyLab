@@ -17,7 +17,7 @@ def cluster_size_validator(value):
             raise ValidationError(u'Can only create max of {0} nodes'.format(current_max),
                                   code="cluster_size_above_limit")
         else:
-            raise ValidationError(u'Sorry. The system reached limit for creating clusters.'.format(current_max),
+            raise ValidationError(u'Sorry. The system has reached the limit for max active clusters.'.format(current_max),
                                   code="cluster_size_above_limit")
 
 
@@ -26,6 +26,6 @@ def get_current_max_nodes():
     online_clusters = MPICluster.objects.exclude(status=5)
     current_instance_count = 0
     for c in online_clusters:
-        current_instance_count += c.cluster_size + 1
+        current_instance_count += c.total_node_count
 
     return min(settings.MAX_NODES_PER_CLUSTER, settings.MAX_TOTAL_INSTANCES - current_instance_count)

@@ -3,6 +3,8 @@
 {% load crispy_forms_filters %}
 {% load staticfiles %}
 
+{% block title %} {{ block.super }} {{ tool.display_name }} {% endblock %}
+
 {% block navbar_breadcrumb %}
     <ol class="breadcrumb">
         <li>

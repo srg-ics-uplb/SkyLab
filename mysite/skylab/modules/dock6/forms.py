@@ -15,9 +15,10 @@ from validators import multi_dock6_other_resources_validator, dock6_in_extension
 
 class GridForm(forms.Form):
     param_input_file = forms.FileField(label="Input file (.in)",
-                                       help_text="All input files and produced files other than .out files are stored in a single directory during execution.",
+                                       help_text="Please set receptor_file and box_file parameters to ./[filename]<br>"
+                                                 "Please set vdw_definition_file parameter to /mirror/dock6/parameters/[vdw_definition_file]",
                                        validators=[dock6_in_extension_validator])
-    param_other_files = MultiFileField(label="Other input resources", help_text="(.pdb), (.sph), (.mol2)", min_num=1,
+    param_other_files = MultiFileField(label="Other input resources", help_text="(.pdb), (.mol2)", min_num=1,
                                        validators=[multi_grid_other_resources_validator])
     param_output_prefix = forms.CharField(required=False, label="Output file prefix",
                                           help_text="default: input_filename",

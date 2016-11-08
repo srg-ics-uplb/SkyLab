@@ -192,8 +192,8 @@ SENDFILE_URL = '/media'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
 SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
-MAX_NODES_PER_CLUSTER = 5
-MAX_TOTAL_INSTANCES = 25  # current limit of vcluster : 32
+MAX_NODES_PER_CLUSTER = 3 #value set to 3 for uat   # max nodes per cluster ? 5
+MAX_TOTAL_INSTANCES = 6  # current limit of vcluster : 16 instances #change this value with correct limit
 
 FRONTEND_IP = "10.0.3.101"
 FRONTEND_USERNAME = "user"

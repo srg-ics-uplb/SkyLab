@@ -99,7 +99,7 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
         exec_string = "autogrid4 "
         task = Task.objects.create(
-            mpi_cluster=cluster, tool=Tool.objects.get(display_name='AutoGrid 4'), user=self.request.user
+            mpi_cluster=cluster, tool=Tool.objects.get(simple_name='autogrid4'), user=self.request.user
         )
 
         self.kwargs['id'] = task.id

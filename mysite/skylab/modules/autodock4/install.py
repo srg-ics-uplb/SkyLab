@@ -31,7 +31,7 @@ def insert_to_db():
          },
         {'display_name': 'autodock4',
          # 'executable_name': 'AutoDock4Executable',
-         # 'view_name': 'AutodockView',
+         # 'view_name': 'Autodoc4kView',
          'description': 'Performs the docking of the ligand to a set of grids describing the target protein',
          },
     ]

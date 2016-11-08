@@ -162,7 +162,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
 
         #print(exec_string)
 
-        tool = Tool.objects.get(display_name="Vina split")
+        tool = Tool.objects.get(simple_name="vinasplit")
         task = Task.objects.create(
             mpi_cluster=cluster, tool=tool, user=self.request.user,
             task_data=json.dumps({'command_list': [exec_string]})

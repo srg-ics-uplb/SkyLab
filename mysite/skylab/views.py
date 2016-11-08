@@ -20,6 +20,7 @@ from sendfile import sendfile
 
 from forms import CreateMPIForm
 from skylab.models import Task, MPICluster, ToolActivation, SkyLabFile, ToolSet, Tool
+from skylab.validators import get_current_max_nodes
 
 
 def has_read_permission(request, task_id):
@@ -99,6 +100,12 @@ class CreateMPIView(LoginRequiredMixin, FormView):
     # 	kwargs = super(CreateMPIView, self).get_form_kwargs()
     # 	kwargs['user'] = self.request.user
     # 	return kwargs
+    def get(self, request, *args, **kwargs):
+        if get_current_max_nodes() <= 1:
+            messages.add_message(request, messages.WARNING,
+                                 'Warning! The system has reached the limit for max active clusters.',
+                                 extra_tags='display_this')
+        super(CreateMPIView, self).get(request, *args, **kwargs)
 
     def form_valid(self, form):
 

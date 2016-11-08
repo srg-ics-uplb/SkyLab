@@ -31,7 +31,7 @@ class Dock6View(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
 
-        tool = Tool.objects.get(display_name="Dock 6")
+        tool = Tool.objects.get(simple_name='dock6')
 
         # -n cluster_size
         command = "mpiexec -n {0:d} -f {1:s} dock6.mpi ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
@@ -44,7 +44,7 @@ class Dock6View(LoginRequiredMixin, FormView):
 
         cluster = form.cleaned_data['mpi_cluster']
 
-        input_file = form.cleaned_data['param_input_files']
+        input_file = form.cleaned_data['param_input_file']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
         command += u"-i {0:s} ".format(input_file.name)
@@ -83,7 +83,7 @@ class GridView(LoginRequiredMixin, FormView):
 
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
-        tool = Tool.objects.get(display_name="Grid")
+        tool = Tool.objects.get(simple_name='grid')
         command = "grid "
         task = Task.objects.create(
             mpi_cluster=cluster, tool=tool, user=self.request.user,
@@ -91,7 +91,7 @@ class GridView(LoginRequiredMixin, FormView):
         )
         self.kwargs['id'] = task.id
 
-        input_file = form.cleaned_data['param_input_files']
+        input_file = form.cleaned_data['param_input_file']
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
 
         command += "-i %s " % input_file.name
