@@ -100,10 +100,12 @@ class RayExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
         self.logger.debug(self.log_prefix + 'Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
         self.logger.debug(self.log_prefix + 'Retrieved ' + zip_filename)
-        sftp.remove(remote_zip_filepath)
+        #sftp.remove(remote_zip_filepath) no need to delete file after transfer since parent directory will be deleted anyway
+
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 

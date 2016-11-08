@@ -40,14 +40,14 @@ class VinaView(LoginRequiredMixin, FormView):
 
         instance = SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_receptor'], task=task)
         receptor_filepath = instance.file.name
-        exec_string_template += "--receptor %s " % receptor_filepath
+        exec_string_template += u"--receptor {0:s} ".format(receptor_filepath)
 
         if form.cleaned_data.get('param_flex'):
             instance = SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_flex'], task=task)
             flex_filepath = instance.file.name
             exec_string_template += "--flex %s " % flex_filepath
 
-        exec_string_template += "--ligand {filepath} --out {outpath}/out.pdbqt --log {outpath}/log.txt "
+        exec_string_template += "--ligand {filepath} --out {outpath}/vina_out.pdbqt --log {outpath}/log.txt "
 
         # if form.cleaned_data['param_score_only']:  # search space not required
         #     exec_string_template += "--score_only "
@@ -59,20 +59,20 @@ class VinaView(LoginRequiredMixin, FormView):
         size_y = form.cleaned_data['param_size_y']
         size_z = form.cleaned_data['param_size_z']
 
-        exec_string_template += "--center_x {0:s} --center_y {1:s} --center_z {2:s} --size_x {3:s} --size_y {4:s} --size_z {5:s} ".format(
+        exec_string_template += "--center_x {0} --center_y {1} --center_z {2} --size_x {3} --size_y {4} --size_z {5} ".format(
             center_x, center_y, center_z, size_x, size_y, size_z)
 
         if form.cleaned_data.get('param_seed'):
-            exec_string_template += "--seed {0:s} ".format(form.cleaned_data['param_seed'])
+            exec_string_template += "--seed {0} ".format(form.cleaned_data['param_seed'])
 
         if form.cleaned_data.get('param_exhaustiveness'):
-            exec_string_template += "--exhaustiveness {0:s} ".format(form.cleaned_data['param_exhaustiveness'])
+            exec_string_template += "--exhaustiveness {0} ".format(form.cleaned_data['param_exhaustiveness'])
 
         if form.cleaned_data.get('param_num_modes'):
-            exec_string_template += "--num_modes {0:s} ".format(form.cleaned_data['param_num_modes'])
+            exec_string_template += "--num_modes {0} ".format(form.cleaned_data['param_num_modes'])
 
         if form.cleaned_data.get('param_energy_range'):
-            exec_string_template += "--energy_range {0:s} ".format(form.cleaned_data['param_energy_range'])
+            exec_string_template += "--energy_range {0} ".format(form.cleaned_data['param_energy_range'])
 
         # if form.cleaned_data['param_local_only']:
         #     exec_string_template += "--local_only "

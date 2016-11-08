@@ -197,14 +197,14 @@ class VinaForm(forms.Form):
             # )
         )
 
-    def clean(self):
-        if self.cleaned_data:
-            if not self.cleaned_data['param_score_only']:
-                if not self.cleaned_data.get('param_center_x') or not self.cleaned_data.get(
-                        'param_center_y') or not self.cleaned_data.get('param_center_z') or not self.cleaned_data.get(
-                        'param_size_x') or not self.cleaned_data.get('param_size_y') or not self.cleaned_data.get(
-                        'param_size_z'):
-                    raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
+    # def clean(self):
+    #     if self.cleaned_data:
+    #         if not self.cleaned_data['param_score_only']:
+    #             if not self.cleaned_data.get('param_center_x') or not self.cleaned_data.get(
+    #                     'param_center_y') or not self.cleaned_data.get('param_center_z') or not self.cleaned_data.get(
+    #                     'param_size_x') or not self.cleaned_data.get('param_size_y') or not self.cleaned_data.get(
+    #                     'param_size_z'):
+    #                 raise forms.ValidationError(u'Search space fields are required', code="search_space_incomplete")
 
 class VinaSplitForm(forms.Form):
     param_input = forms.FileField(label="Input file (.pdbqt)", help_text="Vina docking result",

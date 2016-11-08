@@ -57,11 +57,11 @@ class RayView(LoginRequiredMixin, FormView):
 
             # k-mer length
             if other_parameter_form.cleaned_data.get('param_kmer_length'):
-                command += "-k {0:s} ".format(other_parameter_form.cleaned_data["param_kmer_length"])
+                command += u"-k {0:d}".format(other_parameter_form.cleaned_data["param_kmer_length"])
 
             # -mini-ranks-per-rank
             if select_mpi_form.cleaned_data.get('param_mini_ranks'):
-                command += "-mini-ranks-per-rank {0:s} ".format(select_mpi_form.cleaned_data["param_mini_ranks"])
+                command += u"-mini-ranks-per-rank {0:d} ".format(select_mpi_form.cleaned_data["param_mini_ranks"])
 
             for form in input_formset:
                 parameter = form.cleaned_data.get('parameter')
@@ -91,7 +91,7 @@ class RayView(LoginRequiredMixin, FormView):
                     instance = SkyLabFile.objects.create(type=1, upload_path='input/graph', file=f, task=task)
                     filepath = instance.file.name
                     # filepath = create_input_skylab_file(task, 'input/graph', f)
-                    command += "-read-sample-graph graph{0:s} {1:s} ".format(index, filepath)
+                    command += "-read-sample-graph graph-{0:d} {1:s} ".format(index, filepath)
 
             if other_parameter_form.cleaned_data['param_search']:
                 command += "-search task_{0:d}/input/search ".format(task.id)

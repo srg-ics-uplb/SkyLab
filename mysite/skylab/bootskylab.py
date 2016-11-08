@@ -208,6 +208,7 @@ class MPIThread(threading.Thread):
         shmax_fixer = self.cluster_shell.spawn(['sh', '-c', command], use_pty=True)
         shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         shmax_fixer.wait_for_result()
+        self.logger.debug(self.log_prefix + 'Set kernel.shmmax=500000000')
 
     def test_cluster_connection(self, init=False):
         retries = 0

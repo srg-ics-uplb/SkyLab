@@ -34,7 +34,7 @@ class Dock6View(LoginRequiredMixin, FormView):
         tool = Tool.objects.get(simple_name='dock6')
 
         # -n cluster_size
-        command = "mpiexec -n {0:d} -f {1:s} dock6.mpi ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
+        command = "mpirun -np {0:d} -f {1:s} dock6.mpi ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
 
         # command = "mpiexec -np 4 dock6.mpi "
         task = Task.objects.create(
