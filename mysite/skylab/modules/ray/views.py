@@ -37,8 +37,8 @@ class RayView(LoginRequiredMixin, FormView):
         other_parameter_form = OtherParameterForm(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and other_parameter_form.is_valid() and input_formset.is_valid():
-            cluster_name = select_mpi_form.cleaned_data['mpi_cluster']
-            cluster = MPICluster.objects.get(cluster_name=cluster_name)
+            cluster = select_mpi_form.cleaned_data['mpi_cluster']
+
 
             command_list = []
             # -n cluster_size
@@ -50,7 +50,7 @@ class RayView(LoginRequiredMixin, FormView):
 
             tool = Tool.objects.get(simple_name="ray")
             task = Task.objects.create(
-                mpi_cluster=cluster_name, tool=tool, user=self.request.user
+                mpi_cluster=cluster, tool=tool, user=self.request.user
             )
 
             command += "Ray -o task_{0:d}/output ".format(task.id)

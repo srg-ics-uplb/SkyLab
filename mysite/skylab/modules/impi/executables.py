@@ -13,7 +13,7 @@ from skylab.modules.basetool import P2CToolGeneric
 
 # 6, 11, 12 (segmentation fault) inherent error
 # 3, 4 secondary numeric input needed
-
+#TODO: single sftp open call
 class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operations to run with
     def __init__(self, **kwargs):
         super(ImpiExecutable, self).__init__(**kwargs)
