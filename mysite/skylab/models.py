@@ -415,6 +415,15 @@ class SkyLabFile(models.Model):
             if os.path.splitext(self.filename)[1].lower() in settings.JSMOL_SUPPORTED_FILE_EXT:
                 self.render_with_jsmol = True
 
+        if not self.id: #on create check if already exists
+            try:
+                obj = SkyLabFile.objects.get(filename=self.filename, upload_path=self.upload_path, task_id=self.task_id, type=self.type)
+                super(SkyLabFile, obj).save(*args, **kwargs)
+                return
+            except SkyLabFile.DoesNotExist:
+                pass #No duplicates
+
+
         super(SkyLabFile, self).save(*args, **kwargs)
 
 @python_2_unicode_compatible
