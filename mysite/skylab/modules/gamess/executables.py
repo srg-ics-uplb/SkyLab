@@ -22,7 +22,9 @@ class GamessExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  #fetch input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/input
 
         for f in files:
@@ -30,6 +32,7 @@ class GamessExecutable(P2CToolGeneric):
             sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
@@ -118,7 +121,9 @@ class GamessExecutable(P2CToolGeneric):
         local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
         local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         remote_path = os.path.join(self.remote_task_dir, 'output')
 
         # retrieve then delete produced output files
@@ -165,9 +170,12 @@ class GamessExecutable(P2CToolGeneric):
         remote_zip_filepath = os.path.join(settings.REMOTE_BASE_DIR, zip_filename)
 
         self.shell.run(["zip", "-r", zip_filename, "scr"])  # zip scr folder
+        self.logger.debug(self.log_prefix + 'Downloading '+ zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        self.logger.debug(self.log_prefix + 'Downloaded '+ zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         # register newly transferred file as skylabfile
         new_file = SkyLabFile.objects.create(type=2, task=self.task)

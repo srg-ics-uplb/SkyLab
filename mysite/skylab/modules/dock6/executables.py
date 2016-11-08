@@ -22,7 +22,9 @@ class GridExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/workdir
 
         for f in files:
@@ -30,6 +32,7 @@ class GridExecutable(P2CToolGeneric):
             sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
 
     def run_commands(self, **kwargs):
@@ -101,7 +104,9 @@ class GridExecutable(P2CToolGeneric):
         input_files = SkyLabFile.objects.filter(type=1, task=self.task)
         input_filenames = [file.filename for file in input_files]
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         remote_path = self.working_dir
 
         remote_files = sftp.listdir(path=remote_path)
@@ -124,6 +129,7 @@ class GridExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)

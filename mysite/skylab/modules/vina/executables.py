@@ -21,7 +21,9 @@ class VinaExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         for f in files:
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
@@ -29,6 +31,7 @@ class VinaExecutable(P2CToolGeneric):
             sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
@@ -91,7 +94,9 @@ class VinaExecutable(P2CToolGeneric):
         local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
         local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         remote_path = os.path.join(self.remote_task_dir, 'output')
 
         # retrieve then delete produced output files
@@ -104,7 +109,7 @@ class VinaExecutable(P2CToolGeneric):
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
                 sftp.get(remote_filepath, local_filepath)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                self.logger.debug(self.log_prefix + ' Retrieved ' + remote_file)
                 sftp.remove(remote_filepath)  # delete file after transfer
 
                 # register newly transferred file as skylabfile
@@ -113,6 +118,8 @@ class VinaExecutable(P2CToolGeneric):
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
                                                   remote_file)  # manual assignment to model filefield
                 new_file.save()  # save changes
+        sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
         # Transfer via zip.
@@ -159,13 +166,16 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(os.path.join(self.remote_task_dir, "output"))  # cd /mirror/task_xx
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
@@ -220,11 +230,15 @@ class VinaSplitExecutable(P2CToolGeneric):
         media_root = getattr(settings, "MEDIA_ROOT")
 
         # remove input file in output directory
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)
         for f in SkyLabFile.objects.filter(task=self.task, type=1):
             input_file = f.filename
+            self.logger.debug(self.log_prefix + 'Removing '+ input_file + 'from working directory')
             sftp.remove(input_file)
+            self.logger.debug(self.log_prefix + 'Removed ' + input_file + 'from working directory')
 
         local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
         local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
@@ -251,6 +265,7 @@ class VinaSplitExecutable(P2CToolGeneric):
                 new_file.save()  # save changes
 
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
         # Transfer via zip.

@@ -19,13 +19,19 @@ class RayExecutable(P2CToolGeneric):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
+
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         for f in files:
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
+            self.logger.debug(self.log_prefix + 'Uploading ' + f.filename )
             mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
             sftp.putfo(f.file, f.filename)  # At this point, you are f.upload_path
+            self.logger.debug(self.log_prefix + 'Uploaded ' + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
@@ -90,10 +96,15 @@ class RayExecutable(P2CToolGeneric):
 
         self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        self.logger.debug(self.log_prefix + 'Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        self.logger.debug(self.log_prefix + 'Retrieved ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         # attach transferred file to database
         new_file = SkyLabFile.objects.create(type=2, task=self.task)

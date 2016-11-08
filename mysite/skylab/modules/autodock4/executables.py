@@ -22,7 +22,9 @@ class Autodock4Executable(P2CToolGeneric):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
         files = self.task.files.filter(type=1)
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
@@ -95,7 +97,9 @@ class Autodock4Executable(P2CToolGeneric):
         input_files = SkyLabFile.objects.filter(type=1, task=self.task)
         input_filenames = [file.filename for file in input_files]
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         remote_path = self.working_dir
         remote_files = sftp.listdir(path=remote_path)
 
@@ -117,6 +121,7 @@ class Autodock4Executable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)
@@ -124,7 +129,7 @@ class Autodock4Executable(P2CToolGeneric):
                                               zip_filename)
             new_file.save()
 
-        if not self.status_code == 400:
+        if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
             self.task.change_status(status_code=401, status_msg="Output files received. Errors encountered")
@@ -145,13 +150,16 @@ class AutoGrid4Executable(P2CToolGeneric):
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/workdir
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
             sftp.putfo(f.file, f.filename)
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
     def run_commands(self, **kwargs):
         self.task.change_status(status_msg="Executing tool script", status_code=152)
@@ -215,7 +223,9 @@ class AutoGrid4Executable(P2CToolGeneric):
 
         remote_dir = self.task.task_dirname
 
+        self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        self.logger.debug(self.log_prefix + 'Opened SFTP client')
         remote_path = self.working_dir
         remote_files = sftp.listdir(path=remote_path)
         input_files = SkyLabFile.objects.filter(type=1, task=self.task)
@@ -239,6 +249,7 @@ class AutoGrid4Executable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
             new_file = SkyLabFile.objects.create(type=2, task=self.task)
