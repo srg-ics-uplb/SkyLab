@@ -203,6 +203,12 @@ class MPIThread(threading.Thread):
         ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         self.logger.debug(self.log_prefix + 'Set mtu to 1454')
 
+        # when instance is restarted this settings resets : observation
+        command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
+        shmax_fixer = self.cluster_shell.spawn(['sh', '-c', command], use_pty=True)
+        shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
+        shmax_fixer.wait_for_result()
+
     def test_cluster_connection(self, init=False):
         retries = 0
         exit_loop = False
