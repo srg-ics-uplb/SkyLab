@@ -274,7 +274,7 @@ class Task(models.Model):
         return status_msgs.get(self.status_code, "Status code %d not recognized" % self.status_code)
 
     def change_status(self, **kwargs):
-        status_code = kwargs.get('status_code', 000)
+        status_code = kwargs.get('status_code', self.status_code)
         status_msg = kwargs.get('status_msg')
         self.status_code = status_code
         self.status_msg = self.simple_status_msg

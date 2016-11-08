@@ -103,7 +103,7 @@ class CreateMPIView(LoginRequiredMixin, FormView):
     def get(self, request, *args, **kwargs):
         if get_current_max_nodes() <= 1:
             messages.add_message(request, messages.WARNING,
-                                 'Warning! The system has reached the limit for max active clusters.',
+                                 'Warning! The system has reached the limit for max  active clusters.',
                                  extra_tags='display_this')
         super(CreateMPIView, self).get(request, *args, **kwargs)
 

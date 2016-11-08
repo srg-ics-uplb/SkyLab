@@ -28,7 +28,7 @@ class RayExecutable(P2CToolGeneric):
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             self.logger.debug(self.log_prefix + 'Uploading ' + f.filename )
             mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
-            sftp.putfo(f.file, f.filename)  # At this point, you are f.upload_path
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # At this point, you are f.upload_path
             self.logger.debug(self.log_prefix + 'Uploaded ' + f.filename)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
@@ -100,7 +100,7 @@ class RayExecutable(P2CToolGeneric):
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
         self.logger.debug(self.log_prefix + 'Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
         self.logger.debug(self.log_prefix + 'Retrieved ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()

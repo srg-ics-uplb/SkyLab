@@ -32,7 +32,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
 
 
@@ -153,7 +153,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                 local_filepath = os.path.join(local_path, remote_file)
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath)  # transfer file
+                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                 self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                 sftp.remove(remote_filepath)  # delete file after transfer
 

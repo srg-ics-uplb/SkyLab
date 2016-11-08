@@ -28,7 +28,7 @@ class Autodock4Executable(P2CToolGeneric):
         sftp.chdir(self.working_dir)
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)  # At this point, you are in remote_path
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # At this point, you are in remote_path
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
 
@@ -115,7 +115,7 @@ class Autodock4Executable(P2CToolGeneric):
         self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
 
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
@@ -154,7 +154,7 @@ class AutoGrid4Executable(P2CToolGeneric):
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/workdir
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
@@ -243,7 +243,7 @@ class AutoGrid4Executable(P2CToolGeneric):
         self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
 
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
         self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()

@@ -28,7 +28,7 @@ class VinaExecutable(P2CToolGeneric):
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
@@ -108,7 +108,7 @@ class VinaExecutable(P2CToolGeneric):
                 local_filepath = os.path.join(local_path, remote_file)
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath)  # transfer file
+                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                 self.logger.debug(self.log_prefix + ' Retrieved ' + remote_file)
                 sftp.remove(remote_filepath)  # delete file after transfer
 
@@ -172,7 +172,7 @@ class VinaSplitExecutable(P2CToolGeneric):
         sftp.chdir(os.path.join(self.remote_task_dir, "output"))  # cd /mirror/task_xx
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
@@ -253,7 +253,7 @@ class VinaSplitExecutable(P2CToolGeneric):
                 local_filepath = os.path.join(local_path, remote_file)
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath)  # transfer file
+                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                 self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                 sftp.remove(remote_filepath)  # delete file after transfer
 

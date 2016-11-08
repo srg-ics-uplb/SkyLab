@@ -6,6 +6,7 @@ from django.conf import settings
 from skylab.models import SkyLabFile
 
 
+
 # source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
 def mkdir_p(sftp, remote_directory):
 	"""Change to this directory, recursively making new folders if needed.
@@ -59,6 +60,9 @@ class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executabl
 		self.log_prefix = kwargs.get('log_prefix', '')
 		self.remote_task_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
 		self.working_dir = self.remote_task_dir  # dir where tool commands will be executed
+
+	def sftp_file_transfer_callback(self, bytes_transferred, total_bytes):
+		self.logger.debug(self.log_prefix + "Bytes transferred :{bytes_transferred}, Bytes to transfer: {total_bytes}".format(bytes_transferred=bytes_transferred, total_bytes=total_bytes))
 
 	def clear_or_create_dirs(self, **kwargs):
 		# clean task output skylabfile, with a signal receiver deleting the actual files

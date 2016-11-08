@@ -29,7 +29,7 @@ class GamessExecutable(P2CToolGeneric):
 
         for f in files:
             self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename)  # copy file object to cluster as f.filename in the current dir
+            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
             self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
@@ -135,7 +135,7 @@ class GamessExecutable(P2CToolGeneric):
                 local_filepath = os.path.join(local_path, remote_file)
 
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath)  # transfer file
+                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                 self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                 sftp.remove(remote_filepath)  # delete file after transfer
 
@@ -171,7 +171,7 @@ class GamessExecutable(P2CToolGeneric):
 
         self.shell.run(["zip", "-r", zip_filename, "scr"])  # zip scr folder
         self.logger.debug(self.log_prefix + 'Downloading '+ zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+        sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
         self.logger.debug(self.log_prefix + 'Downloaded '+ zip_filename)
         sftp.remove(remote_zip_filepath)
         sftp.close()
