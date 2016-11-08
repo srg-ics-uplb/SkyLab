@@ -86,7 +86,7 @@ class Autodock4Executable(P2CToolGeneric):
         self.handle_output_files()
 
     def handle_output_files(self, **kwargs):
-        self.task.change_status(status_msg='Retrieving output files', status_code=154)
+        self.task.change_status(status_msg='Retrieving output files', status_code=154 if not self.task.status_code >= 400 else self.task.status_code)
         self.logger.debug(self.log_prefix + 'Sending output files to server')
         media_root = settings.MEDIA_ROOT
 
@@ -215,7 +215,8 @@ class AutoGrid4Executable(P2CToolGeneric):
         self.handle_output_files()
 
     def handle_output_files(self, **kwargs):
-        self.task.change_status(status_msg='Retrieving output files', status_code=154)
+        self.task.change_status(status_msg='Retrieving output files', status_code=154 if not self.task.status_code >= 400 else self.task.status_code)
+
         self.logger.debug(self.log_prefix + 'Sending output files to server')
         media_root = getattr(settings, "MEDIA_ROOT")
 
