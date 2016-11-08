@@ -82,9 +82,7 @@ class Autodock4Executable(P2CToolGeneric):
         task_remote_subdirs = ['workdir', 'output']
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
         self.handle_input_files()
-
         self.run_commands()
-
         self.handle_output_files()
 
     def handle_output_files(self, **kwargs):

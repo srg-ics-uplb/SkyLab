@@ -81,8 +81,8 @@ class VinaExecutable(P2CToolGeneric):
 
     def run_tool(self, **kwargs):
         self.task.change_status(status_msg='Task started', status_code=150)
-        self.handle_input_files()
         self.clear_or_create_dirs(task_remote_subdirs=json.loads(self.task.task_data).get('task_remote_subdirs', None))
+        self.handle_input_files()
         self.run_commands()
         self.handle_output_files()
 
@@ -299,7 +299,7 @@ class VinaSplitExecutable(P2CToolGeneric):
 
     def run_tool(self, **kwargs):  # the whole task process
         self.task.change_status(status_msg='Task started', status_code=150)
-        self.handle_input_files()
         self.clear_or_create_dirs(task_remote_subdirs=['output'])
+        self.handle_input_files()
         self.run_commands()
         self.handle_output_files()
