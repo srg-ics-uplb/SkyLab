@@ -84,7 +84,7 @@ class VinaExecutable(P2CToolGeneric):
         self.clear_or_create_dirs(task_remote_subdirs=json.loads(self.task.task_data).get('task_remote_subdirs', None))
         self.handle_input_files()
         self.run_commands()
-        #self.handle_output_files()
+        self.handle_output_files()
 
     def handle_output_files(self, **kwargs):
         self.task.change_status(status_msg='Retrieving output files', status_code=154 if not self.task.status_code >= 400 else self.task.status_code)

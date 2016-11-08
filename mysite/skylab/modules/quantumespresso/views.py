@@ -59,6 +59,7 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             )
             # build command list
             command_list = []
+            jsmol_output_files = []
 
             # in form clean pseudopotentials field returns json dict
             task_data = json.loads(select_mpi_form.cleaned_data['param_pseudopotentials'])
@@ -76,21 +77,27 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
                             instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
                             # neb.x -inp filename.in
                             # ph.x can be run using images #not supported
+                            output_filename = '{0}.out'.format(os.path.splitext(input_file.name)[0])
 
                             if executable == "neb.x":
                                 command_list.append(
-                                    '{0} {1} {2} -inp input/{3} > output/{4}.out'.format(para_prefix, os.path.join(remote_bin_dir,executable),
+                                    '{0} {1} {2} -inp input/{3} > output/{4}'.format(para_prefix, os.path.join(remote_bin_dir,executable),
                                                                                          para_postfix,
                                                                                          input_file.name,
-                                                                                         os.path.splitext(
-                                                                                             input_file.name)[0]))
+                                                                                         output_filename)
+                                )
 
                             else:  # at least for pw.x, cp.x
-                                command_list.append('{0} {1} {2} < input/{3} > output/{4}.out'.format(
+                                command_list.append('{0} {1} {2} < input/{3} > output/{4}'.format(
                                     para_prefix, os.path.join(remote_bin_dir,executable), para_postfix, input_file.name,
-                                    os.path.splitext(input_file.name)[0]))
+                                    output_filename)
+                                )
+
+                                if executable == "pw.x": #identify expected output as compatible for jsmol
+                                    jsmol_output_files.append(output_filename)
 
             task_data['command_list'] = command_list
+            task_data['jsmol_output_files'] = jsmol_output_files
             task.task_data = json.dumps(task_data)
             task.save()
 

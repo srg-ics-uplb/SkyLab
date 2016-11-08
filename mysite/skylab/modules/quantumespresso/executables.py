@@ -160,7 +160,11 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
                 # register newly transferred file as skylabfile
                 # at the very least pw.x output files seems to be compatible with jsmol
-                new_file = SkyLabFile.objects.create(type=2, task=self.task, render_with_jsmol=True)
+                new_file = SkyLabFile.objects.create(type=2, task=self.task)
+                jsmol_output_files = json.loads(self.task.task_data).get('jsmol_output_files',None)
+                if jsmol_output_files:
+                    if remote_file in jsmol_output_files:  #if marked as jsmol compatible
+                        new_file.render_with_jsmol = True
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
                                                   remote_file)  # manual assignment to model filefield
                 new_file.save()  # save changes

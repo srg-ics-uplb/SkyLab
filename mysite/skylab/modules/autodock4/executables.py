@@ -121,11 +121,11 @@ class Autodock4Executable(P2CToolGeneric):
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
-        with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(type=2, task=self.task)
-            new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                              zip_filename)
-            new_file.save()
+        # attach transferred file to database
+        new_file = SkyLabFile.objects.create(type=2, task=self.task)
+        new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                          zip_filename)
+        new_file.save()
 
         if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
@@ -137,9 +137,9 @@ class Autodock4Executable(P2CToolGeneric):
         # Delete remote task directory
         self.shell.run(['rm', '-r', self.remote_task_dir])
 
-class AutoGrid4Executable(P2CToolGeneric):
+class Autogrid4Executable(P2CToolGeneric):
     def __init__(self, **kwargs):
-        super(AutoGrid4Executable, self).__init__(**kwargs)
+        super(Autogrid4Executable, self).__init__(**kwargs)
         self.working_dir = os.path.join(self.remote_task_dir, 'workdir')
 
     def handle_input_files(self, **kwargs):
@@ -250,11 +250,11 @@ class AutoGrid4Executable(P2CToolGeneric):
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
-        with open(local_zip_filepath, "rb") as local_file:  # attach transferred file to database
-            new_file = SkyLabFile.objects.create(type=2, task=self.task)
-            new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-                                              zip_filename)
-            new_file.save()
+        # attach transferred file to database
+        new_file = SkyLabFile.objects.create(type=2, task=self.task)
+        new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                          zip_filename)
+        new_file.save()
 
         if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")

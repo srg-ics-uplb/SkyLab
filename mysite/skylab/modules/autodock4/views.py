@@ -38,16 +38,17 @@ class Autodock4View(LoginRequiredMixin, FormView):
         )
         self.kwargs['id'] = task.id
 
-        SkyLabFile.objects.bulk_create([
-            SkyLabFile(type=1, file=form.cleaned_data['param_receptor_file'], task=task),
-            SkyLabFile(type=1, file=form.cleaned_data['param_ligand_file'], task=task),
-            SkyLabFile(type=1, file=form.cleaned_data['param_dpf_file'], task=task),
-        ])
+
+        # SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_receptor_file'], task=task)
+        SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_ligand_file'], task=task)
+        SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dpf_file'], task=task)
+        exec_string += "-p %s " % form.cleaned_data['param_dpf_file'].name
 
         for grid_file in form.cleaned_data['param_grid_files']:
             SkyLabFile.objects.create(type=1, file=grid_file, task=task)
 
-        exec_string += "-p %s " % form.cleaned_data['param_dpf_file'].name
+        if form.cleaned_data.get('param_dat_file'):
+            SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dat_file'], task=task)
 
         if form.cleaned_data.get('param_dlg_filename'):
             exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])
@@ -104,12 +105,8 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
         self.kwargs['id'] = task.id
 
-        SkyLabFile.objects.bulk_create([
-            SkyLabFile(type=1, file=form.cleaned_data['param_gpf_file'], task=task),
-            SkyLabFile(type=1, file=form.cleaned_data['param_receptor_file'], task=task),
-            SkyLabFile(type=1, file=form.cleaned_data['param_ligand_file'], task=task)
-        ])
-
+        SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_gpf_file'], task=task)
+        SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_receptor_file'], task=task)
 
         exec_string += "-p %s " % form.cleaned_data['param_gpf_file'].name
 
@@ -123,6 +120,7 @@ class Autogrid4View(LoginRequiredMixin, FormView):
         exec_string += "; "
 
         if form.cleaned_data['param_use_with_autodock']:
+            SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_ligand_file'], task=task)
             SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dpf_file'], task=task)
             exec_string += "autodock4 -p %s " % form.cleaned_data['param_dpf_file'].name
 
@@ -145,7 +143,7 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
             exec_string += ";"
 
-            task.task_data = json.dumps({'command_list': [exec_string]})
-            task.save()
+        task.task_data = json.dumps({'command_list': [exec_string]})
+        task.save()
 
         return super(Autogrid4View, self).form_valid(form)

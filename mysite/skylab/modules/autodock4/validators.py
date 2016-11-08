@@ -24,9 +24,14 @@ def grid_map_file_extension_validator(file):
     ext = os.path.splitext(file.name)[1]
     valid_extensions = ['.map', '.fld', '.xyz']
     if ext.lower() not in valid_extensions:
-        raise forms.ValidationError(u'Only .map, .fld, .xyz file accepted', code="autogrid_invalid_file_format")
+        raise forms.ValidationError(u'Only .map, .fld, .xyz file accepted', code="autodock_invalid_file_format")
 
 
 def multi_grid_map_file_validator(files):
     for file in files:
         grid_map_file_extension_validator(file)
+
+def dat_file_extension_validator(file):
+    ext = os.path.splitext(file.name)[1]
+    if ext.lower() != ".dat":
+        raise forms.ValidationError(u'Only .dat file accepted', code="autodock_invalid_file_format")
