@@ -38,22 +38,23 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
         pseudopotentials = json.loads(self.task.task_data).get("pseudopotentials", None)
         if pseudopotentials:
-            pseudopotential_urls = []
-            # command = 'curl '
+            self.logger.debug(self.log_prefix + 'Downloading pseudopotentials')
+            # pseudopotential_urls = []
+
+            command = 'curl '
             for pseudo_file in pseudopotentials:
                 url = os.path.join(self.network_pseudo_download_url, pseudo_file)
-                pseudopotential_urls.append(url)
-                # command += '-O ' + url
-                # command = 'curl -O ' + url
-                # self.logger.debug(self.log_prefix + 'Downloading '+ url)
-                # self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
-                #self.logger.debug(self.log_prefix + 'Downloaded file')
+                # pseudopotential_urls.append(url)
+                command += '-O ' + url
+                self.logger.debug(self.log_prefix + 'Downloading '+ url)
+                self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
+                self.logger.debug(self.log_prefix + 'Downloaded file')
 
-            self.logger.debug(self.log_prefix + 'Downloading pseudopotentials')
-            command = 'printf "{urls}" > urls.txt && wget -i urls.txt'.format(urls='\n'.join(pseudopotential_urls))
-            self.logger.debug(self.log_prefix + 'Command: ' + command)
-            download_shell = self.shell.run(["sh", "-c", command], cwd=self.pseudo_dir)
-            self.logger.debug(self.log_prefix + download_shell.output)
+
+            # command = 'printf "{urls}" > urls.txt && wget -i urls.txt'.format(urls='\n'.join(pseudopotential_urls))
+            # self.logger.debug(self.log_prefix + 'Command: ' + command)
+            # download_shell = self.shell.run(["sh", "-c", command], cwd=self.pseudo_dir)
+            # self.logger.debug(self.log_prefix + download_shell.output)
             self.logger.debug(self.log_prefix + 'Downloaded pseudopotentials')
 
         sftp.close()

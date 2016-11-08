@@ -45,11 +45,11 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             cluster = select_mpi_form.cleaned_data['mpi_cluster']
 
             # based on intial environment variables config on quantum espresso
-            para_prefix = "mpiexec -n {0:d} -f {1:s} ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
+            para_prefix = "mpirun -np {0:d} -f {1:s} ".format(cluster.total_node_count, settings.MPIEXEC_NODES_FILE)
             para_postfix = "-nk 1 -nd 1 -nb 1 -nt 1 "
 
             # copied from espresso's default env var value
-            para_image_prefix = "mpiexec -n 4"
+            para_image_prefix = "mpirun -np 4"
             param_image_postfix = '-ni 2 {0}'.format(para_postfix)
 
             tool = Tool.objects.get(simple_name='quantumespresso')
