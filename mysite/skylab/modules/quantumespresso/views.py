@@ -101,7 +101,7 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             task.task_data = json.dumps(task_data)
             task.save()
 
-            print(task.task_data)
+
 
             return redirect('task_detail_view', pk=task.id)
         else:

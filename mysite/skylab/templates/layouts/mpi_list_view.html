@@ -140,7 +140,7 @@
         var refreshMPITable = function(){
              ajaxGet('{% url 'ajax_refresh_mpi_list_table' %}', function (content) {
                 table.clear();
-                table.rows.add(content.rows).draw();
+                table.rows.add(content.rows).draw(false);
             })
         };
         refreshMPITable();

@@ -45,13 +45,17 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
 
             for pseudo_file in pseudopotentials:
-                url = os.path.join(self.network_pseudo_download_url, pseudo_file)
-                # pseudopotential_urls.append(url)
-                command = 'curl --max-time 300 -O ' + url
-                # command = "wget --timeout=60 " + url
-                self.logger.debug(self.log_prefix + 'Downloading '+ url)
-                self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
-                self.logger.debug(self.log_prefix + 'Downloaded file')
+                try:
+                    sftp.stat(os.path.join(self.pseudo_dir, pseudo_file))
+                    self.logger.debug(self.log_prefix + pseudo_file + "already in pseudo_dir")
+                except IOError: #if pseudopoential file not found download
+                    url = os.path.join(self.network_pseudo_download_url, pseudo_file)
+                    # pseudopotential_urls.append(url)
+                    command = 'curl --max-time 300 -O ' + url
+                    # command = "wget --timeout=60 " + url
+                    self.logger.debug(self.log_prefix + 'Downloading '+ url)
+                    self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
+                    self.logger.debug(self.log_prefix + 'Downloaded file')
 
 
             # command = 'printf "{urls}" > urls.txt && wget -i urls.txt'.format(urls='\n'.join(pseudopotential_urls))

@@ -47,8 +47,8 @@ class Autodock4View(LoginRequiredMixin, FormView):
         for grid_file in form.cleaned_data['param_grid_files']:
             SkyLabFile.objects.create(type=1, file=grid_file, task=task)
 
-        if form.cleaned_data.get('param_dat_file'):
-            SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dat_file'], task=task)
+        # if form.cleaned_data.get('param_dat_file'):
+        #     SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dat_file'], task=task)
 
         if form.cleaned_data.get('param_dlg_filename'):
             exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])

@@ -102,7 +102,7 @@
             var refreshTaskTable = function(){ {# refresh task table #}
                  ajaxGet('{% url 'ajax_refresh_task_list_table' %}', function (content) {
                     table.clear();
-                    table.rows.add(content.rows).draw();
+                    table.rows.add(content.rows).draw(false);
                 })
             };
             refreshTaskTable();

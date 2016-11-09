@@ -72,7 +72,8 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                         exec_shell.stdin_write(str(parameter) + "\n")
                         time.sleep(3)
                     self.logger.debug(self.log_prefix + 'Running exit operation')
-                    exec_shell.stdin_write('0\n')
+                    while exec_shell.is_running():
+                        exec_shell.stdin_write('0\n')
 
                     # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
