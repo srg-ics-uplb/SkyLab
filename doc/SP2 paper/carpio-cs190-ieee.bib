@@ -1,0 +1,565 @@
+%% An example BibTeX database for the official IEEEtran.bst BibTeX style file.
+%% [IEEEexample.bib v1.10 Copyright (c) 2002 Michael Shell]
+%% EDITED FOR CMSC 190 ICS use - gaflores 2006
+%
+% I. Available tags(Types of references):
+%
+% MASTERSTHESIS
+%     (mastersthesis) master's thesis
+%     (mastersthesis) master's thesis with a type field
+% PHDTHESIS
+%     (phdthesis) Ph.D. dissertation with a URL field
+%
+% ARTICLE
+%     (article) an article in a journal
+%     (article) journal article using et al.
+%     (article) journal article with large page numbers
+%     (article) journal article with dual months
+%     (article) journal article to be published as an article entry type
+% INPROCEEDINGS
+%     (inproceedings) a paper in a conference proceedings
+%     (inproceedings) conference paper with an address and days
+%     (inproceedings) conference paper with volume number
+%     (inproceedings) conference paper with a paper number
+%     (inproceedings) conference paper with a postdeadline type paper
+%     (inproceedings) presented at a conference
+%
+% BOOK
+%     (book) book
+%     (book) book with editor and no author
+%     (book) book with edition, author and editor
+%     (book) book with series and volume
+% INBOOK
+%     (inbook) inbook with chapter number
+%     (inbook) inbook with pages and note
+% INCOLLECTION
+%     (incollection) incollection with author and editor
+%     (incollection) incollection with series
+%     (incollection) incollection with author, editor, chapter and pages
+%     (incollection) incollection with a large number of authors
+%
+% MANUAL
+%     (manual) a data book as a manual
+% TECHREPORT
+%     (techreport) technical report
+%     (techreport) technical report with type
+%
+% PERIODICAL
+%     (periodical) a periodical
+% ELECTRONIC
+%     (electronic) Website with and/or without author
+%     (electronic) electronic with a howpublished information field
+%     (electronic) electronic with an organization and address
+%
+% UNPUBLISHED
+%     (unpublished) an unpublished work
+% MISC
+%     (misc) journal article to be published as a misc entry type
+%     (misc) misc for a techreport like reference
+%     (misc) misc for a white paper
+%     (misc) misc for a data sheet
+%     (misc) a private communication as a misc entry type
+%     (misc) an internet request for comments (RFC) as a misc entry
+%
+% II. Example references:
+
+% master's thesis, often the University name will be abbreviated and the
+% state or country will be included in the address. The type field can
+% used to override the default type "Master's thesis"
+% From the June 2002 issue of "IEEE Transactions on Microelectromechanical
+% Systems", page 186, reference #11.
+
+
+% master's thesis with a type field
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 391, reference #12.
+
+
+% Ph.D. dissertation with a URL field, the university is abbreviated
+% From the October 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 590, reference #11.
+
+
+% an article in a journal
+% Note the use of the IEEE_J_EDL string, defined in the IEEEabrv.bib file,
+% for the journal name. IEEEtran.bst defines the BibTeX standard three
+% letter month codes per IEEE style.
+% From the June 2002 issue of "IEEE Transactions on Electron Devices",
+% page 996, reference #16.
+
+
+% journal article using et al.
+% The (five) authors are actually: F. Delorme, S. Slempkes, G. Alibert,
+% B. Rose, J. Brandon
+% The month (July) was not given here.
+% From the September 1998 issue of "IEEE Journal on Selected Areas in
+% Communications", page 1257, reference #28.
+
+
+% journal article with large page numbers, IEEE will divide numbers 5 digits
+% or longer into groups of three with small spaces between them. Page ranges
+% can be separated via either "-" or "--", IEEEtran.bst will automatically
+% convert the separator dash(es) to "--".
+% Authors and/or IEEE do not always provide/use the journal number, but it
+% was used in this case. IEEEtran.bst can be configured to ignore journal
+% numbers if desired.
+% From the August 2000 issue of "IEEE Photonics Technology Letters",
+% page 1039, reference #11.
+
+
+% journal article with dual months
+% use the BibTeX "#" concatenation operator
+% From the March 2002 issue of "IEEE Transactions on Mechatronics",
+% page 21, reference #8.
+
+
+% journal article to be published as an article entry type
+% year is required, so if absent, use the year field to hold
+% the "submitted for publication" in order to avoid a warning for
+% the missing year field.
+% From the June 2002 issue of "IEEE Transactions on Information Theory",
+% page 1461, reference #21.
+
+@inproceedings{Hermocilla2014,
+  author        = "Joseph Anthony C. Hermocilla",
+  title         = "P2C: Towards Scientific Computing on Private Clouds",
+  booktitle     = "Proceedings of the National Conference on Information Technology Education (NCITE 2014)",
+  year          = "2014",
+  pages         = "162-167"
+};
+
+
+@article{Ahuja2012,
+   author      = "Sanjay P. Ahuja and Sindhu Mani",
+   title       = "The State of High Performance Computing in the Cloud",
+   journal     = "Journal of Emerging Trends in Computing and Information Sciences",
+   volume      = "3",
+   number      = "2",
+   issn        = "2079-8407",
+   pages       = "263-266",
+   month       = feb,
+   year        = "2012",
+   url         = "http://www.chinacloud.cn/upload/2012-03/12031713036456.pdf"
+
+};
+
+@article{Brandic2011,
+  Abstract = {Cloud computing, with its promise of virtually infinite resources, seems to suit well in solving resource greedy scientific computing problems. To study the effects of moving parallel scientific applications onto the cloud, we deployed several benchmark applications like matrix-vector operations and NAS parallel benchmarks, and DOUG (Domain decomposition On Unstructured Grids) on the cloud. DOUG is an open source software package for parallel iterative solution of very large sparse systems of linear equations. The detailed analysis of DOUG on the cloud showed that parallel applications benefit a lot and scale reasonable on the cloud. We could also observe the limitations of the cloud and its comparison with cluster in terms of performance. However, for efficiently running the scientific applications on the cloud infrastructure, the applications must be reduced to frameworks that can successfully exploit the cloud resources, like the MapReduce framework. Several iterative and embarrass},
+  Author = {Brandic, Ivona and Raicu, Ioan and Srirama, Satish Narayana and Batrashev, Oleg and Jakovits, Pelle and Vainikko, Eero},
+  ISSN = {10589244},
+  Journal = {Scientific Programming},
+  Keywords = {CLOUD computing, COMPUTER software, COMPUTER programming, OPEN source software, ELECTRONIC systems, benchmarking, cloud computing, iterative solvers, MapReduce, parallel programming, Scientific computing},
+  Number = {2/3},
+  Pages = {91 - 105},
+  Title = {Scalability of parallel scientific applications on the cloud.},
+  Volume = {19},
+  %URL = {http://search.ebscohost.com/login.aspx?direct=truedb=a9h\*&AN=66692024site=ehost-live},
+  Year = {2011},
+}
+
+@article{8521133920130201,
+    Abstract = {Cloud Computing is an eminent emerging technology that surpasses Grids from their IT resource administrations and arduous Grid middleware solutions. At present, users could access an abundant number of pre-defined cloud services or run their programs on demand as a pay-as-you-go processing model without much distribution problems. In addition, the IT business market has pumped enough revenue for establishing salient common-use cloud solutions. Despite adequate researchers have been involved in the cloud development, scientific application developers are still reluctant to execute their applications in the cloud due to the performance concerns, such as, scalability, availability, and service level agreement violations of the cloud providers. In this paper, a survey of various High Performance Computing (HPC) applications and possible performance concerns while executing applications in cloud is presented. Pointing out the need for Performance Analysis (PA) tools, this paper focuses on },
+    Author = {Benedict, Shajulin},
+    ISSN = {0010485X},
+    Journal = {Computing},
+    Keywords = {HIGH performance computing, PERFORMANCE evaluation, CLOUD computing, COMPUTATIONAL grids (Computer systems), MIDDLEWARE, INFORMATION technology, COMPUTER software developers, 68W40, Cloud applications, Cloud computing, HPC, Performance analysis tools, Service level agreements},
+    Number = {2},
+    Pages = {89 - 108},
+    Title = {Performance issues and performance analysis tools for HPC cloud applications: a survey.},
+    Volume = {95},
+    %URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=85211339&site=ehost-live},
+    Year = {2013},
+}
+
+@article{9686120720140601,
+Abstract = {The function of a newly sequenced gene can be discovered by determining its sequence homology with known proteins. BLAST is the most extensively used sequence analysis program for sequence similarity search in large databases of sequences. With the advent of next generation sequencing technologies it has now become possible to study genes and their expression at a genome-wide scale through RNA-seq and metagenome sequencing experiments. Functional annotation of all the genes is done by sequence similarity search against multiple protein databases. This annotation task is computationally very intensive and can take days to obtain complete results. The program mpiBLAST, an open-source parallelization of BLAST that achieves superlinear speedup, can be used to accelerate large-scale annotation by using supercomputers and high performance computing (HPC) clusters. Although many parallel bioinformatics applications using the Message Passing Interface (MPI) are available in the public domain},
+Author = {Sharma, Parichit and Mantri, Shrikant S.},
+ISSN = {19326203},
+Journal = {PLoS ONE},
+Keywords = {BIOLOGISTS, HIGH performance computing, PERFORMANCE evaluation, SEQUENCE analysis, HOMOLOGY (Biochemistry), RNA-seq, Biology and life sciences, Cloud computing, Comparative genomics, Computational biology, Computer and information sciences, Computer applications, Computer architecture, Computing methods, Engineering and technology, Functional genomics, Gene function, Gene ontologies, Gene prediction, Genetics, Genome analysis, Genome scans, Genome sequencing, Genomics, Molecular biology, Molecular biology techniques, Research Article, Sequence analysis, Sequence assembly tools, Sequencing techniques, Software design, Software engineering, Software tools, Transcriptome analysis, Web-based applications},
+Number = {6},
+Pages = {1 - 13},
+Title = {WImpiBLAST: Web Interface for mpiBLAST to Help Biologists Perform Large-Scale Annotation Using High Performance Computing.},
+Volume = {9},
+%URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=96861207&site=ehost-live},
+Year = {2014},
+}
+
+@article{CloudCom2010,
+    Abstract = {Cloud computing has seen tremendous growth, particularly for commercial web applications. The on-demand, pay-as-you-go model creates a flexible and cost-effective means to access compute resources. For these reasons, the scientific computing community has shown increasing interest in exploring cloud computing. However, the underlying implementation and performance of clouds are very different from those at traditional supercomputing centers. It is therefore critical to evaluate the performance of HPC applications in today’s cloud environments to understand the tradeoffs inherent in migrating to the cloud. This work represents the most comprehensive evaluation to date comparing conventional HPC platforms to Amazon EC2, using real applications representative of the workload at a typical supercomputing center. Overall results indicate that EC2 is six times slower than a typical mid-range Linux cluster, and twenty times slower than a modern HPC system. The interconnect on the EC2 cloud platform severely limits performance and causes significant variability.},
+    Author = {Jackson, Keith and Muriki, Krishna and Canon, Shane and Cholia, Shreyas and Shalf, John and Wasserman, Harvey and Wright, Nicholas},
+    Title = {Performance Analysis of High Performance Computing Applications on the Amazon Web Services Cloud},
+    URL = {https://www.nersc.gov/assets/NERSC-Staff-Publications/2010/CloudCom.pdf},
+    Year = {2010},
+}
+
+@misc{autodock,
+	title = {{AutoDock} — {AutoDock}},
+	url = {http://autodock.scripps.edu/},
+	urldate = {2015-11-15},
+	
+}
+
+@online{jsmol,
+	title = {JSmol: an open-source HTML5 viewer for chemical structures in 3D},
+	url = {http://wiki.jmol.org/index.php/JSmol},
+	urldate = {2016-11-04},
+
+}
+
+@misc{quantumespresso,
+	title = {{QUANTUMESPRESSO} - {Quantum} {ESPRESSO}},
+	url = {http://www.quantum-espresso.org/},
+	abstract = {Quantum ESPRESSO},
+	urldate = {2015-11-15}
+}
+
+@misc{gordon,
+	title = {Gordon {Group}/{GAMESS} {Homepage}},
+	url = {http://www.msg.ameslab.gov/gamess/capabilities.html},
+	urldate = {2015-11-15},
+}
+
+
+@article{boisvert_ray_2012,
+	title = {Ray {Meta}: scalable de novo metagenome assembly and profiling},
+	volume = {13},
+	issn = {1465-6906},
+	shorttitle = {Ray {Meta}},
+	url = {http://genomebiology.com/2012/13/12/R122},
+	doi = {10.1186/gb-2012-13-12-r122},
+	language = {en},
+	number = {12},
+	urldate = {2015-11-15},
+	journal = {Genome Biology},
+	author = {Boisvert, Sébastien and Raymond, Frédéric and Godzaridis, Élénie and Laviolette, François and Corbeil, Jacques},
+	year = {2012},
+	pages = {R122}
+}
+
+@misc{overview,
+	title = {Overview of {DOCK}},
+	url = {http://dock.compbio.ucsf.edu/Overview\_of\_DOCK/index.htm},
+	urldate = {2015-11-15},
+}
+
+@article{SciWorkflowEC2,
+    Author = {Juva, Gideon and Deelman, Ewa and Vahi, Karan and Mehta, Gaurang and Berman, Benjamin and Berriman, Bruce and Maechling, Phil},
+    Title = {Scientific Workflow Applications on Amazon EC2},
+    URL = {http://www.isi.edu/~gideon/publications/JuveG-EC2.pdf},
+}
+
+@article{PerfAnalysisManyTasks,
+    Author = {Iosup, Alexandru and Ostermann, Simon and Yigitbasi, Nezih and Prodan, Radu and Fahrigner, Thomas and Epema, Dick},
+    Title = {Performance Analysis of Cloud Computing Services for Many-Tasks Scientific Computing},
+
+   % URL = {http://www.st.ewi.tudelft.nl/~iosup/cloud-perf10tpds_in-print.pdf},
+    Month = {Nov},
+    Year = {2010},
+}
+
+
+@article{WalkerEC2HPC,
+    Author = {Walker, Edward},
+    Title = {Benchmarking Amazon EC2 for High-Performance Scientific Computing},
+    URL = {https://www.usenix.org/legacy/publications/login/2008-10/openpdfs/walker.pdf},
+    Month = {Oct},
+    Year = {2008},
+}
+
+@inproceedings{ZachHumphrey,
+    Author = {Hill, Zach and Humphrey, Marty},
+    Title = {A Quantitative Analysis of High Performance Computing with Amazon’s EC2 Infrastructure: The Death of the Local Cluster?},
+    booktitle = "Proceedings of the 10th IEEE/ ACM International Conference on Grid Computing (Grid 2009).)",
+    URL = {http://www.cs.virginia.edu/~humphrey/papers/QuantitativeAnalysisEC2.pdf},
+    Month = {Oct},
+    Year = {2009},
+    Location = {Banff,Alberta, Canada},
+}
+
+@article{7411021620120101,
+    Abstract = {Background: There is a significant demand for creating pipelines or workflows in the life science discipline that chain a number of discrete compute and data intensive analysis tasks into sophisticated analysis procedures. This need has led to the development of general as well as domain-specific workflow environments that are either complex desktop applications or Internet-based applications. Complexities can arise when configuring these applications in heterogeneous compute and storage environments if the execution and data access models are not designed appropriately. These complexities manifest themselves through limited access to available HPC resources, significant overhead required to configure tools and inability for users to simply manage files across heterogenous HPC storage infrastructure. Results: In this paper, we describe the architecture of a software system that is adaptable to a range of both pluggable execution and data backends in an open source implementation calle},
+    Author = {Hunter, Adam A. and Macgregor, Andrew B. and Szabo, Tamas O. and Wellington, Crispin A. and Bellgard, Matthew I.},
+    ISSN = {17510473},
+    Journal = {Source Code for Biology and Medicine},
+    Keywords = {LIFE sciences, CLOUD computing, COMPUTATIONAL grids (Computer systems), DATA analysis, WORKFLOW, WEB-based user interfaces, COMPUTER software, BIOINFORMATICS, Bioinformatics, high performance computing, Internet, workflows},
+    Number = {1},
+    Pages = {1 - 10},
+    Title = {Yabi: An online research environment for grid, high performance and cloud computing.},
+    Volume = {7},
+    %URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=74110216&site=ehost-live},
+    Year = {2012},
+}
+% a paper in a conference proceedings
+% "conference" can be used as an alias for "inproceedings"
+% From the June 2002 issue of "Journal of Microelectromechanical Systems",
+% page 205, reference #16.
+
+
+% conference paper with an address and days. Some journals capitalize the
+% letters in "Globecom", this one did not.
+% From the May 2002 issue of "IEEE Transactions on Communications",
+% page 697, reference #12.
+
+
+% conference paper with volume number. A conference proceedings with a vol
+% number is a little uncommon, note that the vol number is placed
+% before the address in the formatted bibliography entry
+% From the April 2002 issue of "IEEE/ACM Transactions on Networking",
+% page 181, reference #26.
+
+
+% conference paper with a paper number, the type field can be used to
+% override the word "paper", e.g., type = "postdeadline paper". A type
+% can be given even without a paper  field.
+% Also, IEEEtran.bst can be configured to ignore paper numbers and types.
+% From the May 2002 issue of "Journal of Lightwave Technology",
+% page 807, reference #4.
+
+
+% conference paper with a postdeadline type paper, the paper field is
+% optional.
+% From the August 2000 issue of "IEEE Photonics Technology Letters",
+% page 1087, reference #12.
+
+
+% presented at a conference
+% intype overrides the default "in" and causes the booktitle not to be
+% emphasized (rendered in italics).
+% From the February 2002 issue of "IEEE/ACM Transactions on Networking",
+% page 163, reference #6.
+
+
+% a book
+% From the May 2002 issue of "IEEE Transactions on Magnetics",
+% page 1466, reference #4.
+
+
+% book with editor and no author
+% From the June 2002 issue of "IEEE Transactions on Information Theory",
+% page 1725, reference #1.
+
+
+% book with edition, author and editor
+% Note that the standard BibTeX styles do not support book entries with both
+% author and editor fields, but IEEEtran.bst does.
+% The standard BibTeX way of specifying the edition is to use capitalized
+% ordinal words such as "First", "Second", etc. Most .bst files can convert
+% up to about "Fifth" into the format needed. IEEEtran.bst can convert up
+% to "Tenth" to the "Arabic ordinal" form IEEE uses (e.g., "10th"). For
+% editions over the tenth, it is best to use the "Arabic ordinal" form for
+% IEEE related work (e.g., "101st")
+% Note how "Jr." has to be entered.
+% From the May 2002 issue of "Journal of Lightwave Technology", page 856,
+% reference #17.
+
+% book with series and volume
+% From the January 2000 issue of "IEEE Transactions on Communications",
+% page 11, reference #31.
+
+
+% inbook with chapter number. The pages field could also have been given.
+% The chapter number could be changed to something else such as a section
+% number via the type field: type = "sec.".
+% From the May 2002 issue of "IEEE Transactions on Circuits and Systems---I:
+% Fundamental Applications and Theory", page 638, reference #22.
+
+
+% inbook with pages and note. The language field is not set to Russian
+% because the title is presented here in its translated, English, form.
+% From the May 2002 issue of "IEEE Transactions on Magnetics", page 1533,
+% reference #5.
+
+
+% incollection with author and editor
+% From the May 2002 issue of "Journal of Lightwave Technology",
+% page 807, reference #7.
+
+
+% incollection with series
+% From the April 2000 issue of "IEEE Transactions on Communication",
+% page 609, reference #3.
+
+
+% incollection with author, editor, chapter and pages
+% From the January 2000 issue of "IEEE Transactions on Communications",
+% page 16, reference #9.
+
+
+% incollection with a large number of authors, some authors/journals will
+% use et al. for so many names. IEEEtran.bst can be configured to do this
+% if desired, or "R. M. A. Dawson and others" can be used instead.
+% Note that IEEE may not include the publisher for incollection entries -
+% IEEEtran.bst will not issue a warning if the publisher is missing for
+% incollections - but other .bst files often will.
+% From the June 2002 issue of "IEEE Transactions on Electron Devices",
+% page 996, reference #12.
+
+% A Motorola data book as a manual
+% It is somewhat unusual to include the data book part number.
+% in the title. It might be more correct to put this information
+% in the howpublished field instead.
+% From the December 2000 issue of "IEEE Transactions on Communications",
+% page 1986, reference #10.
+
+
+% same reference, but using IEEEtran's howpublished extension
+
+
+% technical report
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 490, reference #15.
+
+% technical report with type
+% for those times when "Tech. Rep." needs to be modified
+% From the February 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 46, reference #8.
+
+
+
+% technical report with type
+% for those times when "Tech. Rep." needs to be modified
+% This reference did not have an address.
+% From the January 2000 issue of "IEEE Transactions on Communications",
+% page 117, reference #6.
+
+
+% a periodical
+% From the April 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 160, reference #1.
+% sort key is needed for sorting styles
+
+
+% the IEEE website
+% sort key is needed for sorting styles
+
+% TeX User Group Bibliography Archive
+
+
+% electronic with a howpublished information field
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 391, reference #7.
+
+
+% electronic with a howpublished information field
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 418, reference #31.
+
+
+% electronic with an organization and address
+% From the February 2002 issue of "IEEE/ACM Transactions on Networking",
+% page 114, reference #15.
+
+% an unpublished work
+% for unpublished types, the note field is required. IEEE usually
+% just uses the word "unpublished" for the note.
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 391, reference #16.
+
+
+% journal article to be published as a misc entry type
+% date information like month and year is optional
+% However, the article form like that below may be a better approach.
+% From the May 2002 issue of "IEEE Journal of Selected Areas in
+% Communication", page 725, reference #3.
+
+
+% misc for a techreport like reference
+% techreport is not perfectly suitable because this entry lacks
+% an institution field
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 490, reference #22.
+
+
+% misc for a white paper
+% From the August 2001 issue of "IEEE/ACM Transactions on Networking",
+% page 478, reference #4 - Note that the reference there (improperly?)
+% used the author field for "Cisco".
+
+
+% misc for a data sheet
+% From the November 2000 issue of "IEEE Photonics Technology Letters",
+% page 1551, reference #6.
+
+
+% a private communication as a misc entry type
+% sometimes the designation "personal communication" is used instead
+% From the June 2002 issue of "IEEE Transactions on Information Theory",
+% page 1725, reference #16.
+
+
+% an internet request for comments (RFC) as a misc entry type
+% It would also be nice to add a URL to these types of things.
+% RFCs can also be handled as electronic references.
+% From the April 2002 issue of "IEEE/ACM Transactions on Networking",
+% page 181, reference #14.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% An example of a IEEEtran control entry which can change some IEEEtran.bst
+% settings. An entry like this must be cited via \bstctlcite{} command
+% before the first real \cite{}. The same entry key cannot be called twice
+% (just like multiple \cite{} of the same entry key place only one entry
+% in the bibliography.)
+% The available control fields are:
+%
+% CTLuse_article_number
+% "no" turns off the display of the number for articles.
+% "yes" enables
+%
+% CTLuse_paper
+% "no" turns off the display of the paper and type fields in inproceedings.
+% "yes" enables
+%
+% CTLuse_forced_etal
+% "no" turns off the forced use of "et al."
+% "yes" enables
+%
+% CTLmax_names_forced_etal
+% The maximum number of names that can be present beyond which an "et al."
+% usage is forced. Be sure that CTLnames_show_etal (below)
+% is not greater than this value!
+%
+% CTLnames_show_etal
+% The number of names that will be shown with a forced "et al.".
+% Must be less than or equal to CTLmax_names_forced_etal
+%
+% CTLuse_alt_spacing
+% "no" turns off the alternate interword spacing for entries with URLs.
+% "yes" enables
+%
+% CTLalt_stretch_factor
+% If alternate interword spacing for entries with URLs is enabled, this is
+% the interword spacing stretch factor that will be used. For example, the
+% default "4" here means that the interword spacing in entries with URLs can
+% stretch to four times normal. Does not have to be an integer.
+%
+% CTLdash_repeated_names
+% "no" turns off the "dashification" of repeated (i.e., identical to those
+% of the previous entry) names. IEEE normally does this.
+% "yes" enables
+%
+% CTLname_format_string
+% The name format control string as explained in the BibTeX style hacking
+% guide.
+% IEEE style "{f.~}{vv~}{ll}{, jj}" is the default,
+%
+% CTL_name_latex_cmd
+% A LaTeX command that each name will be fed to (e.g., "\textsc").
+% Leave empty if no special font is desired for the names.
+% The default is empty.
+%
+% Those fields that are not to be changed can be left out or empty.
+@IEEEtranBSTCTL{IEEEexample:BSTcontrol,
+  CTLuse_article_number     = "yes",
+  CTLuse_paper              = "yes",
+  CTLuse_forced_etal        = "no",
+  CTLmax_names_forced_etal  = "10",
+  CTLnames_show_etal        = "1",
+  CTLuse_alt_spacing        = "yes",
+  CTLalt_stretch_factor     = "4",
+  CTLdash_repeated_names    = "yes",
+  CTLname_format_string     = "{f.~}{vv~}{ll}{, jj}",
+  CTLname_latex_cmd         = ""
+};

@@ -1,0 +1,92 @@
+This is BibTeX, Version 0.99d (TeX Live 2013/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: carpio-cs190-ieee.aux
+The style file: ./IEEE/IEEEtran.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Database file #1: ./carpio-cs190-ieee.bib
+You're missing a field name---line 156 of file ./carpio-cs190-ieee.bib
+ :   
+ :   %URL = {http://search.ebscohost.com/login.aspx?direct=truedb=a9h\*&AN=66692024site=ehost-live},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 170 of file ./carpio-cs190-ieee.bib
+ :     
+ :     %URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=85211339&site=ehost-live},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 184 of file ./carpio-cs190-ieee.bib
+ : 
+ : %URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=96861207&site=ehost-live},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 256 of file ./carpio-cs190-ieee.bib
+ :    
+ :    % URL = {http://www.st.ewi.tudelft.nl/~iosup/cloud-perf10tpds_in-print.pdf},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+You're missing a field name---line 290 of file ./carpio-cs190-ieee.bib
+ :     
+ :     %URL = {http://search.ebscohost.com/login.aspx?direct=true&db=a9h&AN=74110216&site=ehost-live},
+(Error may have been on previous line)
+I'm skipping whatever remains of this entry
+-- IEEEtran.bst version 1.11 (2003/04/02) by Michael Shell.
+-- http://www.ctan.org/tex-archive/macros/latex/contrib/supported/IEEEtran/
+-- See the "IEEEtran_bst_HOWTO.pdf" manual for usage information.
+Warning--empty year in Brandic2011
+Warning--empty year in 8521133920130201
+Warning--empty journal in CloudCom2010
+Warning--empty journal in SciWorkflowEC2
+Warning--empty year in SciWorkflowEC2
+Warning--empty journal in WalkerEC2HPC
+Warning--empty journal in PerfAnalysisManyTasks
+Warning--empty year in PerfAnalysisManyTasks
+Warning--empty year in 7411021620120101
+Warning--empty year in 9686120720140601
+
+Done.
+You've used 17 entries,
+            3975 wiz_defined-function locations,
+            888 strings with 10404 characters,
+and the built_in function-call counts, 9786 in all, are:
+= -- 719
+> -- 236
+< -- 61
++ -- 123
+- -- 45
+* -- 495
+:= -- 1545
+add.period$ -- 33
+call.type$ -- 17
+change.case$ -- 17
+chr.to.int$ -- 126
+cite$ -- 27
+duplicate$ -- 755
+empty$ -- 817
+format.name$ -- 54
+if$ -- 2179
+int.to.chr$ -- 0
+int.to.str$ -- 17
+missing$ -- 147
+newline$ -- 93
+num.names$ -- 12
+pop$ -- 400
+preamble$ -- 1
+purify$ -- 0
+quote$ -- 2
+skip$ -- 739
+stack$ -- 0
+substring$ -- 314
+swap$ -- 546
+text.length$ -- 19
+text.prefix$ -- 0
+top$ -- 5
+type$ -- 0
+warning$ -- 10
+while$ -- 31
+width$ -- 19
+write$ -- 182
+(There were 5 error messages)

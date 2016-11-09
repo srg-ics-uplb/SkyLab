@@ -1,0 +1,129 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{#1}
+\csname url@rmstyle\endcsname
+\providecommand{\newblock}{\relax}
+\providecommand{\bibinfo}[2]{#2}
+\providecommand\BIBentrySTDinterwordspacing{\spaceskip=0pt\relax}
+\providecommand\BIBentryALTinterwordstretchfactor{4}
+\providecommand\BIBentryALTinterwordspacing{\spaceskip=\fontdimen2\font plus
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
+  \fontdimen4\font\relax}
+\providecommand\BIBforeignlanguage[2]{{%
+\expandafter\ifx\csname l@#1\endcsname\relax
+\typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
+\typeout{** loaded for the language `#1'. Using the pattern for}%
+\typeout{** the default language instead.}%
+\else
+\language=\csname l@#1\endcsname
+\fi
+#2}}
+
+\bibitem{Ahuja2012}
+\BIBentryALTinterwordspacing
+S.~P. Ahuja and S.~Mani, ``The state of high performance computing in the
+  cloud,'' \emph{Journal of Emerging Trends in Computing and Information
+  Sciences}, vol.~3, no.~2, pp. 263--266, Feb. 2012. [Online]. Available:
+  \url{http://www.chinacloud.cn/upload/2012-03/12031713036456.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{Brandic2011}
+I.~Brandic, I.~Raicu, S.~N. Srirama, O.~Batrashev, P.~Jakovits, and
+  E.~Vainikko, ``Scalability of parallel scientific applications on the
+  cloud.'' \emph{Scientific Programming}, vol.~19, no. 2/3, pp. 91 -- 105.
+
+\bibitem{Hermocilla2014}
+J.~A.~C. Hermocilla, ``P2c: Towards scientific computing on private clouds,''
+  in \emph{Proceedings of the National Conference on Information Technology
+  Education (NCITE 2014)}, 2014, pp. 162--167.
+
+\bibitem{8521133920130201}
+S.~Benedict, ``Performance issues and performance analysis tools for hpc cloud
+  applications: a survey.'' \emph{Computing}, vol.~95, no.~2, pp. 89 -- 108.
+
+\bibitem{CloudCom2010}
+\BIBentryALTinterwordspacing
+K.~Jackson, K.~Muriki, S.~Canon, S.~Cholia, J.~Shalf, H.~Wasserman, and
+  N.~Wright, ``Performance analysis of high performance computing applications
+  on the amazon web services cloud,'' 2010. [Online]. Available:
+  \url{https://www.nersc.gov/assets/NERSC-Staff-Publications/2010/CloudCom.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{SciWorkflowEC2}
+\BIBentryALTinterwordspacing
+G.~Juva, E.~Deelman, K.~Vahi, G.~Mehta, B.~Berman, B.~Berriman, and
+  P.~Maechling, ``Scientific workflow applications on amazon ec2.'' [Online].
+  Available: \url{http://www.isi.edu/~gideon/publications/JuveG-EC2.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{WalkerEC2HPC}
+\BIBentryALTinterwordspacing
+E.~Walker, ``Benchmarking amazon ec2 for high-performance scientific
+  computing,'' Oct 2008. [Online]. Available:
+  \url{https://www.usenix.org/legacy/publications/login/2008-10/openpdfs/walker.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{PerfAnalysisManyTasks}
+A.~Iosup, S.~Ostermann, N.~Yigitbasi, R.~Prodan, T.~Fahrigner, and D.~Epema,
+  ``Performance analysis of cloud computing services for many-tasks scientific
+  computing.''
+
+\bibitem{ZachHumphrey}
+\BIBentryALTinterwordspacing
+Z.~Hill and M.~Humphrey, ``A quantitative analysis of high performance
+  computing with amazon’s ec2 infrastructure: The death of the local
+  cluster?'' in \emph{Proceedings of the 10th IEEE/ ACM International
+  Conference on Grid Computing (Grid 2009).)}, Oct 2009. [Online]. Available:
+  \url{http://www.cs.virginia.edu/~humphrey/papers/QuantitativeAnalysisEC2.pdf}
+\BIBentrySTDinterwordspacing
+
+\bibitem{7411021620120101}
+A.~A. Hunter, A.~B. Macgregor, T.~O. Szabo, C.~A. Wellington, and M.~I.
+  Bellgard, ``Yabi: An online research environment for grid, high performance
+  and cloud computing.'' \emph{Source Code for Biology and Medicine}, vol.~7,
+  no.~1, pp. 1 -- 10.
+
+\bibitem{9686120720140601}
+P.~Sharma and S.~S. Mantri, ``Wimpiblast: Web interface for mpiblast to help
+  biologists perform large-scale annotation using high performance computing.''
+  \emph{PLoS ONE}, vol.~9, no.~6, pp. 1 -- 13.
+
+\bibitem{autodock}
+\BIBentryALTinterwordspacing
+``{AutoDock} — {AutoDock}.'' [Online]. Available:
+  \url{http://autodock.scripps.edu/}
+\BIBentrySTDinterwordspacing
+
+\bibitem{overview}
+\BIBentryALTinterwordspacing
+``Overview of {DOCK}.'' [Online]. Available:
+  \url{http://dock.compbio.ucsf.edu/Overview\_of\_DOCK/index.htm}
+\BIBentrySTDinterwordspacing
+
+\bibitem{quantumespresso}
+\BIBentryALTinterwordspacing
+``{QUANTUMESPRESSO} - {Quantum} {ESPRESSO}.'' [Online]. Available:
+  \url{http://www.quantum-espresso.org/}
+\BIBentrySTDinterwordspacing
+
+\bibitem{gordon}
+\BIBentryALTinterwordspacing
+``Gordon {Group}/{GAMESS} {Homepage}.'' [Online]. Available:
+  \url{http://www.msg.ameslab.gov/gamess/capabilities.html}
+\BIBentrySTDinterwordspacing
+
+\bibitem{boisvert_ray_2012}
+\BIBentryALTinterwordspacing
+S.~Boisvert, F.~Raymond, �.~Godzaridis, F.~Laviolette, and J.~Corbeil,
+  ``\BIBforeignlanguage{en}{Ray {Meta}: scalable de novo metagenome assembly
+  and profiling},'' \emph{\BIBforeignlanguage{en}{Genome Biology}}, vol.~13,
+  no.~12, p. R122, 2012. [Online]. Available:
+  \url{http://genomebiology.com/2012/13/12/R122}
+\BIBentrySTDinterwordspacing
+
+\bibitem{jsmol}
+\BIBentryALTinterwordspacing
+Jsmol: an open-source html5 viewer for chemical structures in 3d. [Online].
+  Available: \url{http://wiki.jmol.org/index.php/JSmol}
+\BIBentrySTDinterwordspacing
+
+\end{thebibliography}
