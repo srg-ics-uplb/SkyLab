@@ -86,7 +86,8 @@ class InputParameterForm(forms.Form):
     param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
     param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
                                        required=False,
-                                       help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
+                                       help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
+                                     #  help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
     def __init__(self, *args, **kwargs):
         super(InputParameterForm, self).__init__(*args, **kwargs)

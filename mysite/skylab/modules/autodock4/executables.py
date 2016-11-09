@@ -104,6 +104,7 @@ class Autodock4Executable(P2CToolGeneric):
         # remove input files in workdir
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
+            print remote_file
             if remote_file in input_filenames:
                 sftp.remove(remote_filepath)  # delete after transfer
 

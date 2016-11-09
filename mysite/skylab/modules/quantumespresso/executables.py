@@ -15,8 +15,10 @@ from skylab.modules.basetool import P2CToolGeneric
 class QuantumEspressoExecutable(P2CToolGeneric):
     def __init__(self, **kwargs):
         super(QuantumEspressoExecutable, self).__init__(**kwargs)
-        self.pseudo_dir = os.path.join(self.remote_task_dir, 'pseudodir')
-        self.tmp_dir = os.path.join(self.remote_task_dir, 'tempdir')
+        # self.pseudo_dir = os.path.join(self.remote_task_dir, 'pseudodir')
+        # self.tmp_dir = os.path.join(self.remote_task_dir, 'tempdir')
+        self.pseudo_dir = os.path.join(settings.REMOTE_BASE_DIR, 'espresso-5.4.0/pseudo')
+        self.tmp_dir = os.path.join(settings.REMOTE_BASE_DIR, 'espresso-5.4.0/tempdir')
         self.network_pseudo_download_url = "http://www.quantum-espresso.org/wp-content/uploads/upf_files/"
         # suggestion is to download all pseudopotentials and host them in a webserver for faster retrieval
 
@@ -41,11 +43,12 @@ class QuantumEspressoExecutable(P2CToolGeneric):
             self.logger.debug(self.log_prefix + 'Downloading pseudopotentials')
             # pseudopotential_urls = []
 
-            command = 'curl '
+
             for pseudo_file in pseudopotentials:
                 url = os.path.join(self.network_pseudo_download_url, pseudo_file)
                 # pseudopotential_urls.append(url)
-                command += '-O ' + url
+                command = 'curl --max-time 300 -O ' + url
+                # command = "wget --timeout=60 " + url
                 self.logger.debug(self.log_prefix + 'Downloading '+ url)
                 self.shell.run(["sh","-c", command], cwd=self.pseudo_dir)
                 self.logger.debug(self.log_prefix + 'Downloaded file')
@@ -92,12 +95,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                         cwd=self.working_dir  # run at remote task dir
                     )
 
-                    # clear tempdir
-                    command = 'rm -rf *'
-                    exec_shell = self.shell.run(
-                        ['sh', '-c', env_command + command],  # run command with env_command
-                        cwd=self.tmp_dir  # run at remote task dir
-                    )
+
 
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
@@ -175,6 +173,13 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
+        # clear tempdir
+        command = 'rm -rf *'
+        exec_shell = self.shell.run(
+            ['sh', '-c', command],  # run command with env_command
+            cwd=self.tmp_dir  # run at remote task dir
+        )
+
         if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
@@ -184,7 +189,8 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
     def run_tool(self, **kwargs):
         self.task.change_status(status_msg='Task started', status_code=150)
-        task_remote_subdirs = ['input', 'output', 'pseudodir', 'tempdir']
+        additional_dirs = ['/mirror/espresso-5.4.0/tempdir','/mirror/espresso-5.4.0/pseudo']
+        task_remote_subdirs = ['input', 'output'] # 'pseudodir', 'tempdir'
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
         self.handle_input_files()
         self.run_commands()
