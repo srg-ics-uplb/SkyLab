@@ -291,6 +291,9 @@ class Autogrid4Executable(P2CToolGeneric):
                                           zip_filename)
         new_file.save()
 
+        # Delete remote task directory
+        self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
+
         if not self.task.status_code == 400:
             self.task.change_status(status_code=200, status_msg="Output files received. No errors encountered")
         else:
@@ -298,5 +301,3 @@ class Autogrid4Executable(P2CToolGeneric):
 
         self.logger.info(self.log_prefix + 'Done. Output files sent')
 
-        # Delete remote task directory
-        self.shell.run(['rm', '-r', self.remote_task_dir])

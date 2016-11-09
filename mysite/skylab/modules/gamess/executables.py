@@ -138,7 +138,8 @@ class GamessExecutable(P2CToolGeneric):
                 self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
                 sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                 self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-                sftp.remove(remote_filepath)  # delete file after transfer
+                # no need to remove files since parent directory (task folder) will be deleted
+                # sftp.remove(remote_filepath)  # delete file after transfer
 
                 # register newly transferred file as skylabfile
                 new_file = SkyLabFile.objects.create(type=2, task=self.task,

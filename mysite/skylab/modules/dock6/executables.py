@@ -2,6 +2,7 @@ import json
 import math
 import os.path
 import time
+import stat
 
 import spur
 from django.conf import settings
@@ -107,25 +108,44 @@ class GridExecutable(P2CToolGeneric):
         input_files = SkyLabFile.objects.filter(type=1, task=self.task)
         input_filenames = [file.filename for file in input_files]
 
+        local_dir = u'{0:s}/output/'.format(self.task.task_dirname)
+        local_path = os.path.join(media_root, local_dir)  # absolute path for local dir
+
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
-        remote_path = self.working_dir
 
+        remote_path = self.working_dir
         remote_files = sftp.listdir(path=remote_path)
 
         # remove input files in workdir
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
-            if remote_file in input_filenames:
-                sftp.remove(remote_filepath)  # delete after transfer
+            if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
+                if not remote_file in input_filenames:
+                    local_filepath = os.path.join(local_path, remote_file)
 
-        zip_filename = self.task.task_dirname + "-output.zip"
+                    self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                    sftp.get(remote_filepath, local_filepath,
+                             callback=self.sftp_file_transfer_callback)  # transfer file
+                    self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                    # no need to remove files since parent directory (task folder) will be deleted
+                    # sftp.remove(remote_filepath)  # delete file after transfer
+
+                    # register newly transferred file as skylabfile
+                    new_file = SkyLabFile.objects.create(type=2, task=self.task)  # gamess output file can be rendered with jsmol
+                    new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
+                                                      remote_file)  # manual assignment to model filefield
+                    new_file.save()  # save changes
+
+
+
+        zip_filename = self.task.task_dirname + "-other-outputs.zip"
         local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
         remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
 
         self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
-        self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
+        # self.shell.run(["zip", "-r", "-g", zip_filename, "workdir"], cwd=self.remote_task_dir)
 
         self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
         sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip

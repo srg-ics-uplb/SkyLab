@@ -27,7 +27,7 @@ SECRET_KEY = '34%6w9p0c(kmpgzuaqrl4fbc%=*b_!y63eoihloqjz$uh*v8&y'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.9.9','skylab.localhost.com','127.0.0.1','127.0.9.9.xip.io']
+ALLOWED_HOSTS = ['127.0.9.9','skylab.localhost.com','127.0.0.1','127.0.9.9.xip.io', '192.168.1.2', '192.168.1.2.xip.io']
 # ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
@@ -221,7 +221,7 @@ JSMOL_SERVER_ROOT = "http://localhost/jsmol"
 # JSMOL_SERVER_URL = "http://localhost/jsmol/php/jsmol.php"
 # https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/
 JSMOL_SUPPORTED_FILE_EXT = [
-    '.pdbqt', '.mol2', '.pdb', '.mol', '.xyz', '.csf'
+    '.pdbqt', '.mol2', '.pdb', '.mol', '.csf'
 ]
 
 TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
