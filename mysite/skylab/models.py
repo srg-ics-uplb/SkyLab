@@ -159,7 +159,7 @@ class ToolSet(models.Model):
             self.package_name = pattern.sub('', self.display_name).lower()
 
         if self.simple_name is None:
-            self.simple_name = re.sub(r'[\s_/-]', '', self.p2ctool_name.lower())
+            self.simple_name = re.sub(r'[\s_/-]', '', self.display_name.lower())
 
         if not self.id:
             self.created = timezone.now()

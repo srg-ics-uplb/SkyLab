@@ -11,13 +11,13 @@
     left: -5px;
 }
 
-#mpi-table tr {
-    cursor: pointer;
-}
+/*#mpi-table tr {*/
+    /*cursor: pointer;*/
+/*}*/
 
-#task-list-table {
-    cursor: pointer;
-}
+/*#task-list-table {*/
+    /*cursor: pointer;*/
+/*}*/
 
 
 
@@ -209,15 +209,20 @@ h6 {
 
 .alert-fixed {
     position:fixed;
-    top: 0px;
-    left: 0px;
+    top: 50px;
+    left: 0;
     width: 100%;
     z-index:9999;
-    border-radius:0px
+    border-radius:0
 }
 
 .clickable-row:hover{
     background: #859de2;
+}
+
+
+.dropdown:hover .dropdown-menu {
+    display: block;
 }
 
 

@@ -4,15 +4,21 @@ from django.views.generic import RedirectView
 from . import views
 
 urlpatterns = [
-    url(r'^toolsets$', views.ToolsetListView.as_view(), name='toolset_list_view'),
-    url(r'^toolsets/(?P<toolset_simple_name>[a-z0-9]+)$', views.ToolSetDetailView.as_view(),
-        name='toolset_detail_view'),
+
     url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
     url(r'^mpi-clusters$', views.MPIListView.as_view(), name='mpi_list_view'),
     url(r'^mpi-clusters/(?P<pk>\d+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
     url(r'^mpi-clusters/(?P<cluster_name>\w+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
     url(r'^tasks$', views.TaskListView.as_view(), name='task_list_view'),
     url(r'^tasks/(?P<pk>\d+)$', views.TaskDetailView.as_view(), name='task_detail_view'),
+    url(r'^toolsets$', views.ToolsetListView.as_view(), name='toolset_list_view'),
+    url(r'^toolsets/(?P<toolset_simple_name>[a-z0-9]+)$', views.ToolSetDetailView.as_view(),
+        name='toolset_detail_view'),
+    url(r'^toolsets/(?P<toolset_simple_name>[a-z][\w/-]+)/(?P<tool_simple_name>[a-z][\w/-]+)/$', views.tool_view,
+        name="skylab_tool_view"),
+    url(r'^toolsets/(?P<toolset_pk>\d+)/(?P<tool_pk>\d+)/$', views.tool_view, name='skylab_tool_view'),
+
+
     url(r'^ajax/refresh-task-list-table$', views.refresh_task_list_table, name='ajax_refresh_task_list_table'),
     url(r'^ajax/refresh-mpi-list-table$', views.refresh_mpi_list_table, name='ajax_refresh_mpi_list_table'),
     url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view,
@@ -26,9 +32,6 @@ urlpatterns = [
     url(r'ajax/refresh-select-tools/(?P<toolset_simple_name>[a-z]\w+)', views.refresh_select_toolset_tool_options,
         name='ajax_refresh_select_tool'),
 
-    url(r'^toolsets/(?P<toolset_simple_name>[a-z][\w/-]+)/(?P<tool_simple_name>[a-z][\w/-]+)/$', views.tool_view,
-        name="skylab_tool_view"),
-    url(r'^toolsets/(?P<toolset_pk>\d+)/(?P<tool_pk>\d+)/$', views.tool_view, name='skylab_tool_view'),
     # url(r'^tools/')
 
 

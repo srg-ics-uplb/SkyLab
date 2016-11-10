@@ -32,15 +32,41 @@
             <ul class="nav navbar-nav navbar-right">
                 {% if user.is_authenticated %}
                     <li><a href="{% url 'mpi_list_view' %}"><i class="fa fa-cloud fa-fw"></i> MPI Clusters </a></li>
-                    <li><a href="{% url 'toolset_list_view' %}"><i class="fa fa-gears fa-fw"></i> Toolsets </a></li>
+                    <li class="dropdown"> {# TODO: run as script on server start to generate a home.html containing this list #}
+                        <a href="{% url 'toolset_list_view' %}"><i class="fa fa-gears fa-fw"></i> Toolsets </a>
+                        <ul class="dropdown-menu">
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="autodock4"%}"><strong>AutoDock 4</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="vina"%}"><strong>AutoDock Vina</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="dock6"%}"><strong>Dock 6</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="gamess"%}"><strong>GAMESS</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="impi"%}"><strong>Impi</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="quantumespresso"%}"><strong>Quantum ESPRESSO</strong></a>
+                            </li>
+                            <li>
+                                <a href="{% url 'toolset_detail_view' toolset_simple_name="ray"%}"><strong>Ray</strong></a>
+                            </li>
+                        </ul>
+                    </li>
                     <li class="dropdown">
-                        <a class="dropdown-toggle" data-toggle="dropdown" href="#" onclick="navTasksOnClick()">
-                            <i class="fa fa-tasks fa-fw"></i> Tasks <i class="fa fa-caret-down"></i>
+                        <a href="{% url 'task_list_view' %}" onmouseover="navTasksOnClick()">
+                            <i class="fa fa-tasks fa-fw"></i> Tasks</i>
                         </a>
                         <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
                             <li>
-                                <p class="text-center"><i class="fa fa-refresh fa-spin fa-fw"></i>Loading...</li>
-                            </p>
+                                <p class="text-center"><i class="fa fa-refresh fa-spin fa-fw"></i>Loading...  </p>
+                            </li>
+
                         </ul>
                         <!-- /.dropdown-tasks -->
                     </li>
@@ -58,7 +84,7 @@
                                 </a>
                                 <ul class="dropdown-menu">
                                     <li>
-                                        <a id="logout-button" class="text-center"><i class="fa fa-sign-out"></i> Logout</a>
+                                        <a id="logout-button" class="text-justify"><i class="fa fa-sign-out"></i><strong> Logout</strong></a>
                                     </li>
                                 </ul>
                             </li>
@@ -196,6 +222,8 @@
             });
             ajaxGet('{% url 'ajax_refresh_select_toolset'%}', function (content) {
                 $('#create-task-toolset-select').prop('selectedIndex', -1);
+                $('#create-task-toolset-select-help').html('Select the toolset you want to use.');
+                $('#create-task-tool-select-help').html('Select the tool you want to use.');
                 $('#create-task-tool-select').prop('selectedIndex', -1);
                 tool_info = content
             })
@@ -214,7 +242,7 @@
         create_tasks_toolset_select.change(function () {
             var selected_toolset = $(this).find(':selected');
             $('#create-task-toolset-select-help').html(selected_toolset.data('description'));
-
+            $('#create-task-tool-select-help').html('Select the tool you want to use.');
             tool_select.html('');
             var tools = tool_info[selected_toolset.val()];
 

@@ -71,7 +71,7 @@
 
                             $(td).removeClass();
                             switch (cellData) {
-                                case "Online":
+                                case "Success":
                                     $(td).addClass('text-success');
                                     break;
                                 case "Error":
@@ -80,6 +80,21 @@
                                 default:
                                     $(td).addClass('text-info');
                             }
+
+                        }
+                    },
+                    {
+                        "targets":[0],
+                        "createdCell": function (td, cellData, rowData, row, col) { {# make cluster name a link #}
+                            var url_mask = "{% url 'task_detail_view' pk=0 %}".replace(/0/, cellData);
+                            $(td).html('<a href="'+url_mask+'">'+cellData+'</a>')
+                        }
+                    },
+                    {
+                        "targets":[2],
+                        "createdCell": function (td, cellData, rowData, row, col) { {# make cluster name a link #}
+                            var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, cellData);
+                            $(td).html('<a href="'+url_mask+'">'+cellData+'</a>')
 
                         }
                     }

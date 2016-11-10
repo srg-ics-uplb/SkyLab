@@ -10,7 +10,7 @@ from skylab.modules.autodock4.forms import Autodock4Form, Autogrid4Form
 
 
 class Autodock4View(LoginRequiredMixin, FormView):
-    template_name = "modules/autodock/use_autodock.html"
+    template_name = "modules/autodock4/use_autodock.html"
     form_class = Autodock4Form
 
     def get_form_kwargs(self):
@@ -77,7 +77,7 @@ class Autodock4View(LoginRequiredMixin, FormView):
 
 
 class Autogrid4View(LoginRequiredMixin, FormView):
-    template_name = "modules/autodock/use_autogrid.html"
+    template_name = "modules/autodock4/use_autogrid.html"
     form_class = Autogrid4Form
 
     def get_form_kwargs(self):
