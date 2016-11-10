@@ -11,7 +11,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.views.generic import DetailView, ListView
 from django.views.generic.base import TemplateView
 from django.views.generic.edit import FormView
@@ -83,6 +83,11 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 # 	connection.close()
 
+def index(request):
+    if request.user.is_authenticated:
+        return redirect('mpi_list_view')
+    else:
+        return render(request, 'layouts/landing_page.html')
 
 class HomeView(TemplateView):
     template_name = "layouts/home.html"
@@ -246,11 +251,11 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
 
 
 def logout_success(request):
-    messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='display_this')
+    messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='landing_alert')
     return redirect('skylab-home')
 
-def index(request):
-    return HttpResponse("Hello, world. You're at the skylab index.")
+
+
 
 @login_required
 def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_pk=None, tool_pk=None):

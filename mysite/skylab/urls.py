@@ -31,7 +31,9 @@ urlpatterns = [
     url(r'^toolsets/(?P<toolset_pk>\d+)/(?P<tool_pk>\d+)/$', views.tool_view, name='skylab_tool_view'),
     # url(r'^tools/')
 
-    url(r'^$', views.HomeView.as_view(), name='skylab-home'),
+
+    url(r'^$', views.index, name='skylab-home'),
+
 
     # skip logout confirmation
     url(r'^accounts/login/$', RedirectView.as_view(url="/skylab/accounts/google/login/?process=login", permanent=False),

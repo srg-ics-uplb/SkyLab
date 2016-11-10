@@ -5,9 +5,9 @@
 
 {% block navbar_breadcrumb %}
     <ol class="breadcrumb">
-        <li>
-            <a href="{% url 'skylab-home' %}">Home</a>
-        </li>
+{#        <li>#}
+{#            <a href="{% url 'skylab-home' %}">Home</a>#}
+{#        </li>#}
         <li>
             <a href="{% url 'toolset_list_view' %}">Toolsets</a>
         </li>
@@ -29,26 +29,29 @@
                  href="{{ toolset.source_url }}">{{ toolset.source_url }}</a> </span>
     </div>
     <div class="row">
-        <label for="toolset-description">Description: </label>
-
         <p id="toolset-description" class="text-justify">
+            <label>Description: </label>
             {{ toolset.description }}
         </p>
 
 
         <label for="subtools-list">Tools in this package: </label>
-        <div id="subtools-list" class="list-group">
+        <div id="subtools-list">{# class="list-group"> #}
+            <ul>
             {% for tool in toolset.subtools.all %}
-                <a href="{% url 'skylab_tool_view' toolset_simple_name=toolset.simple_name tool_simple_name=tool.simple_name %}"
-                   class="list-group-item">
-                    <h4 class="list-group-item-heading">
+                <li>
+                <a href="{% url 'skylab_tool_view' toolset_simple_name=toolset.simple_name tool_simple_name=tool.simple_name %}">
+{#                   class="list-group-item">#}
+{#                    <h4> {# class="list-group-item-heading"> #}
                         {{ tool.display_name }}
-                    </h4>
-                    <p class="list-group-item-text">
-                        {{ tool.description }}
-                    </p>
+{#                    </h4>#}
                 </a>
+                 <p> {# class="list-group-item-text"> #}
+                        {{ tool.description }}
+                </p>
+                </li>
             {% endfor %}
+        </ul>
         </div>
     </div>
 {% endblock %}

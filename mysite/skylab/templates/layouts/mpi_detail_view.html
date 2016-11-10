@@ -9,9 +9,9 @@
 
 {% block navbar_breadcrumb %}
     <ol class="breadcrumb">
-        <li>
-            <a href="{% url 'skylab-home' %}">Home</a>
-        </li>
+{#        <li>#}
+{#            <a href="{% url 'skylab-home' %}">Home</a>#}
+{#        </li>#}
         <li>
             <a href="{% url 'mpi_list_view' %}">MPI Clusters</a>
         </li>
@@ -67,8 +67,18 @@
 
                         {% if mpi_cluster.creator == user %}
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
-                        <td><input type="checkbox" name="visibility-checkbox" data-label-text="Public"
-                                   {% if mpi_cluster.is_public %}checked{% endif %}></td>
+                        <td>{% if user == mpi_cluster.creator %}
+                                 <input type="checkbox" name="visibility-checkbox" data-label-text="Public"
+                                   {% if mpi_cluster.is_public %}checked{% endif %}>
+                            {% else %}
+                                {% if mpi_cluster.is_public %}
+                                    Public
+                                {% else %}
+                                    Private
+                                {% endif %}
+                            {% endif %}
+
+                           </td>
                         <td>{{ mpi_cluster.created |date:'m/d/Y P' }}</td>
                     </tr>
                     </tbody>
@@ -161,26 +171,30 @@
             mpi_info_table.find('td:nth-child(6)').hide();
         {% endif %}
 
-        visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
 
-        visibility_switch.bootstrapSwitch();
-        {% if not user == mpi_cluster.creator %}
+        {% if user == mpi_cluster.creator %}
+                {# init as bootstrap switch #}
+            visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
+            visibility_switch.bootstrapSwitch();
             visibility_switch.bootstrapSwitch('disabled', true);
-        {% endif %}
-        {# init as bootstrap switch #}
-        visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
-            {# if cluster is public hide share key column, otherwise, show       #}
-            {# tell server about the change            #}
-            ajaxPost('{% url 'ajax_post_mpi_privacy_change' %}', {
-                'is_public': state,
-                'pk':{{mpi_cluster.id}}
-            }, function (content) {
-{#                todo: add progress icon#}
-                mpi_info_table.find('th:nth-child(6)').toggle();
-                mpi_info_table.find('td:nth-child(6)').toggle();
+
+            visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
+                {# if cluster is public hide share key column, otherwise, show       #}
+                {# tell server about the change            #}
+                ajaxPost('{% url 'ajax_post_mpi_privacy_change' %}', {
+                    'is_public': state,
+                    'pk':{{mpi_cluster.id}}
+                }, function (content) {
+    {#                todo: add progress icon#}
+                    mpi_info_table.find('th:nth-child(6)').toggle();
+                    mpi_info_table.find('td:nth-child(6)').toggle();
+                });
+
             });
 
-        });
+        {% endif %}
+
+
 
         {# delete cluster via ajax post, update html            #}
         var deleteCluster = function () {

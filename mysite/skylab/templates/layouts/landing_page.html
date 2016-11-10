@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}SkyLab {% endblock title %}</title>
+    {% load staticfiles %}
+
+    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap-theme.min.css' %}">
+    <link rel="stylesheet" href="{% static 'font-awesome-4.6.3/css/font-awesome.min.css' %}">
+    <link rel="stylesheet" href="{% static 'skylab/css/landing-page.css' %}">
+    <link rel="stylesheet" href="{% static 'skylab/css/skylab.css' %}">
+    {% block css_imports %}
+    {% endblock %}
+
+    {% block css %}{% endblock css %}
+</head>
+<body>
+
+<nav class="navbar navbar-inverse navbar-landing ">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="{% url 'skylab-home' %}">SkyLab</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+
+            {#    top-right navbar        #}
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#about">About</a>
+                </li>
+                <li>
+                     <a href="#features">Features</a>
+                </li>
+            </ul>
+
+        </div>
+    </div>
+</nav>
+<div class="container">
+    {% if messages %}
+    {% for message in messages %}
+        {% if message.extra_tags == 'landing_alert' %}
+            <div class="alert alert-{{ message.level_tag }} alert-fixed fade in">
+                <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                {{ message }}
+            </div>
+        {% endif %}
+    {% endfor %}
+    {% endif %}
+
+
+    {# create task modal #}
+</div>
+
+<!-- Header -->
+    <a name="about"></a>
+    <div class="intro-header">
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="intro-message">
+                        <h1>SkyLab</h1>
+                        <h3>A Web Application for vCluster</h3>
+                        <hr class="intro-divider">
+                        <ul class="list-inline intro-social-buttons">
+                            <li>
+                                <a href="{% url 'account_login' %}" class="btn btn-default btn-lg"><i class="fa fa-sign-in fa-fw"></i> <span class="network-name">Login</span></a>
+                            </li>
+                            <li>
+                                <a href="https://github.com/vincentpaul12/SkyLab/" class="btn btn-default btn-lg"><i class="fa fa-github fa-fw"></i> <span class="network-name" >View on Github</span></a>
+                            </li>
+
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <!-- /.intro-header -->
+
+    <!-- Page Content -->
+
+	<a  name="features"></a>
+    <div class="content-section-a">
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-5 col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Deploy an MPI Cluster<br>on demand</h2>
+                    <p class="lead">This is achieved by utilizing vCluster, a feature of Peak-Two Cloud (P2C). P2C is an Openstack-based private cloud on top of commodity hardware targeted
+for scientific and high-performance computing.</p>
+                </div>
+                <div class="col-lg-6 col-lg-offset-1 col-sm-6">
+                    <img class="img-responsive" src="{% static 'screenshots/create_mpi.png' %}" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <!-- /.content-section-a -->
+
+    <div class="content-section-b">
+
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Manage your own cluster</h2>
+                    <p class="lead">You can view your cluster status, activate tools or share your cluster to others.</p>
+                </div>
+                <div class="col-lg-6 col-sm-pull-6  col-sm-6">
+                    <img class="img-responsive" src="{% static 'screenshots/mpi_detail_view.png' %}" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <!-- /.content-section-b -->
+
+    <div class="content-section-a">
+
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-6 col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Execute tasks <br>after a few clicks</h2>
+                    <p class="lead">No need to open a terminal and do all the dirty work.</p>
+                </div>
+                <div class="col-lg-6 col-sm-6">
+                    <img class="img-responsive" src="{% static 'screenshots/gamess_form.png' %}" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+    <!-- /.content-section-a -->
+
+    <div class="content-section-b">
+
+        <div class="container">
+
+            <div class="row">
+                <div class="col-lg-5 col-lg-offset-1 col-sm-push-6  col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Monitor tasks</h2>
+                    <p class="lead">You can easily keep track of your tasks. You can view your task details and current progress. </p>
+                </div>
+                <div class="col-lg-6 col-sm-pull-6  col-sm-6">
+                    <img class="img-responsive" src="{% static 'screenshots/tasks_detail_view.png' %}" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+
+    <div class="content-section-a">
+
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-5 col-sm-6">
+                    <hr class="section-heading-spacer">
+                    <div class="clearfix"></div>
+                    <h2 class="section-heading">Visualize your task output</h2>
+                    <p class="lead">Compatible output files are rendered with JSmol. </p>
+                </div>
+                <div class="col-lg-6 col-lg-offset-1 col-sm-6">
+                    <img class="img-responsive" src="{% static 'screenshots/jsmol_detail_view.png' %}" alt="">
+                </div>
+            </div>
+
+        </div>
+        <!-- /.container -->
+
+    </div>
+
+<script src="{% static 'jquery/js/jquery-1.12.4.min.js' %}"></script>
+<script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
+<script src="{% static 'bootstrap-3.3.7-dist/js/npm.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+{#    LOGOUTS GOOGLE ACCOUNT ON SKYLAB ACCOUNT LOGOUT. REMOVE THIS FUNCTION TO PRESERVE OAUTH WORKFLOW#}
+
+
+
+{% block js %}
+
+{% endblock %}
+
+</body>
+</html>
