@@ -98,8 +98,8 @@
                     <tbody>
                     {% for tool_activation in mpi_cluster.toolactivation_set.all %}
                         <tr>
-                            <td>{{ tool_activation.toolset.display_name }}</td>
-                            <td>{{ tool_activation.toolset.description }}</td>
+                            <td><a href="{% url 'toolset_detail_view' toolset_simple_name=tool_activation.toolset.simple_name %}">{{ tool_activation.toolset.display_name }}</a></td>
+                            <td>{{ tool_activation.toolset.short_description }}</td>
                             <td id="tool-activation-status-cell-{{ tool_activation.toolset.id }}">
                                 {% if tool_activation.status == 0 %}
                                     <span class="text-muted">{{ tool_activation.current_status_msg }}</span>
@@ -176,7 +176,7 @@
                 {# init as bootstrap switch #}
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
             visibility_switch.bootstrapSwitch();
-            visibility_switch.bootstrapSwitch('disabled', true);
+{#            visibility_switch.bootstrapSwitch('disabled', true);#}
 
             visibility_switch.on('switchChange.bootstrapSwitch', function (event, state) {
                 {# if cluster is public hide share key column, otherwise, show       #}

@@ -12,9 +12,9 @@ from django.db.models import Q
 from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.views.generic import DetailView, ListView
+from django.views.generic import DetailView, ListView, View
 from django.views.generic.base import TemplateView
-from django.views.generic.edit import FormView
+from django.views.generic import FormView
 from django_ajax.decorators import ajax
 from sendfile import sendfile
 
@@ -83,11 +83,7 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 # 	connection.close()
 
-def index(request):
-    if request.user.is_authenticated:
-        return redirect('mpi_list_view')
-    else:
-        return render(request, 'layouts/landing_page.html')
+
 
 class HomeView(TemplateView):
     template_name = "layouts/home.html"
@@ -100,17 +96,14 @@ class CreateMPIView(LoginRequiredMixin, FormView):
     def get_success_url(self):
         return reverse('mpi_detail_view', kwargs={'pk': self.kwargs.pop('pk')})
 
-    # def get_form_kwargs(self):
-    # 	# pass "user" keyword argument with the current user to your form
-    # 	kwargs = super(CreateMPIView, self).get_form_kwargs()
-    # 	kwargs['user'] = self.request.user
-    # 	return kwargs
     def get(self, request, *args, **kwargs):
         if get_current_max_nodes() <= 1:
             messages.add_message(request, messages.WARNING,
                                  'Warning! The system has reached the limit for max  active clusters.',
                                  extra_tags='display_this')
+        # super(CreateMPIView, self).get(request, *args, **kwargs) #super does not work
         super(CreateMPIView, self).get(request, *args, **kwargs)
+        return self.render_to_response(self.get_context_data())
 
     def form_valid(self, form):
 
@@ -249,13 +242,16 @@ class ToolSetDetailView(LoginRequiredMixin, DetailView):
         context = self.get_context_data(object=self.object)  # pass retrieved object
         return self.render_to_response(context)
 
+def index(request):
+    if request.user.is_authenticated:
+        return redirect('mpi_list_view')
+    else:
+        return render(request, 'layouts/landing_page.html')
+
 
 def logout_success(request):
     messages.add_message(request, messages.INFO, 'You have logged out from SkyLab. NOTE: This does not logout your Google account.', extra_tags='landing_alert')
     return redirect('skylab-home')
-
-
-
 
 @login_required
 def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_pk=None, tool_pk=None):
