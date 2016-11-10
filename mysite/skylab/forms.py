@@ -80,10 +80,11 @@ class MPIModelChoiceField(forms.ModelChoiceField):
 					status = "Queued for installation"
 				elif tool_activation.status == 0:
 					status = "Not installed"
-				return "{0} (nodes : {1}, queue length: {2}) ({3} status: {4})".format(obj.cluster_name, obj.cluster_size, obj.task_queued_count,
+				return "{0} (nodes : {1}, queue length: {2}) ({3} status: {4})".format(obj.cluster_name, obj.total_node_count, obj.task_queued_count,
 																	self.toolset.display_name, status)
 			except ToolActivation.DoesNotExist:
-				return "{0} (nodes : {1}) ({2}, queue length: {3}) ".format(obj.cluster_name, obj.cluster_size,
+				return "{0} (nodes : {1}) ({2}, queue length: {3}) ".format(obj.cluster_name, obj.total_node_count,
 														self.toolset.display_name, obj.task_queued_count)
 		else:
-			return "{0} (nodes : {1}, queue length: {2}))".format(obj.cluster_name, obj.cluster_size, obj.task_queued_count)
+			return "{0} (nodes : {1}, queue length: {2}))".format(obj.cluster_name, obj.total_node_count, obj.task_queued_count)
+

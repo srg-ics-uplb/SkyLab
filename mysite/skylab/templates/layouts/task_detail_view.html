@@ -308,8 +308,7 @@
             width: "100%",
             height: 400,
             debug: false,
-
-            color: "#ced6dd",//"0x468499",
+{#            color: "#ced6dd",//"0x468499",#}
             addSelectionOptions: false,
             use: "HTML5", {# JAVA HTML5 WEBGL are all options #}
             j2sPath: "{{ jsmol_server_root }}/j2s",
@@ -354,7 +353,9 @@
             $('html, body').animate({
                 scrollTop: isosurface_options.offset().top
             }, 2000);
-        });
+
+            $('input[type=radio][name=isosurface-options]').prop('checked', false)//.checkboxradio("refresh");
+        });;
 
         $('input[type=radio][name=isosurface-options]').change(function () {
             Jmol.script(jmolApplet0, this.value);

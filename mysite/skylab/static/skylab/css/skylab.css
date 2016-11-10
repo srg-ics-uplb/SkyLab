@@ -97,6 +97,7 @@
 
 .list-group > a:hover, .list-group > a:focus {
 	color: #0645AD;
+    background: #dddddd;
 }
 
 /** { box-sizing: border-box; }*/
@@ -216,9 +217,9 @@ h6 {
     border-radius:0
 }
 
-.clickable-row:hover{
-    background: #859de2;
-}
+/*.clickable-row:hover{*/
+    /*background: #859de2;*/
+/*}*/
 
 
 .dropdown:hover .dropdown-menu {
