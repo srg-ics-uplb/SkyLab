@@ -10,7 +10,7 @@ from django.conf import settings
 from skylab.models import SkyLabFile
 from skylab.modules.basetool import P2CToolGeneric
 
-
+from cStringIO import StringIO
 # 6, 11, 12 (segmentation fault) inherent error
 # 3, 4 secondary numeric input needed
 #TODO: single sftp open call
@@ -56,24 +56,37 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
         for filename in input_filenames:
-            command = "impi ../input/" + filename
+            # command = 'impi '+ os.path.join('../input', filename)
+
+            command = "mpirun -np {0:d} -f {1:s} impi ../input/{2}".format(self.task.mpi_cluster.total_node_count,
+                                                                    settings.MPIEXEC_NODES_FILE, filename)
             retries = 0
             exit_loop = False
 
             while not exit_loop:  # try while not exit
                 self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
                 try:
+                    exit_retries = 0
                     exec_shell = self.shell.spawn(
                         ['sh', '-c', env_command + command],  # run command with env_command
-                        cwd=self.working_dir
+                        cwd=self.working_dir, store_pid=True
                     )
 
                     for parameter in command_list:
+                        self.logger.debug(self.log_prefix + 'input ' + str(parameter))
                         exec_shell.stdin_write(str(parameter) + "\n")
                         time.sleep(3)
-                    self.logger.debug(self.log_prefix + 'Running exit operation')
+
                     while exec_shell.is_running():
+                        self.logger.debug(self.log_prefix + 'Running exit operation')
                         exec_shell.stdin_write('0\n')
+                        time.sleep(3)
+                        exit_retries += 1
+
+                        if exit_retries > 5:
+                            self.logger.debug(self.log_prefix + 'Force exit operation')
+                            exec_shell.send_signal(9)
+                            exit_loop = False
 
                     # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
@@ -140,7 +153,7 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         # hangs on this command, used workaround instead
         # remote_files = sftp.listdir()  # list dirs and files in remote path
 
-        for remote_file in self.output_files:
+        for remote_file in self.output_files:  #sftp.listdir(path=remote_path):
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
