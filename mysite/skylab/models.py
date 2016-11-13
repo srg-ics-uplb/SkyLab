@@ -138,7 +138,7 @@ class ToolSet(models.Model):
     p2ctool_name = models.CharField(max_length=50, unique=True)
     simple_name = models.CharField(max_length=50, unique=True, blank=True, null=True)
     package_name = models.CharField(max_length=50, )
-    description = models.CharField(max_length=300, null=True, blank=True)
+    description = models.TextField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
     created = models.DateTimeField()
 
@@ -182,7 +182,7 @@ class Tool(models.Model):
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
     simple_name = models.CharField(max_length=50, blank=True)
     view_name = models.CharField(max_length=50, blank=True)
-    description = models.CharField(max_length=300, default="No description provided")
+    description = models.TextField(max_length=300, default="No description provided")
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
     created = models.DateTimeField()
 
@@ -220,13 +220,13 @@ def get_sentinel_mpi():
 @python_2_unicode_compatible
 class Task(models.Model):
     priority = models.PositiveSmallIntegerField(default=3)  # 1=(reserved) p2c tool activate, 2=high, 3=normal
-    task_data = models.CharField(max_length=500, blank=True)
+    task_data = models.TextField(max_length=500, blank=True)
     # additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE, null=True)
-    status_msg = models.CharField(default="Task Created", max_length=200)
+    status_msg = models.TextField(default="Task Created", max_length=300)
     status_code = models.SmallIntegerField(default=0)
 
     updated = models.DateTimeField()
@@ -430,7 +430,7 @@ class SkyLabFile(models.Model):
 @python_2_unicode_compatible
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
-    status_msg = models.CharField(max_length=200)
+    status_msg = models.TextField(max_length=300)
     timestamp = models.DateTimeField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
 

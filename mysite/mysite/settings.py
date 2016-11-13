@@ -106,25 +106,28 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # For final deployment
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'skylab',
-#         'USER': 'root',
-#         'PASSWORD': 'pass',
-#         'HOST': 'localhost',
-#         'PORT': '',
-#     }
-# }
-
-#For development only
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'skylab',
+        'USER': 'skylabuser',
+        'PASSWORD': 'password',
+        'HOST': 'localhost',
+        'PORT': '',
+        'OPTIONS':{
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
+        }
     }
 }
 
+#For development only
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+# }
+#
 
 
 # Password validation

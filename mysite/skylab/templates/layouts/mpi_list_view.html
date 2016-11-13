@@ -98,12 +98,15 @@
                 default:
                     return 0;
             }
-
         };
 
         {# dataTable object init #}
         var table = $('#mpi-table').DataTable({
             "columnDefs": [
+                {
+                    "type" : "mpi-status",
+                    "targets": [4]
+                },
                 {
                     "targets": [4], {# status column #}
                     "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}

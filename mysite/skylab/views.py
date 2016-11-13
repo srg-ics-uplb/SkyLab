@@ -441,7 +441,7 @@ def post_mpi_toolset_activate(request):
             'status_msg': obj.current_status_msg
         }
         return data
-    return None
+    return {}
 
 
 @login_required
@@ -460,7 +460,7 @@ def post_mpi_delete(request):
             'status': mpi_cluster.status
         }
         return data
-    return None
+    return {}
 
 
 @login_required
@@ -475,7 +475,7 @@ def post_mpi_visibility(request):
         if request.user.is_superuser or request.user == mpi_cluster.creator: #only admin and creator can change visibility
             mpi_cluster.is_public = is_public
             mpi_cluster.save()
-    return None
+    return {}
 
 
 @login_required
@@ -602,4 +602,4 @@ def refresh_task_detail_view(request, pk=None):
         }
 
         return data
-    return None
+    return {}

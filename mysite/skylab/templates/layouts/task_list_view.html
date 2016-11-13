@@ -62,9 +62,23 @@
                 window.location = $(this).data("href");
                 {# go to task detail view #}
             });
+            $.fn.dataTable.ext.type.order['task-status-pre'] = function ( d ) {
+                switch ( d ) {
+                    case 'Queued': return 1;
+                    case 'Success': return 2;
+                    case 'Error':   return 3;
+{#                    default: return 0;#}
+                }
+                return 0;
+            };
+
             var table = $('#task-list-table').DataTable({
                 "order": [],
                 "columnDefs": [
+                    {
+                        "type" : "task-status",
+                        "targets": [3]
+                    },
                     {
                         "targets": [3], {# status column #}
                         "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}
