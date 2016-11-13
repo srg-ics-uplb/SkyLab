@@ -26,7 +26,9 @@ from skylab.validators import get_current_max_nodes
 def has_read_permission(request, task_id):
 
     "Only show to authenticated users - extend this as desired"
-    if Task.objects.get(pk=task_id).user_id == request.user.id:
+    if request.user.is_superuser:
+        return True
+    elif Task.objects.get(pk=task_id).user_id == request.user.id:
         return True
     else:
         return False
@@ -144,9 +146,11 @@ class MPIListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super(MPIListView, self).get_queryset()
-        user_allowed = Q(allowed_users=self.request.user)
-        cluster_is_public = Q(is_public=True)
-        return qs.filter(user_allowed | cluster_is_public).order_by('-updated')
+        if not self.request.user.is_superuser:
+            user_allowed = Q(allowed_users=self.request.user)
+            cluster_is_public = Q(is_public=True)
+            qs =  qs.filter(user_allowed | cluster_is_public).order_by('-updated')
+        return qs
 
 
 class MPIDetailView(LoginRequiredMixin, DetailView):
@@ -180,9 +184,11 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         qs = super(MPIDetailView, self).get_queryset()
-        user_allowed = Q(allowed_users=self.request.user)
-        cluster_is_public = Q(is_public=True)
-        return qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+        if not self.request.user.is_superuser:
+            user_allowed = Q(allowed_users=self.request.user)
+            cluster_is_public = Q(is_public=True)
+            qs = qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+        return qs
 
 
 class TaskListView(LoginRequiredMixin, ListView):
@@ -192,7 +198,9 @@ class TaskListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super(TaskListView, self).get_queryset()
-        return qs.filter(user=self.request.user).order_by('-updated')
+        if not self.request.user.is_superuser:
+            qs =  qs.filter(user=self.request.user)
+        return qs.order_by('-updated')
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -220,7 +228,9 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         qs = super(TaskDetailView, self).get_queryset()
-        return qs.filter(user=self.request.user)
+        if not self.request.user.is_superuser: #all tasks are visible to the admin
+            qs =  qs.filter(user=self.request.user)
+        return qs
 
 
 class ToolSetDetailView(LoginRequiredMixin, DetailView):
@@ -278,7 +288,10 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 @login_required
 @ajax
 def refresh_task_list_table(request):
-    tasks = Task.objects.filter(user=request.user).order_by('-updated')
+    if request.user.is_superuser:
+        tasks = Task.objects.all()
+    else:
+        tasks = Task.objects.filter(user=request.user).order_by('-updated')
     rows = []
     for task in tasks:  # build array of arrays containing info for each cluster
         rows.append([
@@ -295,10 +308,13 @@ def refresh_task_list_table(request):
 @login_required
 @ajax
 def refresh_mpi_list_table(request):
-    user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
-    cluster_is_public = Q(is_public=True)
-    qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
-    qs = qs.exclude(status=5)
+    if request.user.is_superuser:   #all clusters are visible to the admin
+        qs = MPICluster.objects.all()
+    else:
+        user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
+        cluster_is_public = Q(is_public=True)
+        qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        qs = qs.exclude(status=5)
 
     rows = []
     for cluster in qs:  # build array of arrays containing info for each cluster
@@ -322,7 +338,7 @@ def refresh_mpi_list_table(request):
 @login_required
 @ajax
 def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = request.POST['pk']
-    print toolset_simple_name
+
     try:
         toolset = ToolSet.objects.get(simple_name=toolset_simple_name)
         tools = Tool.objects.filter(toolset=toolset)
@@ -434,8 +450,9 @@ def post_mpi_delete(request):
     pk = request.POST.get('pk')
     if pk:
         mpi_cluster = MPICluster.objects.get(pk=pk)
-        mpi_cluster.queued_for_deletion = True
-        mpi_cluster.save()
+        if request.user.is_superuser or mpi_cluster.creator == request.user: #ensure that only the creator or the admin can delete the cluster
+            mpi_cluster.queued_for_deletion = True
+            mpi_cluster.save()
 
         data = {
             'cluster_ip': mpi_cluster.cluster_ip,
@@ -455,15 +472,19 @@ def post_mpi_visibility(request):
     if is_public and pk:
         is_public = is_public == 'true'
         mpi_cluster = MPICluster.objects.get(pk=pk)
-        mpi_cluster.is_public = is_public
-        mpi_cluster.save()
+        if request.user.is_superuser or request.user == mpi_cluster.creator: #only admin and creator can change visibility
+            mpi_cluster.is_public = is_public
+            mpi_cluster.save()
     return None
 
 
 @login_required
 @ajax
 def refresh_nav_task_list(request):
-    tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
+    if request.user.is_superuser:
+        tasks = Task.objects.all().order_by('-updated')[:3]
+    else:
+        tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
     list_items = []
     if tasks:
 
@@ -523,7 +544,6 @@ def refresh_nav_task_list(request):
             '#nav-task-list': '<li class="divider"></li>'.join(list_items)
         }
     }
-
     return data
 
 
@@ -531,7 +551,10 @@ def refresh_nav_task_list(request):
 @ajax
 def refresh_task_detail_view(request, pk=None):
     if pk is not None:
-        task = Task.objects.get(pk=pk, user=request.user.id)
+        if request.user.is_superuser:
+            task = Task.objects.get(pk=pk)
+        else:
+            task = Task.objects.get(pk=pk, user=request.user)
         # print task.id
         # print "Status code", task.status_code
 
@@ -579,3 +602,4 @@ def refresh_task_detail_view(request, pk=None):
         }
 
         return data
+    return None

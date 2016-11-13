@@ -63,10 +63,6 @@
                             <i class="fa fa-tasks fa-fw"></i> Tasks</i>
                         </a>
                         <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
-                            <li>
-                                <p class="text-center"><i class="fa fa-refresh fa-spin fa-fw"></i>Loading...  </p>
-                            </li>
-
                         </ul>
                         <!-- /.dropdown-tasks -->
                     </li>
@@ -220,11 +216,19 @@
             window.location = "{% url 'logout_redirect' %}"
         });
 
+        var navTaskListRefreshing = false;
         var navTasksOnClick = function () {
-            $('#nav-task-list').append('<li><p class="text-center"><i class="fa fa-refresh fa-spin fa-fw"></i>Loading...</li></p>');
-            ajaxGet('{% url 'ajax_refresh_nav_task_list' %}', function (content) {
 
-            })
+            if (!navTaskListRefreshing){
+                navTaskListRefreshing = true;
+                $('#nav-task-list').append('<li><p class="text-center"><i class="fa fa-refresh fa-spin fa-fw"></i>Refreshing...</li></p>');
+
+                ajaxGet('{% url 'ajax_refresh_nav_task_list' %}', function (content) {
+                     navTaskListRefreshing = false
+                });
+
+            }
+
         };
 
         {# begin create task modal #}

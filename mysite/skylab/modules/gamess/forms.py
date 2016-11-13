@@ -1,5 +1,5 @@
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Div, HTML
+from crispy_forms.layout import Layout, Div, HTML, Field
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.urlresolvers import reverse
@@ -17,7 +17,7 @@ def validate_gamess_input_extension(files):
 
 
 class GamessForm(forms.Form):
-    input_files = MultiFileField(validators=[validate_gamess_input_extension], label="Input file(s)")
+    input_files = MultiFileField(validators=[validate_gamess_input_extension], label="Input file(s)", help_text="File type: (.inp)")
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -36,20 +36,7 @@ class GamessForm(forms.Form):
         self.helper.form_method = 'post'
         self.helper.form_action = ''
         self.helper.layout = Layout(
-            Div(
-
-                Div(
-                    'mpi_cluster',
-                    css_class="col-md-12"
-                ),
-
-                Div(
-                    'input_files',
-                    css_class="col-md-12"
-                ),
-                HTML('<input name="submit" value="Submit task" type="submit" class="btn btn-primary btn-block">'),
-                css_class="row"
-            )
-
-
+                Field('mpi_cluster', wrapper_class="col-xs-12"),
+                Field('input_files', wrapper_class="col-xs-12"),
+                HTML('<input name="submit" value="Submit task" type="submit" class="btn btn-primary btn-block">')
         )

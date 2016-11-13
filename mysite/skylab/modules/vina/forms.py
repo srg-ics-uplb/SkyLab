@@ -43,18 +43,18 @@ class VinaForm(forms.Form):
 
     param_seed = forms.IntegerField(required=False, label="Explicit random seed")
     param_exhaustiveness = forms.IntegerField(required=False, label="Exhaustiveness of the global search",
-                                              help_text=" (Roughly proportional to time): 1+ . Range: (1-8)",
+                                              help_text=" (Roughly proportional to time): 1+ .<br>Choose a number from 1 to 8.",
                                               min_value=1, max_value=8,
                                               validators=[MinValueValidator(1), MaxValueValidator(8)],
                                               widget=forms.NumberInput(
                                                   attrs={'placeholder': '8'}))  # 1-8 default 8
     param_num_modes = forms.IntegerField(required=False, label="Max number of binding modes to generate", min_value=1,
                                          max_value=10, validators=[MinValueValidator(1), MaxValueValidator(10)],
-                                         help_text="Enter number from (1-10)",
+                                         help_text="Choose a number from 1 to 10.",
                                          widget=forms.NumberInput(
                                              attrs={'placeholder': '9'}))  # 1-10 default 9
     param_energy_range = forms.DecimalField(required=False, label="Energy range",
-                                            help_text="Maximum energy difference between the best binding mode and the worst one displayed (kcal/mol). Range: (1.0-3.0)",
+                                            help_text="Maximum energy difference between the best binding mode and the worst one displayed (kcal/mol).<br>Choose a decimal from 1.0 to 3.0 .",
                                             min_value=1, max_value=3,
                                             validators=[MinValueValidator(1), MaxValueValidator(3)],
 
@@ -100,56 +100,37 @@ class VinaForm(forms.Form):
         self.helper.layout = Layout(  # crispy_forms layout
             # TabHolder(
             #     Tab('Basic Parameters',
-                    Div(
-                        Field('mpi_cluster', wrapper_class='col-xs-12'),
-                        css_class="col-xs-12"
-                    ),
+
+                    Field('mpi_cluster', wrapper_class='col-xs-12'),
+
                     Fieldset(
                         'Input',
-                        Div(
-                            Div('param_receptor', css_class='col-xs-12'),
-                            Div('param_flex', css_class='col-xs-12'),
-                            Div('param_ligands', css_class='col-xs-12 col-md-8'),
-                            css_class='row-fluid col-sm-12'
-                        )
+                        Field('param_receptor', wrapper_class='col-xs-12'),
+                        Field('param_flex', wrapper_class='col-xs-12'),
+                        Field('param_ligands', wrapper_class='col-xs-12 col-md-8'),
+                        css_class='col-xs-12'
                     ),
                     Fieldset(
                         'Search space',
-                        Div(
-                            Div('param_center_x', css_class='col-xs-12 col-md-4'),
-                            Div('param_center_y', css_class='col-xs-12 col-md-4'),
-                            Div('param_center_z', css_class='col-xs-12 col-md-4'),
-                            Div('param_size_x', css_class='col-xs-12 col-md-4'),
-                            Div('param_size_y', css_class='col-xs-12 col-md-4'),
-                            Div('param_size_z', css_class='col-xs-12 col-md-4'),
-                            css_class='row-fluid col-sm-12'
-                        )
+                        Field('param_center_x', wrapper_class='col-xs-12 col-md-4'),
+                        Field('param_center_y', wrapper_class='col-xs-12 col-md-4'),
+                        Field('param_center_z', wrapper_class='col-xs-12 col-md-4'),
+                        Field('param_size_x', wrapper_class='col-xs-12 col-md-4'),
+                        Field('param_size_y', wrapper_class='col-xs-12 col-md-4'),
+                        Field('param_size_z', wrapper_class='col-xs-12 col-md-4'),
+                        css_class='col-xs-12'
                     ),
                     Fieldset(
                         'Miscellaneous',
-                        Div(
-                            Div(
-                                Field('param_seed', wrapper_class="col-xs-12 col-md-8"),
-                                css_class='col-xs-12'
-                            ),
-                            Div(
-                                Field('param_exhaustiveness', wrapper_class="col-xs-12 col-md-8"),
-                                css_class='col-xs-12'
-                            ),
-                            Div(
-                                Field('param_num_modes', wrapper_class="col-xs-12 col-md-8"),
-                                css_class='col-xs-12'
-                            ),
-                            Div(
-                                Field('param_energy_range', wrapper_class="col-xs-12 col-md-8"),
-                                css_class='col-xs-12'
-                            ),
-                            css_class='row-fluid col-sm-12'
-                        )
+                        Field('param_seed', wrapper_class="col-xs-12 col-md-8"),
+                        Field('param_exhaustiveness', wrapper_class="col-xs-12 col-md-8"),
+                        Field('param_num_modes', wrapper_class="col-xs-12 col-md-8"),
+                        Field('param_energy_range', wrapper_class="col-xs-12 col-md-8"),
+                        css_class='col-xs-12'
                     ),
 
             # ),
-            # disabled this features since in vina website : AutoDock Vina's "advanced options"
+            # disabled these features since in vina website : AutoDock Vina's "advanced options"
             # are intended to be primarily used by people interested in methods development rather than the end users.
             # Tab('Advanced Parameters',
             #         Fieldset(
@@ -222,19 +203,6 @@ class VinaSplitForm(forms.Form):
         self.helper.form_tag = False
 
         self.helper.layout = Layout(
-            Div(
-                'mpi_cluster',
-                css_class="col-xs-12"
-            ),
-
-            Fieldset(
-                'Input',
-                Div(
-                    'param_input',
-                    # 'param_ligand_prefix',
-                    # 'param_flex_prefix',
-                    css_class='col-xs-12'
-                )
-            )
-
+            'mpi_cluster',
+            'param_input',
         )

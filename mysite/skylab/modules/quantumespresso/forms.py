@@ -15,7 +15,7 @@ from validators import in_files_validator
 
 class SelectMPIFilesForm(forms.Form):
     param_pseudopotentials = forms.CharField(label="Pseudopotentials", validators=[],
-                                             help_text="UPF files separated by a comma. (xx.UPF,yy.UPF)")
+                                             help_text="Required UPF files separated by commas. (xx.UPF,yy.UPF)")
 
     def clean_param_pseudopotentials(self):
         pseudopotentials = self.cleaned_data.get('param_pseudopotentials', None)
@@ -51,19 +51,8 @@ class SelectMPIFilesForm(forms.Form):
         # self.helper.form_method = 'post'
         # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
-
-
-            Div(
-                Field('mpi_cluster'),
-                css_class="col-sm-12"
-            ),
-
-            Div(
-                Div('param_pseudopotentials'),
-                css_class='row-fluid col-sm-12'
-            )
-            ,
-
+            'mpi_cluster',
+            'param_pseudopotentials'
         )
 
 
@@ -81,8 +70,8 @@ class InputParameterForm(forms.Form):
     )
     param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
     param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
-                                       required=False,
-                                       help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
+                                       required=False)#,
+                                      # help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
                                      #  help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
     def __init__(self, *args, **kwargs):
@@ -97,10 +86,10 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('param_executable', css_class='parameter'), css_class='col-xs-12 col-md-5'),
-                Div(Field('param_input_files'), css_class='col-xs-12 col-md-5 col-md-offset-1'),
+                Field('param_executable', css_class='parameter', wrapper_class='col-xs-10 col-sm-5'),
+                Div(Field('param_input_files'), css_class='col-xs-12 col-sm-5 col-sm-offset-1'),
 
-                css_class='row-fluid col-xs-12 form-container'
+                css_class='col-xs-12 form-container'
             ),
         )
 

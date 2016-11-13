@@ -35,14 +35,9 @@ class SelectMPIFilesForm(forms.Form):
         # self.helper.form_method = 'post'
         # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
-            Div(
-                Field('mpi_cluster'),
-                css_class="col-sm-12"
-            ),
-            Div(
-                Div('input_files'),
-                css_class='row-fluid col-sm-12'
-            )
+
+            Field('mpi_cluster', wrapper_class="col-xs-12"),
+            Field('input_files', wrapper_class="col-xs-12"),
         )
 
 
@@ -75,10 +70,10 @@ class InputParameterForm(forms.Form):
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('param_operation', css_class='parameter'), css_class='col-xs-5'),
-                Div(Field('param_value', wrapper_class='hidden'), css_class='col-xs-5 col-xs-offset-1'),
+                Field('param_operation', css_class='parameter', wrapper_class='col-xs-10 col-sm-5'),
+                Div(Field('param_value', wrapper_class='hidden'), css_class='col-xs-10 col-sm-5 col-sm-offset-1'),
 
-                css_class='row-fluid col-sm-12 form-container'
+                css_class='col-xs-12 form-container'
             ),
         )
 

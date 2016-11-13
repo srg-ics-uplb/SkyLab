@@ -108,12 +108,13 @@ class Autogrid4View(LoginRequiredMixin, FormView):
         SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_gpf_file'], task=task)
         SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_receptor_file'], task=task)
 
-        exec_string += "-p %s " % form.cleaned_data['param_gpf_file'].name
+        exec_string += u"-p {0:s} ".format(form.cleaned_data['param_gpf_file'].name)
 
         if form.cleaned_data.get('param_glg_filename'):
-            exec_string += "-l ../output/%s.glg " % (form.cleaned_data['param_glg_filename'])
+            exec_string += u"-l ../output/{0:s}.glg ".format(form.cleaned_data['param_glg_filename'])
         else:
-            exec_string += "-l ../output/%s.glg " % os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0]
+            exec_string += u'-l ../output/{0:s}.glg '.format(
+                os.path.splitext(form.cleaned_data['param_gpf_file'].name)[0])
 
         if form.cleaned_data['param_d']:
             exec_string += "-d "
@@ -125,9 +126,10 @@ class Autogrid4View(LoginRequiredMixin, FormView):
             exec_string += "autodock4 -p %s " % form.cleaned_data['param_dpf_file'].name
 
             if form.cleaned_data.get('param_dlg_filename'):
-                exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])
+                exec_string += u"-l ../output/{0:s}.dlg ".format(form.cleaned_data['param_dlg_filename'])
             else:
-                exec_string += "-l ../output/%s.dlg " % os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0]
+                exec_string += u"-l ../output/{0:s}.dlg ".format(
+                    os.path.splitext(form.cleaned_data['param_dpf_file'].name)[0])
 
             if form.cleaned_data['param_k']:
                 exec_string += "-k "

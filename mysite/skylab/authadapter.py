@@ -13,3 +13,4 @@ class UniversityAccountAdapter(DefaultSocialAccountAdapter):
             messages.add_message(request, messages.ERROR, 'You need to login using an @up.edu.ph account. NOTE: Your account is still logged in with Google.',
                                  extra_tags='display_this')
             raise ImmediateHttpResponse(render(request, 'layouts/home.html'))
+
