@@ -5,7 +5,7 @@ from . import views
 
 urlpatterns = [
 
-    url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
+    url(r'^mpi-clusters/create-mpi-cluster$', views.CreateMPIView.as_view(), name='create_mpi'),
     url(r'^mpi-clusters$', views.MPIListView.as_view(), name='mpi_list_view'),
     url(r'^mpi-clusters/(?P<pk>\d+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
     url(r'^mpi-clusters/(?P<cluster_name>\w+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),

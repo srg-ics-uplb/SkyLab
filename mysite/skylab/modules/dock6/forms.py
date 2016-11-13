@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_all
 from skylab.models import MPICluster, ToolSet
 from validators import multi_dock6_other_resources_validator, dock6_in_extension_validator, \
     multi_grid_other_resources_validator
@@ -35,15 +35,9 @@ class GridForm(forms.Form):
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(GridForm, self).__init__(*args, **kwargs)
-
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
@@ -102,14 +96,9 @@ class Dock6Form(forms.Form):
         self.user = kwargs.pop('user')
         super(Dock6Form, self).__init__(*args, **kwargs)
 
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="dock6")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))

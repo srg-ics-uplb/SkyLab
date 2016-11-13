@@ -2,6 +2,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, HTML
 from django import forms
 from django.conf import settings
+from django.db.models import Q
 from django.core.validators import RegexValidator
 
 from skylab.models import ToolSet, MPICluster, ToolActivation
@@ -64,10 +65,23 @@ class CreateMPIForm(forms.Form):
 # 		self.helper.form_action = ''
 #
 # 		self.helper.add_input(Submit('submit','Execute'))
+def get_mpi_queryset_all(user):
+	if user.is_superuser:
+		qs = MPICluster.objects.all()
+	else:
+		user_allowed = Q(allowed_users=user)
+		cluster_is_public = Q(is_public=True)
+		qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
+		qs = qs.exclude(status=5).exclude(queued_for_deletion=True)
+
+	return qs
+
 class MPIModelChoiceField(forms.ModelChoiceField):
 	def __init__(self, *args, **kwargs):
 		self.toolset = kwargs.pop("toolset", None)
 		super(MPIModelChoiceField, self).__init__(*args, **kwargs)
+
+
 
 	def label_from_instance(self, obj):
 		if self.toolset is not None:

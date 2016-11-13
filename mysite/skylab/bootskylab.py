@@ -47,15 +47,10 @@ class MPIThreadManager(object):
         self._connected_to_frontend = threading.Event()
 
         self.frontend_shell = None
-        init_thread = threading.Thread(target=self.connect_to_frontend)
-        init_thread.start()
+        connect_to_frontend_thread = threading.Thread(target=self.connect_to_frontend)
+        connect_to_frontend_thread.start()
 
-        for cluster in clusters:
 
-            if cluster.id not in self.threadHash:
-                t = MPIThread(cluster, self)
-                self.threadHash[cluster.id] = t
-                t.start()
 
         post_save.connect(receiver=self.receive_mpi_cluster_from_post_save_signal, sender=MPICluster,
                           dispatch_uid="receive_mpi_from_post_save_signal")
@@ -67,7 +62,16 @@ class MPIThreadManager(object):
         post_save.connect(receiver=self.receive_toolactivation_from_post_save_signal, sender=ToolActivation,
                           dispatch_uid="receive_toolactivation_from_post_save_signal")
 
+        #TODO: enclose in thread
+        for cluster in clusters:
+            if cluster.id not in self.threadHash:
+                t = MPIThread(cluster, self)
+                self.threadHash[cluster.id] = t
+                t.start()
+
         super(MPIThreadManager, self).__init__()
+
+
 
     def connect_to_frontend(self):
         if self.frontend_shell is None:
@@ -84,6 +88,7 @@ class MPIThreadManager(object):
                     # from : http://stackoverflow.com/questions/28288533/check-if-paramiko-ssh-connection-is-still-alive
                     channel = self.frontend_shell._get_ssh_transport().send_ignore()
                     self._connected_to_frontend.set()
+                    self.logger.info("Connected to frontend...")
                     exit_loop = True  # exit loop
 
                 except (spur.ssh.ConnectionError, EOFError) as e:
@@ -96,7 +101,7 @@ class MPIThreadManager(object):
                         self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
                         time.sleep(wait_time)
 
-            self.logger.info("Connected to frontend...")
+
 
         return self.frontend_shell
 
@@ -153,24 +158,10 @@ class MPIThread(threading.Thread):
 
         self.logger.info(self.log_prefix + 'Spawned MPI Thread')
 
-
-        self.logger.info(self.log_prefix + "Populating task queue")
-
-        # get tasks that are not finished yet
-        tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(status_code=200).exclude(
-            status_code=401).order_by('priority', 'created')  # status 400 is not terminal, 401 is
-        # lower priority value are prioritized
-
-        for task in tasks:
-            self.add_task_to_queue(task.priority, task)
-
-        # get toolactivations queued for activation (status == 1)
-        queued_toolset_activations = self.mpi_cluster.toolsets.filter(toolactivation__status=1)
-        for toolset in queued_toolset_activations:
-            self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
-
         init_thread = threading.Thread(target=self.connect_or_create)
         init_thread.start()  # sets event _connection on finish
+
+
 
         super(MPIThread, self).__init__()
 
@@ -203,7 +194,7 @@ class MPIThread(threading.Thread):
         ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         self.logger.debug(self.log_prefix + 'Set mtu to 1454')
 
-        # when instance is restarted this settings resets : observation
+        # when instance is restarted this settings resets : observation >> confirmed
         command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
         shmax_fixer = self.cluster_shell.spawn(['sh', '-c', command], use_pty=True)
         shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
@@ -389,6 +380,22 @@ class MPIThread(threading.Thread):
         self.logger.debug(self.log_prefix + 'Obtained cluster ip: {0}'.format(cluster_ip))
 
     def run(self):
+        self.logger.info(self.log_prefix + "Populating task queue")
+
+        # get tasks that are not finished yet
+        tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(status_code=200).exclude(
+            status_code=401).order_by('priority', 'created')  # status 400 is not terminal, 401 is
+        # lower priority value are prioritized
+
+        for task in tasks:
+            self.add_task_to_queue(task.priority, task)
+
+        # get toolactivations queued for activation (status == 1)
+        queued_toolset_activations = self.mpi_cluster.toolsets.filter(toolactivation__status=1)
+        for toolset in queued_toolset_activations:
+            self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
+
+
         # block waiting for connected event to be set
         self._ready.wait()
 

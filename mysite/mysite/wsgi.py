@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+import logging
 
 
 
@@ -17,13 +18,15 @@ application = get_wsgi_application()
 
 from skylab.bootskylab import install_toolsets, setup_logging, MPIThreadManager
 
+
+
 install_toolsets()
 
-#
 setup_logging()  # setup logger, handlers
-
+#
 # TaskLog.objects.all().delete()
 # # SkyLabFile.objects.all().delete()
+
 manager = MPIThreadManager()
 
 

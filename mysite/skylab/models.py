@@ -250,9 +250,10 @@ class Task(models.Model):
         super(Task, self).save(*args, **kwargs)
 
         # placed below super since instance does not have pk until saved
-        if created:
-            # Create tasklog stating task is created
-            self.change_status(status_code=100, status_msg="Task created")
+        # this code results to a bug .. super().save probably triggers post_save instead of the triggering after the whole function
+        # if created:
+        #     # Create tasklog stating task is created
+        #     self.change_status(status_code=100, status_msg="Task created")
 
     @property
     def simple_status_msg(self):
@@ -279,7 +280,7 @@ class Task(models.Model):
         self.status_code = status_code
         self.status_msg = self.simple_status_msg
         self.save()
-        TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
+        TaskLog.objects.create(status_code=self.status_code, status_msg=self.status_msg, task=self)
 
     @property
     def task_dirname(self):

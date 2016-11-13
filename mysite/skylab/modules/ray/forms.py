@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_all
 from skylab.models import MPICluster, ToolSet
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
@@ -25,18 +25,12 @@ class SelectMPIFilesForm(forms.Form):
         self.user = kwargs.pop('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="ray")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
-
 
         self.helper = FormHelper()
         self.helper.form_tag = False
@@ -55,8 +49,8 @@ class SelectMPIFilesForm(forms.Form):
             Fieldset(
                 'MiniRanks',
                 Div(
-                    Div('param_mini_ranks', css_class='col-xs-12 col-md-4'),
-                    Div('param_bynode', css_class='col-xs-12 col-xs-offset-0 col-md-6 col-md-offset-2'),
+                    Div('param_mini_ranks', css_class='col-xs-12'),
+                    Div('param_bynode', css_class='col-xs-12 col-xs-offset-0'),
                     css_class='row-fluid col-sm-12'
                 ),
 

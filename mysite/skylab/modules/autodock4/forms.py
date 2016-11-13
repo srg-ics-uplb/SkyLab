@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_all
 from skylab.models import MPICluster, ToolSet
 from validators import pdbqt_file_extension_validator, dpf_file_extension_validator, gpf_file_extension_validator, \
     multi_grid_map_file_validator, dat_file_extension_validator
@@ -45,14 +45,9 @@ class Autodock4Form(forms.Form):
         self.user = kwargs.pop('user')
         super(Autodock4Form, self).__init__(*args, **kwargs)
 
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
@@ -60,46 +55,32 @@ class Autodock4Form(forms.Form):
         self.helper = FormHelper()
         self.helper.form_tag = False
         self.helper.layout = Layout(
-            Div(
+
                 # Field('mpi_cluster', wrapper_class='col-xs-5'),
-                Field('mpi_cluster', wrapper_class='col-xs-12'),
-                css_class="col-sm-12"
-            ),
+            Field('mpi_cluster', wrapper_class='col-xs-12'),
+
+
             Fieldset(
                 'Input',
-                Div(
                     # Div('param_receptor_file', css_class='col-xs-12'),
-                    Div('param_ligand_file', css_class='col-xs-12'),
-                    Div('param_dpf_file', css_class='col-xs-12'),
-                    Div('param_grid_files', css_class='col-xs-12 col-md-8'),
+                Field('param_ligand_file',wrapper_class='col-xs-12'),
+                Field('param_dpf_file', wrapper_class='col-xs-12'),
+                Field('param_grid_files', wrapper_class='col-xs-12'),
                     # Div('param_dat_file', css_class='col-xs-12'),
-                    css_class='row-fluid col-sm-12'
-                )
+                css_class='col-xs-12'
             ),
             Fieldset(
                 'Output',
-                Div(
-                    Div(AppendedText('param_dlg_filename', '.dlg'), css_class='col-xs-12 col-md-8'),
-                    css_class='row-fluid col-sm-12'
-                ),
+                AppendedText('param_dlg_filename', '.dlg', wrapper_class='col-xs-12 col-md-8'),
+                css_class='col-xs-12'
             ),
             Fieldset(
                 'Other parameters',
-                # Div(
-                #     Div(AppendedText('param_dlg_filename', '.dlg'),css_class='col-xs-4'),
-                #     css_class='row-fluid col-sm-12'
-                # ),
-                Div(
-                    Div('param_k', css_class='col-xs-12'),
-                    Div('param_i', css_class='col-xs-12'),
-                    Div('param_t', css_class='col-xs-12'),
-                    Div('param_d', css_class='col-xs-12'),
-                    # Div('param_k', css_class="col-xs-6"),
-                    # Div('param_i', css_class="col-xs-6"),
-                    # Div('param_t', css_class="col-xs-6"),
-                    # Div('param_d', css_class="col-xs-6"),
-                    css_class='row-fluid col-xs-12'
-                )
+                Field('param_k', wrapper_class='col-xs-12'),
+                Field('param_i', wrapper_class='col-xs-12'),
+                Field('param_t', wrapper_class='col-xs-12'),
+                Field('param_d', wrapper_class='col-xs-12'),
+                css_class='col-xs-12'
             ),
         )
 
@@ -145,14 +126,9 @@ class Autogrid4Form(forms.Form):
         self.user = kwargs.pop('user')
         super(Autogrid4Form, self).__init__(*args, **kwargs)
 
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
@@ -173,14 +149,14 @@ class Autogrid4Form(forms.Form):
                         Div(
                             Div('param_receptor_file', css_class='col-xs-12'),
                             Div('param_gpf_file', css_class='col-xs-12'),
-                            css_class='row-fluid col-sm-12'
+                            css_class='row col-xs-12'
                         )
                     ),
                     Fieldset(
                         'Output',
                         Div(
                             Div(AppendedText('param_glg_filename', '.glg'), css_class='col-xs-12 col-md-8'),
-                            css_class='row-fluid col-sm-12'
+                            css_class='col-xs-12'
                         ),
                     ),
                     Fieldset(
@@ -199,14 +175,14 @@ class Autogrid4Form(forms.Form):
                         Div(
                             Div('param_ligand_file', css_class='col-xs-12'),
                             Div('param_dpf_file', css_class='col-xs-12'),
-                            css_class='row-fluid col-sm-12'
+                            css_class='col-xs-12'
                         )
                     ),
                     Fieldset(
                         'Output',
                         Div(
                             Div(AppendedText('param_dlg_filename', '.dlg'), css_class='col-xs-12 col-md-8'),
-                            css_class='row-fluid col-sm-12'
+                            css_class='col-xs-12'
                         ),
                     ),
                     Fieldset(
@@ -216,7 +192,7 @@ class Autogrid4Form(forms.Form):
                             Div('param_i', css_class='col-xs-12'),
                             Div('param_t', css_class='col-xs-12'),
                             Div('param_d_dock', css_class='col-xs-12'),
-                            css_class='row-fluid col-xs-12'
+                            css_class='col-xs-12'
                         )
                     ),
 
