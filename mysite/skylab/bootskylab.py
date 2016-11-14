@@ -62,7 +62,7 @@ class MPIThreadManager(object):
         post_save.connect(receiver=self.receive_toolactivation_from_post_save_signal, sender=ToolActivation,
                           dispatch_uid="receive_toolactivation_from_post_save_signal")
 
-        #TODO: enclose in thread
+
         for cluster in clusters:
             if cluster.id not in self.threadHash:
                 t = MPIThread(cluster, self)
