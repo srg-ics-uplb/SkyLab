@@ -51,7 +51,7 @@
                             <span id="mpi-info-status" class="
                             {% if mpi_cluster.status == 2 %}
                                 text-success
-                            {% elif mpi_cluster.status == 4 %}
+                            {% elif mpi_cluster.status == 4 or mpi_cluster.status == 5 %}
                                 text-danger
                             {% else %}
                                 text-info
@@ -68,8 +68,10 @@
                         {% if mpi_cluster.creator == user or user.is_superuser %}
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
                         <td>{% if user == mpi_cluster.creator or user.is_superuser %}
+                                {% if mpi_cluster.status != 5 %} {# disable checkbox if already cluster is already deleted #}
                                  <input type="checkbox" name="visibility-checkbox" data-label-text="Public"
                                    {% if mpi_cluster.is_public %}checked{% endif %}>
+                                {% endif %}
                             {% else %}
                                 {% if mpi_cluster.is_public %}
                                     Public
@@ -83,7 +85,7 @@
                     </tr>
                     </tbody>
                 </table>
-                {% if not mpi_cluster.queued_for_deletion %}
+                {% if not mpi_cluster.queued_for_deletion or mpi_cluster.status != 5 %}
                     {% if mpi_cluster.creator == user or user.is_superuser %}
                         <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
                                 data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
@@ -112,9 +114,11 @@
                             <td id="tool-activation-status-cell-{{ tool_activation.toolset.id }}">
                                 {% if tool_activation.status == 0 %}
                                     <span class="text-muted">{{ tool_activation.current_status_msg }}</span>
+                                    {% if mpi_cluster.status != 5 %}
                                     <button class="btn btn-success pull-right toolset-activate-btn"
                                             data-toolset-pk="{{ tool_activation.toolset.id }}">Activate
                                     </button>
+                                    {% endif %}
                                     {# activate button                            #}
                                 {% elif tool_activation.status == 1 %}
                                     <span class="text-info"> {{ tool_activation.current_status_msg }}</span>
@@ -127,7 +131,7 @@
                     </tbody>
                 </table>
             </div>
-            {% if not mpi_cluster.queued_for_deletion %}
+            {% if not mpi_cluster.queued_for_deletion or mpi_cluster.status != 5 %}
                 {% if mpi_cluster.creator == user or user.is_superuser %}
 
                     <div class="modal fade" id="delete-confirm-modal" role="dialog">
@@ -167,6 +171,7 @@
 
 {% block js %}
     {{ block.super }}
+    {% if mpi_cluster.status != 5 %}
     <script type="text/javascript"
             src="{% static 'bootstrap-switch-master/dist/js/bootstrap-switch.min.js' %}"></script>
     <script>
@@ -201,6 +206,7 @@
             });
 
         {% endif %}
+
 
 
 
@@ -253,5 +259,5 @@
             })
         })
     </script>
-
+    {% endif %}
 {% endblock %}

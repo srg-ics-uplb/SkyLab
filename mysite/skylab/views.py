@@ -324,7 +324,7 @@ def refresh_mpi_list_table(request):
             cluster.total_node_count,
             cluster.cluster_ip,
             cluster.task_queued_count,
-            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else '',
             'Public' if cluster.is_public else 'Private',
             cluster.created.strftime('%x %I:%M %p'),
         ])
@@ -413,7 +413,7 @@ def post_allow_user_access_to_mpi(request):
                     cluster.total_node_count,
                     cluster.cluster_ip,
                     cluster.task_queued_count,
-                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else ''
                     'Public' if cluster.is_public else 'Private',
                     cluster.created.strftime('%x %I:%M %p'),
                 ])
@@ -563,15 +563,35 @@ def refresh_task_detail_view(request, pk=None):
             task_output_file_list += '<a class="list-group-item" href="%s">%s</a>' % (
                 item.get("url"), item.get("filename"))
 
+        progress_bar_template = '<div id="task-view-progress-bar" class="progress progress-striped {active}">' \
+                                '<div class="progress-bar progress-bar-{class_type}" role="progressbar" aria-valuenow="{task_completion_rate}" aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%">' \
+                                '</div></div>'
+
         if task.status_code < 200:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-info pull-right">' + task.status_msg + '</span>'
+            active = 'active'
+            class_type = 'info'
+            # progress_bar_class = "info"
+            # task_status_class = 'info'
         elif task.status_code == 200:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-success pull-right">' + task.status_msg + '</span>'
+            active = ''
+            class_type = 'success'
+            # progress_bar_class = "success"
+            # task_status_class = 'success'
         elif task.status_code >= 400:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-danger pull-right">' + task.status_msg + '</span>'
+            active = ''
+            class_type = 'danger'
+            # progress_bar_class = "danger"
+            # task_status_class = 'success'
+
+        # if task.status_code < 200:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-info pull-right">' + task.status_msg + '</span>'
+        # elif task.status_code == 200:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-success pull-right">' + task.status_msg + '</span>'
+        # elif task.status_code >= 400:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-danger pull-right">' + task.status_msg + '</span>'
         # progress_bar
 
         output_image_urls = task.get_output_image_files_urls()
@@ -589,11 +609,11 @@ def refresh_task_detail_view(request, pk=None):
                 '#output-carousel-div': carousel_cells,
             },
             'fragments': {
-                '#task-view-progress-bar': progress_bar,
-                '#task-status': status_msg,
+                '#task-view-progress-bar': progress_bar_template.format(active=active, class_type=class_type, task_completion_rate=task.completion_rate),
+                '#task-status': '<span id="task-status" class="text-{class_type} pull-right">{status_msg}</span>'.format(class_type=class_type, status_msg=task.status_msg),
             },
             'status_code': task.status_code,
-            'progress': progress_bar,
+            #'progress': progress_bar,
             # 'has_jsmol_file': task.has_jsmol_file,
             'uri_dict': jsmol_file_absolute_uris,
             'jsmol_display': bool(jsmol_file_absolute_uris),
