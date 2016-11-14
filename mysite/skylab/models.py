@@ -95,8 +95,8 @@ class MPICluster(models.Model):
     def save(self, *args, **kwargs):
         # Update timestamps
         if not self.id:
-            self.created = timezone.now()
-        self.updated = timezone.now()
+            self.created = timezone.localtime(timezone.now())
+        self.updated = timezone.localtime(timezone.now())
         super(MPICluster, self).save(*args, **kwargs)
 
 @python_2_unicode_compatible
@@ -113,7 +113,7 @@ class ToolActivation(models.Model):
         return "{0} activation for {1}".format(self.toolset.display_name, self.mpi_cluster.cluster_name)
 
     def save(self, *args, **kwargs):
-        self.mpi_cluster.updated = timezone.now()
+        self.mpi_cluster.updated = timezone.localtime(timezone.now())
         super(ToolActivation, self).save(*args, **kwargs)
 
     @property
@@ -162,7 +162,7 @@ class ToolSet(models.Model):
             self.simple_name = re.sub(r'[\s_/-]', '', self.display_name.lower())
 
         if not self.id:
-            self.created = timezone.now()
+            self.created = timezone.localtime(timezone.now())
 
 
         super(ToolSet, self).save(*args, **kwargs)
@@ -203,7 +203,7 @@ class Tool(models.Model):
         #     self.simple_name = self.display_name.lower().replace(' ','')
 
         if not self.id:  # on instance created
-            self.created = timezone.now()
+            self.created = timezone.localtime(timezone.now())
             # if not self.simple_name:
             #     self.simple_name = re.sub(r'\s+|\_+','-',self.display_name).lower()
 
@@ -240,10 +240,9 @@ class Task(models.Model):
         created = False
         if not self.id:
             created = True
-            self.created = timezone.now()
+            self.created = timezone.localtime(timezone.now())
 
-        self.updated = timezone.now()
-
+        self.updated = timezone.localtime(timezone.now())
         # create toolactivation if does not exist
         obj, created = ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
                                              defaults={'status': 1})
@@ -446,6 +445,6 @@ class TaskLog(models.Model):
     def save(self, *args, **kwargs):
         # django.utils.timezone is more reliable vs datetime.datetime.now()
         # reference : http://stackoverflow.com/questions/1737017/django-auto-now-and-auto-now-add
-        self.task.updated = timezone.now()
-        self.timestamp = timezone.now()
+        self.task.updated = timezone.localtime(timezone.now())
+        self.timestamp = timezone.localtime(timezone.now())
         super(TaskLog, self).save(*args, **kwargs)

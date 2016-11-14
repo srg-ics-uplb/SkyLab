@@ -299,8 +299,8 @@ def refresh_task_list_table(request):
             task.tool.display_name,
             task.mpi_cluster.cluster_name,
             task.simple_status_msg,
-            task.updated.strftime('%x %I:%M %p'),
-            task.created.strftime('%x %I:%M %p')
+            task.created.strftime('%x %I:%M %p'),
+            task.updated.strftime('%x %I:%M %p')
         ])
     return {'rows': rows}
 
