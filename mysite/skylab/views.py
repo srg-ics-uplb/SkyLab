@@ -324,7 +324,7 @@ def refresh_mpi_list_table(request):
             cluster.total_node_count,
             cluster.cluster_ip,
             cluster.task_queued_count,
-            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else '',
+            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
             'Public' if cluster.is_public else 'Private',
             cluster.created.strftime('%x %I:%M %p'),
         ])
@@ -413,7 +413,7 @@ def post_allow_user_access_to_mpi(request):
                     cluster.total_node_count,
                     cluster.cluster_ip,
                     cluster.task_queued_count,
-                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else ''
+                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
                     'Public' if cluster.is_public else 'Private',
                     cluster.created.strftime('%x %I:%M %p'),
                 ])
