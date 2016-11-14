@@ -289,7 +289,7 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 @ajax
 def refresh_task_list_table(request):
     if request.user.is_superuser:
-        tasks = Task.objects.all()
+        tasks = Task.objects.all().order_by('-updated')
     else:
         tasks = Task.objects.filter(user=request.user).order_by('-updated')
     rows = []

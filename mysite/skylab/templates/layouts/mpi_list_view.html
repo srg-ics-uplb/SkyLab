@@ -102,6 +102,7 @@
 
         {# dataTable object init #}
         var table = $('#mpi-table').DataTable({
+            "order": [[4, 'asc']],
             "columnDefs": [
                 {
                     "type" : "mpi-status",
