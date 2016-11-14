@@ -411,7 +411,7 @@ class MPIThread(threading.Thread):
                 self.logger.info(self.log_prefix + 'Terminating ...')
             else:
                 try:
-                    queue_obj = self.task_queue.get()
+                    queue_obj = self.task_queue.get_nowait() #non-blocking get
 
                     if queue_obj[0] == 1:  # p2c-tools activate are always priority # 1
                         self.logger.debug(self.log_prefix + "Running " + queue_obj[1])
