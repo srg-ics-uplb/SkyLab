@@ -83,6 +83,15 @@
                     </tr>
                     </tbody>
                 </table>
+                {% if not mpi_cluster.queued_for_deletion %}
+                    {% if mpi_cluster.creator == user or user.is_superuser %}
+                        <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
+                                data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
+                            Delete this cluster
+                        </button>
+                    {% endif %}
+                {% endif %}
+
             </div>
 
             <div class="row">
@@ -120,12 +129,7 @@
             </div>
             {% if not mpi_cluster.queued_for_deletion %}
                 {% if mpi_cluster.creator == user or user.is_superuser %}
-                    <div class="row">
-                        <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
-                                data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
-                            Delete this cluster
-                        </button>
-                    </div>
+
                     <div class="modal fade" id="delete-confirm-modal" role="dialog">
                         <div class="modal-dialog ">
                             <div class="modal-content">

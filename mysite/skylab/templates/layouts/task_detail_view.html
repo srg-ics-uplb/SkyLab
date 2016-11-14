@@ -312,8 +312,8 @@
             addSelectionOptions: false,
             use: "HTML5", {# JAVA HTML5 WEBGL are all options #}
             j2sPath: "{{ jsmol_server_root }}/j2s",
-            //j2sPath: "http://localhost/jsmol/j2s",
-            //j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
+{#            j2sPath: "http://localhost/jsmol/j2s",#}
+{#            j2sPath: "{% static 'jsmol/j2s' %}", {# this needs to point to where the j2s directory is. #}
             script: script,
             serverURL: "{{ jsmol_server_root }}/php/jsmol.php",
             readyFunction: jmol_isReady,
@@ -356,7 +356,6 @@
 
             $('input[type=radio][name=isosurface-options]').prop('checked', false)//.checkboxradio("refresh");
         });;
-
         $('input[type=radio][name=isosurface-options]').change(function () {
             Jmol.script(jmolApplet0, this.value);
             if (this.value == "isosurface delete") {

@@ -190,10 +190,16 @@
 <script src="{% static 'bootstrap-3.3.7-dist/js/bootstrap.min.js' %}"></script>
 <script src="{% static 'bootstrap-3.3.7-dist/js/npm.js' %}"></script>
 <script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+
 {#    LOGOUTS GOOGLE ACCOUNT ON SKYLAB ACCOUNT LOGOUT. REMOVE THIS FUNCTION TO PRESERVE OAUTH WORKFLOW#}
 
 {% if user.is_authenticated %}
     <script type="text/javascript">
+{#         $(document).ajaxError(function(e, xhr, opt){#}
+{#            console.log("Error requesting " + opt.url + ": " + xhr.status + " " + xhr.statusText);#}
+{#        });#}
+
+
         {# logout_google_account via ajax post #}
         $("body").bind("ajaxSend", function (elm, xhr, s) {
             if (s.type == "POST") {

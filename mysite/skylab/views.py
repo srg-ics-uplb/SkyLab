@@ -565,13 +565,13 @@ def refresh_task_detail_view(request, pk=None):
 
         if task.status_code < 200:
             progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-info pull-right">' + task.simple_status_msg + '</span>'
+            status_msg = '<span id="task-status" class="text-info pull-right">' + task.status_msg + '</span>'
         elif task.status_code == 200:
             progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-success pull-right">' + task.simple_status_msg + '</span>'
+            status_msg = '<span id="task-status" class="text-success pull-right">' + task.status_msg + '</span>'
         elif task.status_code >= 400:
             progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-danger pull-right">' + task.simple_status_msg + '</span>'
+            status_msg = '<span id="task-status" class="text-danger pull-right">' + task.status_msg + '</span>'
         # progress_bar
 
         output_image_urls = task.get_output_image_files_urls()
