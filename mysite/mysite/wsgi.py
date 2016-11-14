@@ -27,7 +27,7 @@ setup_logging()  # setup logger, handlers
 # TaskLog.objects.all().delete()
 # # SkyLabFile.objects.all().delete()
 #
-# manager = MPIThreadManager()
+manager = MPIThreadManager()
 
 
 
