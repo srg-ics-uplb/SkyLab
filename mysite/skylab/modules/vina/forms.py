@@ -106,8 +106,8 @@ class VinaForm(forms.Form):
                     Fieldset(
                         'Input',
                         Field('param_receptor', wrapper_class='col-xs-12'),
-                        Field('param_flex', wrapper_class='col-xs-12'),
                         Field('param_ligands', wrapper_class='col-xs-12 col-md-8'),
+                        Field('param_flex', wrapper_class='col-xs-12'),
                         css_class='col-xs-12'
                     ),
                     Fieldset(
