@@ -3,7 +3,7 @@ import math
 import os.path
 import stat
 import time
-
+import socket
 import spur
 from django.conf import settings
 
@@ -21,15 +21,26 @@ class VinaExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
+
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
+        sftp.get_channel().settimeout(180.0)  # set timeout to 3 mins
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for f in files:
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             mkdir_p(sftp, f.upload_path)  # mimics mkdir -p f.upload_path
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except socket.timeout:
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
@@ -98,6 +109,8 @@ class VinaExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        sftp.get_channel().settimeout(180.0)  # set timeout to 3 mins
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
 
         # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
         # Transfer via zip.
@@ -107,20 +120,27 @@ class VinaExecutable(P2CToolGeneric):
 
         self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
 
-        sftp = self.shell._open_sftp_client()
-        self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
-        self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
-        sftp.remove(remote_zip_filepath)
+
+
+        while True:
+            try:
+                self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
+                sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
+                self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+                break
+            except socket.timeout:
+                self.logger.debug(self.log_prefix + ' Retrying for ' + zip_filename)
+
+        #sftp.remove(remote_zip_filepath) no need to delete since task dir will be deleted anyway
         sftp.close()
+        self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
         # attach transferred file to database
         new_file = SkyLabFile.objects.create(type=2, task=self.task)
         new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
                                           zip_filename)
         new_file.save()
-        sftp.close()
-        self.logger.debug(self.log_prefix + 'Closed SFTP client')
+
 
 
 
@@ -149,11 +169,19 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        sftp.get_channel().settimeout(180.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
         sftp.chdir(os.path.join(self.remote_task_dir, "output"))  # cd /mirror/task_xx
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except socket.timeout:
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
@@ -214,6 +242,7 @@ class VinaSplitExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
         sftp.chdir(self.working_dir)
         for f in SkyLabFile.objects.filter(task=self.task, type=1):
             input_file = f.filename
@@ -227,15 +256,24 @@ class VinaSplitExecutable(P2CToolGeneric):
         remote_path = os.path.join(self.remote_task_dir, 'output')
         # retrieve then delete produced output files
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
-
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except socket.timeout:
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
                 #sftp.remove(remote_filepath)  # delete file after transfer
 
                 # register newly transferred file as skylabfile

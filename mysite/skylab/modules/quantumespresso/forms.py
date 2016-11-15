@@ -31,6 +31,8 @@ class SelectMPIFilesForm(forms.Form):
                     raise forms.ValidationError("Invalid UPF file : {0}".format(upf_file))
 
             return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
+        else: raise forms.ValidationError("No pseudopotentials specified")
+
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
@@ -68,7 +70,7 @@ class InputParameterForm(forms.Form):
         #('ph.x','ph.x'), #PHonon
 
     )
-    param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
+    param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES) #todo: required=False, validate formset
     param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
                                        required=False)#,
                                       # help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)

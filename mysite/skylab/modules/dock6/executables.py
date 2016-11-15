@@ -3,6 +3,7 @@ import math
 import os.path
 import time
 import stat
+import socket
 
 import spur
 from django.conf import settings
@@ -27,13 +28,21 @@ class GridExecutable(P2CToolGeneric):
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/workdir
 
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except socket.timeout:
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
@@ -84,7 +93,7 @@ class GridExecutable(P2CToolGeneric):
 
         if error:
             self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
+                status_msg='Task execution error! See output file for more information', status_code=400)
         else:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -117,6 +126,9 @@ class GridExecutable(P2CToolGeneric):
 
         remote_path = self.working_dir
         remote_files = sftp.listdir(path=remote_path)
+
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
 
         # remove input files in workdir
         for remote_file in remote_files:

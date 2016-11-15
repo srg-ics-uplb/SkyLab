@@ -17,6 +17,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
 from skylab.bootskylab import install_toolsets, setup_logging, MPIThreadManager
+from skylab.models import Task, ToolActivation, MPICluster
 
 
 
@@ -28,6 +29,7 @@ setup_logging()  # setup logger, handlers
 # # SkyLabFile.objects.all().delete()
 #
 manager = MPIThreadManager()
+
 
 
 

@@ -126,7 +126,7 @@ class RayView(LoginRequiredMixin, FormView):
                                                                                              annotations_file.name)
 
                 command_list.append(
-                    "wget -O task_{0:d}/input/OntologyTerms.txt http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo".format(
+                    "wget -q -O task_{0:d}/input/OntologyTerms.txt http://geneontology.org/ontology/obo_format_1_2/gene_ontology_ext.obo".format(
                         task.id))
 
             # Other Output options

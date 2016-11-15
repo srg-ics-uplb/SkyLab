@@ -64,7 +64,7 @@ class InputParameterForm(forms.Form):
         ('-i','-i'),
         ('-s','-s'),
     )
-    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES, required=False)
+    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES) #todo: required = False, validate in custom formset
     input_file1 = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
     input_file2 = forms.FileField(label="Sequence file 2", validators=[ray_file_extension_validator], required=False)
 

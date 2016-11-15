@@ -54,7 +54,7 @@ class InputParameterForm(forms.Form):
         ('9', 'Laplace (8-neighbor)'),
         ('10', 'Sobel')
     )
-    param_operation = forms.ChoiceField(label="Image processing operation", choices=OPTIONS, required=False)
+    param_operation = forms.ChoiceField(label="Image processing operation", choices=OPTIONS) #todo: required=False, validate in custom formset
     param_value = forms.IntegerField(label="Value", help_text="Select from 1-100", required=False, max_value=100,
                                      min_value=1)
 

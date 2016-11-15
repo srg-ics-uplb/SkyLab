@@ -3,6 +3,7 @@ import math
 import os
 import stat
 import time
+import socket
 
 import spur
 from django.conf import settings
@@ -27,13 +28,24 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
         self.logger.debug(self.log_prefix + "Opening SFTP client")
         sftp = self.shell._open_sftp_client()
+
+        # sftp.settimeout(300) #set sftp operations timeout to 300 secs
         sftp.chdir(os.path.join(self.remote_task_dir, 'input'))  # cd /mirror/task_xx/input
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except socket.timeout:
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
         sftp.close()
         self.logger.debug(self.log_prefix + "Closed SFTP client")
 
@@ -75,18 +87,23 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                     for parameter in command_list:
                         self.logger.debug(self.log_prefix + 'input ' + str(parameter))
                         exec_shell.stdin_write(str(parameter) + "\n")
-                        time.sleep(3)
+                        time.sleep(10)
 
-                    while exec_shell.is_running():
+
+                    while True:
                         self.logger.debug(self.log_prefix + 'Running exit operation')
-                        exec_shell.stdin_write('0\n')
-                        time.sleep(3)
-                        exit_retries += 1
+                        time.sleep(10)
+                        if exec_shell.is_running():
+                            exec_shell.stdin_write('0\n')
+                            exit_retries += 1
 
-                        if exit_retries > 5:
-                            self.logger.debug(self.log_prefix + 'Force exit operation')
-                            exec_shell.send_signal(9)
-                            exit_loop = False
+                            if exit_retries > 5:
+                                self.logger.debug(self.log_prefix + 'Force exit operation')
+                                exec_shell.send_signal(9)
+                                exit_loop = False
+                        else:
+                            self.logger.debug(self.log_prefix + 'Exited operation')
+                            break
 
                     # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
@@ -126,7 +143,7 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         if error:
             self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
+                status_msg='Task execution error!', status_code=400)
         else:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -144,7 +161,8 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         self.logger.debug(self.log_prefix + "Opening SFTP client")
         sftp = self.shell._open_sftp_client()
-        self.logger.debug(self.log_prefix + "Opened SFTP client")
+        sftp.get_channel().settimeout(300.0)
+
         remote_path = os.path.join(self.remote_task_dir, 'output')
         sftp.chdir(remote_path)
 
@@ -153,16 +171,24 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         # hangs on this command, used workaround instead
         # remote_files = sftp.listdir()  # list dirs and files in remote path
 
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+        self.logger.debug(self.log_prefix + "Opened SFTP client")
+
         for remote_file in self.output_files:  #sftp.listdir(path=remote_path):
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
-
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-                sftp.remove(remote_filepath)  # delete file after transfer
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except socket.timeout:
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
+                #sftp.remove(remote_filepath)  # delete file after transfer
 
                 # register newly transferred file as skylabfile
                 new_file = SkyLabFile.objects.create(type=2,

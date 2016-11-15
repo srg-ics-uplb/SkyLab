@@ -100,7 +100,7 @@
                     {
                         "targets":[0],
                         "createdCell": function (td, cellData, rowData, row, col) { {# make cluster name a link #}
-                            var url_mask = "{% url 'task_detail_view' pk=0 %}".replace(/0/, cellData);
+                            var url_mask = "{% url 'task_detail_view' pk=99999 %}".replace(/99999/, cellData);
                             $(td).html('<a href="'+url_mask+'">'+cellData+'</a>')
                         }
                     },
@@ -119,7 +119,7 @@
 
                     {# make row clickable #}
                     {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
-                    var url_mask = "{% url 'task_detail_view' pk=911 %}".replace(/911/, data[0]);
+                    var url_mask = "{% url 'task_detail_view' pk=99999 %}".replace(/99999/, data[0]);
                     {# parse url #}
                     $(row).attr('data-href', url_mask);
                 }

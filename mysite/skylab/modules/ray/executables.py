@@ -24,6 +24,11 @@ class RayExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
+        #no timeouts will be implemented for ray since input files used are too large
+        # sftp.get_channel().settimeout(900.0) #
+        # self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for f in files:
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             self.logger.debug(self.log_prefix + 'Uploading ' + f.filename )

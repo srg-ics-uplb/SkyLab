@@ -4,6 +4,7 @@ import os
 import re
 import stat
 import time
+import socket
 
 import spur
 from django.conf import settings
@@ -25,12 +26,22 @@ class GamessExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/input
 
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except socket.timeout:
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
+
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
@@ -106,7 +117,7 @@ class GamessExecutable(P2CToolGeneric):
 
         if error:
             self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
+                status_msg='Task execution error! See output file for more information', status_code=400)
         else:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -125,19 +136,29 @@ class GamessExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
+
         remote_path = os.path.join(self.remote_task_dir, 'output')
 
         # retrieve then delete produced output files
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except socket.timeout:
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
 
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                 # no need to remove files since parent directory (task folder) will be deleted
                 # sftp.remove(remote_filepath)  # delete file after transfer
 

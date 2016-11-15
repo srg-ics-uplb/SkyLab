@@ -106,7 +106,8 @@ class MPIThreadManager(object):
         return self.frontend_shell
 
     def get_frontend_shell(self):
-        self._connected_to_frontend.wait()
+        if not self._connected_to_frontend.isSet():
+            self._connected_to_frontend.wait()
         return self.frontend_shell
 
     def receive_toolactivation_from_post_save_signal(self, sender, instance, created, **kwargs):
@@ -167,7 +168,7 @@ class MPIThread(threading.Thread):
 
     def connect_or_create(self):
 
-        self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
+
         if self.mpi_cluster.status == 0:  # create
             self.create_mpi_cluster()
         else:
@@ -189,17 +190,20 @@ class MPIThread(threading.Thread):
         self.test_cluster_connection(init=True)
 
         # fix for unresponsive ssh from srg.ics
+        self.logger.debug(self.log_prefix + 'Set mtu to 1454')
         command = "sudo ifconfig eth0 mtu 1454"
         ssh_fix = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
         ssh_fix.stdin_write(settings.CLUSTER_PASSWORD + "\n")
-        self.logger.debug(self.log_prefix + 'Set mtu to 1454')
+        ssh_fix.wait_for_result()
+
 
         # when instance is restarted this settings resets : observation >> confirmed
+        self.logger.debug(self.log_prefix + 'Set kernel.shmmax=500000000')
         command = 'sudo /sbin/sysctl -w kernel.shmmax=500000000'
         shmax_fixer = self.cluster_shell.spawn(['sh', '-c', command], use_pty=True)
         shmax_fixer.stdin_write(settings.CLUSTER_PASSWORD + "\n")
         shmax_fixer.wait_for_result()
-        self.logger.debug(self.log_prefix + 'Set kernel.shmmax=500000000')
+
 
     def test_cluster_connection(self, init=False):
         retries = 0
@@ -259,6 +263,7 @@ class MPIThread(threading.Thread):
                 self.logger.debug(self.log_prefix + "Installing zip")
                 command = "sudo apt-get install zip -y"
                 zip_shell = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
+                time.sleep(1)
                 zip_shell.stdin_write(settings.CLUSTER_PASSWORD + "\n")
                 # zip_shell.stdin_write("Y\n")
                 self.logger.debug(self.log_prefix + zip_shell.wait_for_result().output)
@@ -294,9 +299,11 @@ class MPIThread(threading.Thread):
             exit_loop = False
             while not exit_loop:
                 if toolset.p2ctool_name == 'quantum-espresso':
-                    command = 'wget http://qe-forge.org/gf/download/frsrelease/211/968/espresso-5.4.0.tar.gz &&' \
-                              'tar -xvsf espresso-5.4.0.tar.gz && cd espresso-5.4.0/  &&  ./configure  &&' \
-                              'make all'
+                    pass
+                    #todo : host in p2c webserver
+                    # command = 'wget http://qe-forge.org/gf/download/frsrelease/211/968/espresso-5.4.0.tar.gz &&' \
+                    #           'tar -xvsf espresso-5.4.0.tar.gz && cd espresso-5.4.0/  &&  ./configure  &&' \
+                    #           'make all'
                 else:
                     command = "p2c-tools activate {0}".format(toolset.p2ctool_name)
                 try:
@@ -332,7 +339,7 @@ class MPIThread(threading.Thread):
 
     def create_mpi_cluster(self):
         self.logger.info(self.log_prefix + "Creating MPI Cluster")
-
+        self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
         retries = 0
         exit_loop = False
         while not exit_loop:
@@ -383,7 +390,7 @@ class MPIThread(threading.Thread):
         self.logger.info(self.log_prefix + "Populating task queue")
 
         # get tasks that are not finished yet
-        tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster.id).exclude(status_code=200).exclude(
+        tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster).exclude(status_code=200).exclude(
             status_code=401).order_by('priority', 'created')  # status 400 is not terminal, 401 is
         # lower priority value are prioritized
 
@@ -440,7 +447,7 @@ class MPIThread(threading.Thread):
                     if self.mpi_cluster.queued_for_deletion:  # if queue is empty and cluster is queued for deletion
                         self._stop.set()
                         self.logger.info(self.log_prefix + "Deleting MPI Cluster")
-
+                        self.frontend_shell = self.manager.get_frontend_shell()  # get working frontend_shell
                         retries = 0
                         exit_loop = False
                         while not exit_loop:
@@ -474,6 +481,8 @@ class MPIThread(threading.Thread):
 
                         self.mpi_cluster.toolsets.clear()  # clear toolsets, toolactivation
                         self.mpi_cluster.change_status(5)
+                    else:
+                        time.sleep(5) #sleep for 5 seconds before processing again
 
     def add_task_to_queue(self, priority, task):
         self.task_queue.put((priority, task))
