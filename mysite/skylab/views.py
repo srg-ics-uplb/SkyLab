@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.utils import timezone
 from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -299,8 +300,8 @@ def refresh_task_list_table(request):
             task.tool.display_name,
             task.mpi_cluster.cluster_name,
             task.simple_status_msg,
-            task.created.strftime('%x %I:%M %p'),
-            task.updated.strftime('%x %I:%M %p')
+            timezone.localtime(task.created).strftime('%x %I:%M %p'),
+            timezone.localtime(task.updated).strftime('%x %I:%M %p')
         ])
     return {'rows': rows}
 
@@ -326,7 +327,8 @@ def refresh_mpi_list_table(request):
             cluster.task_queued_count,
             cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
             'Public' if cluster.is_public else 'Private',
-            cluster.created.strftime('%x %I:%M %p'),
+
+            timezone.localtime(cluster.created).strftime('%x %I:%M %p'),
         ])
 
     return {'rows':rows}
@@ -415,7 +417,7 @@ def post_allow_user_access_to_mpi(request):
                     cluster.task_queued_count,
                     cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
                     'Public' if cluster.is_public else 'Private',
-                    cluster.created.strftime('%x %I:%M %p'),
+                    timezone.localtime(cluster.created).strftime('%x %I:%M %p'),
                 ])
             data['rows'] = rows
 
