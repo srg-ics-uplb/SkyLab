@@ -95,6 +95,8 @@
                     return 2;
                 case 'Connection error':
                     return 3;
+                case 'Deleted':
+                    return 4;
                 default:
                     return 0;
             }
@@ -121,6 +123,7 @@
                                     $(td).addClass('text-success');
                                     break;
                                 case "Connection error":
+                                case "Deleted":
                                     $(td).addClass('text-danger');
                                     break;
                                 default:

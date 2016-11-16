@@ -476,13 +476,14 @@ class MPIThread(threading.Thread):
                                 if not exit_loop:
                                     retries += 1
                                     wait_time = min(math.pow(2, retries), MAX_WAIT)
-                                    self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+                                    self.logger.debug(self.log_prefix+'Waiting {0}s until next retry'.format(wait_time))
                                     time.sleep(wait_time)
 
                         self.mpi_cluster.toolsets.clear()  # clear toolsets, toolactivation
                         self.mpi_cluster.change_status(5)
                     else:
-                        time.sleep(5) #sleep for 5 seconds before processing again
+                        self.logger.debug(self.log_prefix+"Queue is empty. Sleeping for 30 seconds")
+                        time.sleep(30) #sleep for 30 seconds before processing again, since queue is empty
 
     def add_task_to_queue(self, priority, task):
         self.task_queue.put((priority, task))
