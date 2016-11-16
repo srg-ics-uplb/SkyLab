@@ -39,7 +39,7 @@ class SelectMPIFilesForm(forms.Form):
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
 
-        toolset = ToolSet.objects.get(p2ctool_name="quantum-espresso")
+        toolset = ToolSet.objects.get(p2ctool_name="espresso")
 
         self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
                                                          toolset=toolset,
