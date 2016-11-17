@@ -316,9 +316,20 @@ class Autogrid4Executable(P2CToolGeneric):
                 self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
                 sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
                 self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
+                break
             except socket.timeout:
                 self.logger.debug(self.log_prefix + ' Retrying for ' + zip_filename)
                 time.sleep(2)
+
+                # self.test_ssh_connection()
+                # self.logger.debug(self.log_prefix + 'Opening SFTP client')
+                # sftp = self.shell._open_sftp_client()
+                # self.logger.debug(self.log_prefix + 'Opened SFTP client')
+                #
+                # sftp.get_channel().settimeout(300.0)
+                # self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
+
         #sftp.remove(remote_zip_filepath)
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')

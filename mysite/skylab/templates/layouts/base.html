@@ -59,10 +59,11 @@
                         </ul>
                     </li>
                     <li class="dropdown">
-                        <a href="{% url 'task_list_view' %}" onmouseover="navTasksOnClick()">
+                        <a href="{% url 'task_list_view' %}" id="nav-tasks-link">
                             <i class="fa fa-tasks fa-fw"></i> Tasks</i>
                         </a>
                         <ul class="dropdown-menu dropdown-tasks" id="nav-task-list">
+                            <li><p class="text-center" >No tasks created</p></li>
                         </ul>
                         <!-- /.dropdown-tasks -->
                     </li>
@@ -223,7 +224,10 @@
         });
 
         var navTaskListRefreshing = false;
-        var navTasksOnClick = function () {
+
+
+
+        var refreshNavTaskList = function () {
             $('.nav-refreshing').remove();
             $('#nav-task-list').append('<li><p class="text-center nav-refreshing"><i class="fa fa-refresh fa-spin fa-fw"></i>Refreshing...</li></p>');
 
@@ -231,6 +235,15 @@
                $('.nav-refreshing').remove();
             });
         };
+
+        var setTimeoutConst;
+        $('#nav-tasks-link').hover(function(){
+        setTimeoutConst = setTimeout(refreshNavTaskList, 2000);
+        },function(){
+        clearTimeout(setTimeoutConst );
+        });
+
+        refreshNavTaskList();
 
         {# begin create task modal #}
         var create_task_modal = $('#create-task-modal');

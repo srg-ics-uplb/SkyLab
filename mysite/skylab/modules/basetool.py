@@ -1,11 +1,14 @@
 import os.path
+import spur
+import time
+import math
 from abc import abstractmethod
 
 from django.conf import settings
 
 from skylab.models import SkyLabFile
 
-
+MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
 
 # source: http://stackoverflow.com/questions/14819681/upload-files-using-sftp-in-python-but-create-directories-if-path-doesnt-exist
 def mkdir_p(sftp, remote_directory):
@@ -60,6 +63,30 @@ class P2CToolGeneric(object):  # parent class for all skylab.modules.-.executabl
 		self.log_prefix = kwargs.get('log_prefix', '')
 		self.remote_task_dir = os.path.join(settings.REMOTE_BASE_DIR, self.task.task_dirname)
 		self.working_dir = self.remote_task_dir  # dir where tool commands will be executed
+
+	def test_ssh_connection(self):
+		retries = 0
+		exit_loop = False
+		while not exit_loop:
+			try:
+				self.logger.info(self.log_prefix + "Testing connection to cluster...")
+				# check if connection is sucessful
+				# from : http://stackoverflow.com/questions/28288533/check-if-paramiko-ssh-connection-is-still-alive
+				channel = self.shell._get_ssh_transport().send_ignore()
+				exit_loop = True  # exit loop
+
+			except (spur.ssh.ConnectionError, EOFError) as e:
+				self.logger.error(self.log_prefix + "Error connecting to cluster", exc_info=True)
+				self.task.mpi_cluster.change_status(4)
+
+			finally:
+				if not exit_loop:
+					retries += 1
+					wait_time = min(math.pow(2, retries), MAX_WAIT)
+					self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
+					time.sleep(wait_time)
+
+		self.logger.info(self.log_prefix + "Connected to cluster...")
 
 	def sftp_file_transfer_callback(self, bytes_transferred, total_bytes):
 		self.logger.debug(self.log_prefix + "Bytes transferred :{bytes_transferred}, Bytes to transfer: {total_bytes}".format(bytes_transferred=bytes_transferred, total_bytes=total_bytes))

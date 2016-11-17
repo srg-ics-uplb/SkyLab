@@ -8,9 +8,9 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField, get_mpi_queryset_all
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_for_task_submission
 from skylab.models import MPICluster, ToolSet
-from validators import in_files_validator
+from validators import in_file_extension_validator
 
 
 class SelectMPIFilesForm(forms.Form):
@@ -41,7 +41,7 @@ class SelectMPIFilesForm(forms.Form):
 
         toolset = ToolSet.objects.get(p2ctool_name="espresso")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
@@ -71,8 +71,9 @@ class InputParameterForm(forms.Form):
 
     )
     param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES) #todo: required=False, validate formset
-    param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
-                                       required=False)#,
+    param_input_file = forms.FileField(label="Input file (.in)", validators=[in_file_extension_validator])
+    # param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
+    #                                    required=False)#,
                                       # help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
                                      #  help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
@@ -89,7 +90,7 @@ class InputParameterForm(forms.Form):
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
                 Field('param_executable', css_class='parameter', wrapper_class='col-xs-10 col-sm-5'),
-                Div(Field('param_input_files'), css_class='col-xs-12 col-sm-5 col-sm-offset-1'),
+                Div(Field('param_input_file'), css_class='col-xs-12 col-sm-5 col-sm-offset-1'),
 
                 css_class='col-xs-12 form-container'
             ),

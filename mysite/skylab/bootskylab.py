@@ -15,6 +15,7 @@ import time
 import spur
 from django.conf import settings
 from django.db.models.signals import post_save
+from skylab.signals import queue_task
 
 import skylab.modules
 from skylab.models import MPICluster, Task, ToolSet, ToolActivation, Tool
@@ -25,6 +26,8 @@ def populate_tools():
 
 
 MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
+
+
 
 def setup_logging(
         path=os.path.dirname(os.path.abspath(__file__)) + '/logs/skylab_log_config.json',
@@ -54,8 +57,10 @@ class MPIThreadManager(object):
 
         post_save.connect(receiver=self.receive_mpi_cluster_from_post_save_signal, sender=MPICluster,
                           dispatch_uid="receive_mpi_from_post_save_signal")
-        post_save.connect(receiver=self.receive_task_from_post_save_signal, sender=Task,
-                          dispatch_uid="receive_task_from_post_save_signal")
+        # post_save.connect(receiver=self.receive_task_from_queue_task_signal, sender=Task,
+        #                    dispatch_uid="receive_task_from_queue_task_signal")
+        queue_task.connect(receiver=self.receive_task_from_queue_task_signal, sender=Task,
+                           dispatch_uid="receive_task_from_queue_task_signal")
 
         # this may lead to duplicates on mpi create,
         # activate_toolset checks if the toolset is activated before execution
@@ -111,7 +116,7 @@ class MPIThreadManager(object):
         return self.frontend_shell
 
     def receive_toolactivation_from_post_save_signal(self, sender, instance, created, **kwargs):
-        if created and instance.status == 1:
+        if instance.status == 1:
             logging.info(
                 'Received ToolActivation #{0} ({1}) for MPI #{2}'.format(instance.id, instance.toolset.display_name,
                                                                          instance.mpi_cluster_id))
@@ -119,12 +124,11 @@ class MPIThreadManager(object):
             self.threadHash[instance.mpi_cluster_id].add_task_to_queue(1, "self.activate_tool({0})".format(
                 instance.toolset_id))
 
-    def receive_task_from_post_save_signal(self, sender, instance, created, **kwargs):
-        if created:
-            logging.info('Received Task #{0} for MPI #{1}'.format(instance.id, instance.mpi_cluster.cluster_name))
+    def receive_task_from_queue_task_signal(self, task_instance, **kwargs):
+        logging.info('Received Task #{0} for MPI #{1}'.format(task_instance.id, task_instance.mpi_cluster.cluster_name))
 
-            # append to queue
-            self.threadHash[instance.mpi_cluster_id].add_task_to_queue(instance.priority, instance)
+        # append to queue
+        self.threadHash[task_instance.mpi_cluster_id].add_task_to_queue(task_instance.priority, task_instance)
 
     def receive_mpi_cluster_from_post_save_signal(self, sender, instance, created, **kwargs):
         if created:
@@ -167,8 +171,6 @@ class MPIThread(threading.Thread):
         super(MPIThread, self).__init__()
 
     def connect_or_create(self):
-
-
         if self.mpi_cluster.status == 0:  # create
             self.create_mpi_cluster()
         else:
@@ -310,8 +312,8 @@ class MPIThread(threading.Thread):
                     tool_activator = self.cluster_shell.spawn(["sh", "-c", command], use_pty=True)
                     tool_activator.stdin_write(settings.CLUSTER_PASSWORD + "\n")
                     tool_activator.wait_for_result()
-                    self.logger.info(self.log_prefix + "{0} is now activated.".format(toolset.display_name))
-                    self.logger.debug(self.log_prefix + tool_activator.wait_for_result().output)
+                    self.logger.info(self.log_prefix + u"{0:s} is now activated.".format(toolset.display_name))
+                    self.logger.debug(u"{0:s}{1:s}".format(self.log_prefix ,tool_activator.wait_for_result().output))
 
                     # set activated to true after installation
                     tool_activation_instance.refresh_from_db()

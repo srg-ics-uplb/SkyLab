@@ -9,6 +9,7 @@ from django.views.generic import FormView
 
 from skylab.models import Tool, Task, SkyLabFile
 from skylab.modules.impi.forms import InputParameterForm, SelectMPIFilesForm
+from skylab.signals import send_to_queue
 
 
 class ImpiView(LoginRequiredMixin, FormView):
@@ -72,10 +73,12 @@ class ImpiView(LoginRequiredMixin, FormView):
             task.refresh_from_db()
             task.task_data = json.dumps(task_data)
             task.save()
+            send_to_queue(task=task)
 
             return redirect('task_detail_view', pk=task.id)
         else:
             return render(request, 'modules/impi/use_impi.html', {
                 'form': select_mpi_form,
                 'input_formset': input_formset,
+                'tool':Tool.objects.get(simple_name='impi'),
             })

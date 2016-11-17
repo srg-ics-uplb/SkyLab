@@ -65,14 +65,14 @@ class CreateMPIForm(forms.Form):
 # 		self.helper.form_action = ''
 #
 # 		self.helper.add_input(Submit('submit','Execute'))
-def get_mpi_queryset_all(user):
+def get_mpi_queryset_for_task_submission(user):
 	if user.is_superuser:
 		qs = MPICluster.objects.all()
 	else:
 		user_allowed = Q(allowed_users=user)
 		cluster_is_public = Q(is_public=True)
 		qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
-		qs = qs.exclude(status=5).exclude(queued_for_deletion=True)
+	qs = qs.exclude(status=5).exclude(queued_for_deletion=True)
 
 	return qs
 

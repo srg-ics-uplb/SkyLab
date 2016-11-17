@@ -9,6 +9,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.gamess.forms import GamessForm
+from skylab.signals import send_to_queue
 
 
 class GamessView(LoginRequiredMixin, FormView):
@@ -46,6 +47,7 @@ class GamessView(LoginRequiredMixin, FormView):
         task.refresh_from_db()
         task.task_data = json.dumps({'command_list': command_list})
         task.save()
+        send_to_queue(task=task)
 
         self.kwargs['id'] = task.id
         return super(GamessView, self).form_valid(form)

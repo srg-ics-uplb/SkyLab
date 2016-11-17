@@ -7,6 +7,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.autodock4.forms import Autodock4Form, Autogrid4Form
+from skylab.signals import send_to_queue
 
 
 class Autodock4View(LoginRequiredMixin, FormView):
@@ -71,7 +72,7 @@ class Autodock4View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [exec_string]})
         task.save()
-
+        send_to_queue(task=task)
         # find a way to know if thread is already running
         return super(Autodock4View, self).form_valid(form)
 
@@ -147,5 +148,6 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [exec_string]})
         task.save()
+        send_to_queue(task=task)
 
         return super(Autogrid4View, self).form_valid(form)

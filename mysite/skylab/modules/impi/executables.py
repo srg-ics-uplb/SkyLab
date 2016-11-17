@@ -68,10 +68,10 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
         for filename in input_filenames:
-            # command = 'impi '+ os.path.join('../input', filename)
+            command = 'impi '+ os.path.join('../input', filename)
 
-            command = "mpirun -np {0:d} -f {1:s} impi ../input/{2}".format(self.task.mpi_cluster.total_node_count,
-                                                                    settings.MPIEXEC_NODES_FILE, filename)
+            #command = "mpirun -np {0:d} -f {1:s} impi ../input/{2}".format(self.task.mpi_cluster.total_node_count,
+            #                                                        settings.MPIEXEC_NODES_FILE, filename)
             retries = 0
             exit_loop = False
 
@@ -87,25 +87,31 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                     for parameter in command_list:
                         self.logger.debug(self.log_prefix + 'input ' + str(parameter))
                         exec_shell.stdin_write(str(parameter) + "\n")
-                        time.sleep(10)
+                        time.sleep(2)
 
+                    # force_exit_executed = False
+                    # while True:
+                    self.logger.debug(self.log_prefix + 'Running exit operation')
+                    # time.sleep(10)
+                        # if exec_shell.is_running():
+                    exec_shell.stdin_write(str(0)+"\n")
+                            #exit_retries += 1
 
-                    while True:
-                        self.logger.debug(self.log_prefix + 'Running exit operation')
-                        time.sleep(10)
-                        if exec_shell.is_running():
-                            exec_shell.stdin_write('0\n')
-                            exit_retries += 1
+                            # if exit_retries > 5:
+                            #     self.logger.debug(self.log_prefix + 'Force exit operation')
+                            #     if exec_shell.is_running() and not force_exit_executed:
+                            #         exec_shell.send_signal(9)
+                            #         force_exit_executed = True
+                            #         time.sleep(10)
+                            #         break
+                                #exit_loop = False
+                        #else:
+                    exec_shell.wait_for_result()
+                    self.logger.debug(self.log_prefix + 'Exited operation')
 
-                            if exit_retries > 5:
-                                self.logger.debug(self.log_prefix + 'Force exit operation')
-                                exec_shell.send_signal(9)
-                                exit_loop = False
-                        else:
-                            self.logger.debug(self.log_prefix + 'Exited operation')
-                            break
-
-                    # rename output file : (default output file: test_out.jpg)
+                            #break
+                    # if not force_exit_executed:
+                        # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
                     if default_output_filename != new_output_filename:
                         sftp.rename(default_output_filename, new_output_filename)

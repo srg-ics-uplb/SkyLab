@@ -7,6 +7,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.vina.forms import VinaForm, VinaSplitForm
+from skylab.signals import send_to_queue
 
 
 class VinaView(LoginRequiredMixin, FormView):
@@ -121,6 +122,7 @@ class VinaView(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': command_list, 'task_remote_subdirs': task_remote_subdirs})
         task.save()
+        send_to_queue(task=task)
         self.kwargs['task_id'] = task.id
         return super(VinaView, self).form_valid(form)
 
@@ -170,5 +172,6 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         self.kwargs['id'] = task.id  # pass to get_success_url
 
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
+        send_to_queue(task=task)
 
         return super(VinaSplitView, self).form_valid(form)

@@ -8,6 +8,7 @@ from django.views.generic import FormView
 
 from skylab.models import MPICluster, Task, SkyLabFile, Tool
 from skylab.modules.ray.forms import InputParameterForm, SelectMPIFilesForm, OtherParameterForm
+from skylab.signals import send_to_queue
 
 
 class RayView(LoginRequiredMixin, FormView):
@@ -178,7 +179,7 @@ class RayView(LoginRequiredMixin, FormView):
 
             task.task_data = json.dumps({'command_list': command_list})
             task.save()
-
+            send_to_queue(task=task)
             return redirect('task_detail_view', pk=task.id)
 
             # return redirect(reverse('task_detailview', kwargs={'pk': task.id}))
@@ -187,4 +188,5 @@ class RayView(LoginRequiredMixin, FormView):
                 'form': select_mpi_form,
                 'other_parameter_form': other_parameter_form,
                 'input_formset': input_formset,
+                'tool':Tool.objects.get(simple_name="ray")
             })

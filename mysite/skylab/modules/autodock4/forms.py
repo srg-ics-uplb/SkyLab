@@ -7,7 +7,7 @@ from django.db.models import Q
 from django.utils.text import get_valid_filename
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField, get_mpi_queryset_all
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_for_task_submission
 from skylab.models import MPICluster, ToolSet
 from validators import pdbqt_file_extension_validator, dpf_file_extension_validator, gpf_file_extension_validator, \
     multi_grid_map_file_validator, dat_file_extension_validator
@@ -47,7 +47,7 @@ class Autodock4Form(forms.Form):
 
         toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
@@ -124,7 +124,7 @@ class Autogrid4Form(forms.Form):
 
         toolset = ToolSet.objects.get(p2ctool_name="autodock")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_all(self.user), label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))

@@ -532,6 +532,7 @@ def refresh_nav_task_list(request):
         list_items.append(  # link to task list view
             '<li><a class="text-center" href="#" data-toggle="modal" data-target="#create-task-modal"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong>Create New Task </strong></span></li>'
         )
+
         # list_items.append(  # link to task list view
         #     '<li><a class="text-center" href="{url}"><strong>See All Tasks </strong><i class="fa fa-angle-right"></i></a></li>'.format(
         #         url=task_list_url))

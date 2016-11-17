@@ -8,6 +8,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.dock6.forms import Dock6Form, GridForm
+from skylab.signals import send_to_queue
 
 
 class Dock6View(LoginRequiredMixin, FormView):
@@ -59,6 +60,7 @@ class Dock6View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
+        send_to_queue(task=task)
 
         return super(Dock6View, self).form_valid(form)
 
@@ -113,5 +115,5 @@ class GridView(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
-
+        send_to_queue(task=task)
         return super(GridView, self).form_valid(form)

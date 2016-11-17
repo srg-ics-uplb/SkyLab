@@ -11,6 +11,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.quantumespresso.forms import InputParameterForm, SelectMPIFilesForm
+from skylab.signals import send_to_queue
 
 
 class QuantumEspressoView(LoginRequiredMixin, FormView):
@@ -68,38 +69,36 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             remote_bin_dir = "/mirror/espresso-5.4.0/bin"
 
             for form in input_formset:
-                executable = form.cleaned_data.get('param_executable')
-                if executable:  # ignore blank parameter value
+                executable = form.cleaned_data.get('param_executable', None)
+                input_file = form.cleaned_data.get("param_input_file", None)
+                if executable and input_file:  # ignore blank parameter value
+                    instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
+                    # neb.x -inp filename.in
+                    # ph.x can be run using images #not supported
+                    output_filename = '{0}.out'.format(os.path.splitext(input_file.name)[0])
 
-                    input_files = form.cleaned_data.get("param_input_files", [])
-                    if input_files:
-                        for input_file in input_files:
-                            instance = SkyLabFile.objects.create(type=1, file=input_file, task=task)
-                            # neb.x -inp filename.in
-                            # ph.x can be run using images #not supported
-                            output_filename = '{0}.out'.format(os.path.splitext(input_file.name)[0])
+                    if executable == "neb.x":
+                        command_list.append(
+                            '{0} {1} {2} -inp input/{3} > output/{4}'.format(para_prefix, os.path.join(remote_bin_dir,executable),
+                                                                                 para_postfix,
+                                                                                 input_file.name,
+                                                                                 output_filename)
+                        )
 
-                            if executable == "neb.x":
-                                command_list.append(
-                                    '{0} {1} {2} -inp input/{3} > output/{4}'.format(para_prefix, os.path.join(remote_bin_dir,executable),
-                                                                                         para_postfix,
-                                                                                         input_file.name,
-                                                                                         output_filename)
-                                )
+                    else:  # at least for pw.x, cp.x
+                        command_list.append('{0} {1} {2} < input/{3} > output/{4}'.format(
+                            para_prefix, os.path.join(remote_bin_dir,executable), para_postfix, input_file.name,
+                            output_filename)
+                        )
 
-                            else:  # at least for pw.x, cp.x
-                                command_list.append('{0} {1} {2} < input/{3} > output/{4}'.format(
-                                    para_prefix, os.path.join(remote_bin_dir,executable), para_postfix, input_file.name,
-                                    output_filename)
-                                )
-
-                                if executable == "pw.x": #identify expected output as compatible for jsmol
-                                    jsmol_output_files.append(output_filename)
+                        if executable == "pw.x": #identify expected output as compatible for jsmol
+                            jsmol_output_files.append(output_filename)
 
             task_data['command_list'] = command_list
             task_data['jsmol_output_files'] = jsmol_output_files
             task.task_data = json.dumps(task_data)
             task.save()
+            send_to_queue(task=task)
 
 
 
@@ -108,4 +107,5 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             return render(request, 'modules/quantum espresso/use_quantum_espresso.html', {
                 'form': select_mpi_form,
                 'input_formset': input_formset,
+                'tool':  Tool.objects.get(simple_name='quantumespresso'),
             })

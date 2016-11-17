@@ -1,9 +1,10 @@
 import os
 
 from django.db.models.signals import post_delete, pre_save, post_save
-from django.dispatch import receiver
+from django.dispatch import receiver, Signal
 
 from skylab.models import SkyLabFile, Task, TaskLog, ToolSet, ToolActivation, MPICluster
+
 
 
 # @receiver(post_save, sender=MPICluster)
@@ -68,3 +69,8 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
                 os.remove(old_file.path)
 
 pre_save.connect(auto_delete_file_on_change, sender=SkyLabFile, dispatch_uid="auto_delete_file_on_change")
+
+queue_task = Signal(providing_args=['task_instance'])
+
+def send_to_queue(task):  # send signal to queue self
+    queue_task.send(sender=task.__class__, task_instance=task)
