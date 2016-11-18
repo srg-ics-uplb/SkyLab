@@ -40,7 +40,7 @@ class GridExecutable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
         sftp.close()

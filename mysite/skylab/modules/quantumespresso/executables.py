@@ -43,7 +43,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
 
@@ -171,7 +171,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                         sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                         self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                         break
-                    except socket.timeout:
+                    except (socket.timeout, EOFError):
                         self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
                         time.sleep(2)
 

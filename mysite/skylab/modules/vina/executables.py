@@ -38,7 +38,7 @@ class VinaExecutable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
         sftp.close()
@@ -128,7 +128,7 @@ class VinaExecutable(P2CToolGeneric):
                 sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
                 self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
                 break
-            except socket.timeout:
+            except (socket.timeout, EOFError):
                 self.logger.debug(self.log_prefix + ' Retrying for ' + zip_filename)
 
         #sftp.remove(remote_zip_filepath) no need to delete since task dir will be deleted anyway
@@ -179,7 +179,7 @@ class VinaSplitExecutable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
         sftp.close()
@@ -271,7 +271,7 @@ class VinaSplitExecutable(P2CToolGeneric):
                         sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                         self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                         break
-                    except socket.timeout:
+                    except (socket.timeout, EOFError):
                         self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
                         time.sleep(2)
                 #sftp.remove(remote_filepath)  # delete file after transfer

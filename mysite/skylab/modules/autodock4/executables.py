@@ -39,7 +39,7 @@ class Autodock4Executable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # At this point, you are in remote_path
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
         sftp.close()
@@ -127,7 +127,7 @@ class Autodock4Executable(P2CToolGeneric):
                         sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
                         self.logger.debug(self.log_prefix + ' Received ' + remote_file)
                         break
-                    except socket.timeout:
+                    except (socket.timeout, EOFError):
                         self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
                         time.sleep(2)
                 #sftp.remove(remote_filepath)  # delete file after transfer
@@ -217,7 +217,7 @@ class Autogrid4Executable(P2CToolGeneric):
                     sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)
                     self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
                     break
-                except socket.timeout:
+                except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
         sftp.close()
@@ -317,7 +317,7 @@ class Autogrid4Executable(P2CToolGeneric):
                 sftp.get(remote_zip_filepath, local_zip_filepath, callback=self.sftp_file_transfer_callback)  # get remote zip
                 self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
                 break
-            except socket.timeout:
+            except (socket.timeout, EOFError):
                 self.logger.debug(self.log_prefix + ' Retrying for ' + zip_filename)
                 time.sleep(2)
 

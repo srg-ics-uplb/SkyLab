@@ -1,4 +1,5 @@
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import Queue  # queue for python 3
 import importlib
@@ -11,6 +12,8 @@ import pkgutil
 import re
 import threading
 import time
+
+from paramiko.ssh_exception import SSHException
 
 import spur
 from django.conf import settings
@@ -176,7 +179,7 @@ class MPIThread(threading.Thread):
         else:
             self.mpi_cluster.change_status(1)
 
-        self.connect_to_cluster()  #get working cluster shell
+        self.connect_to_cluster(init=True)  #get working cluster shell
 
         if self.mpi_cluster.status == 0:  # create
             self.install_dependencies()  #zip
@@ -185,11 +188,11 @@ class MPIThread(threading.Thread):
         self.mpi_cluster.change_status(2)  # cluster available
         self._ready.set()
 
-    def connect_to_cluster(self):
+    def connect_to_cluster(self,init=False):
         self.cluster_shell = spur.SshShell(hostname=self.mpi_cluster.cluster_ip, username=settings.CLUSTER_USERNAME,
                                            password=settings.CLUSTER_PASSWORD,
                                            missing_host_key=spur.ssh.MissingHostKey.accept)
-        self.test_cluster_connection(init=True)
+        self.test_cluster_connection(init=init)
 
         # fix for unresponsive ssh from srg.ics
         self.logger.debug(self.log_prefix + 'Set mtu to 1454')
@@ -313,7 +316,7 @@ class MPIThread(threading.Thread):
                     tool_activator.stdin_write(settings.CLUSTER_PASSWORD + "\n")
                     tool_activator.wait_for_result()
                     self.logger.info(self.log_prefix + u"{0:s} is now activated.".format(toolset.display_name))
-                    self.logger.debug(u"{0:s}{1:s}".format(self.log_prefix ,tool_activator.wait_for_result().output))
+                    self.logger.debug(u"{0:s}{1:s}".format(self.log_prefix ,tool_activator.wait_for_result().decode('utf-8')))
 
                     # set activated to true after installation
                     tool_activation_instance.refresh_from_db()
@@ -440,7 +443,16 @@ class MPIThread(threading.Thread):
                         # task_remote_subdirs = ['input', 'output']
                         # executable_obj.clear_or_create_dirs(additional_dirs=additional_dirs,
                         #                           task_remote_subdirs=task_remote_subdirs)
-                        executable_obj.run_tool()
+                        try:
+                            executable_obj.run_tool()
+                        except SSHException:
+                            current_task.refresh_from_db()
+                            current_task.priority += 1
+                            current_task.save()
+                            self.logger.error(self.log_prefix + task_log_prefix + "SSH Connection dropped. Reconnecting to cluster and requeue task with lower priority.")
+                            self.connect_to_cluster(init=False)
+                            self.add_task_to_queue(current_task.priority, current_task)
+
                         # executable_obj.clear_or_create_dirs()
                         # executable_obj.handle_input_files()
 
