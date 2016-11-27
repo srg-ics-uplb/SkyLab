@@ -46,8 +46,8 @@
                         <td>{{ mpi_cluster.cluster_name }}</td>
                         <td>{{ mpi_cluster.total_node_count }}</td>
                         <td id="mpi-info-ip">{{ mpi_cluster.cluster_ip }}</td>
-                        <td>{{ mpi_cluster.task_queued_count }}</td>
-                        <td>
+                        <td id="mpi-task-queued-cell">{{ mpi_cluster.task_queued_count }}</td>
+                        <td id="mpi-status-cell">
                             <span id="mpi-info-status" class="
                             {% if mpi_cluster.status == 2 %}
                                 text-success
@@ -67,7 +67,7 @@
 
                         {% if mpi_cluster.creator == user or user.is_superuser %}
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
-                        <td>{% if user == mpi_cluster.creator or user.is_superuser %}
+                        <td id="mpi-visibility-cell">{% if user == mpi_cluster.creator or user.is_superuser %}
                                 {% if mpi_cluster.status != 5 %} {# disable checkbox if already cluster is already deleted #}
                                  <input type="checkbox" name="visibility-checkbox" data-label-text="Public"
                                    {% if mpi_cluster.is_public %}checked{% endif %}>
@@ -144,7 +144,7 @@
                                 <div class="modal-body">
                                     <p>You are about to schedule MPI Cluster
                                         ({{ mpi_cluster.cluster_name }}) for deletion, this
-                                        procedure is irreversible. Cluster will be deleted after all tasks queued are
+                                        procedure is irreversible.<br>Cluster will be deleted after all tasks queued are
                                         finished. </p>
                                 </div>
                                 <div class="modal-footer ">
@@ -183,6 +183,7 @@
         {% endif %}
 
 
+
         {% if user == mpi_cluster.creator or user.is_superuser %}
                 {# init as bootstrap switch #}
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
@@ -207,6 +208,28 @@
 
         {% endif %}
 
+
+{#        todo: refresh cluster status  and task queued#}
+        var refreshClusterStatus = function () {
+            ajaxGet('{% url 'ajax_refresh_mpi_detail_view' pk=mpi_cluster.id %}', function (content) {
+{#                mpi_task_queued_cell#}
+{#                mpi_status_cell#}
+                {% if user == mpi_cluster.creator or user.is_superuser %}
+                    visibility_switch.prop('checked', content.is_public);
+                {% else %}
+                    if (content.is_public){
+                        $('#mpi-visibility-cell').html('Public');
+                    }else{
+                        $('#mpi-visibility-cell').html('Private');
+                    }
+                {% endif %}
+                if (content.status_code == 5){
+                    clearInterval(clusterStatusRefresher)
+                }
+            })
+        };
+
+        var clusterStatusRefresher = setInterval(refreshClusterStatus, 10000); {# refresh cluster status every 10 seconds #}
 
 
 

@@ -288,6 +288,39 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 
 @login_required
 @ajax
+def refresh_mpi_detail_view(request, pk):
+    try:
+        mpi_cluster = MPICluster.objects.get(pk=pk)
+        status = '<span class="text-{0}">{1}</span>'
+        status_msg = mpi_cluster.current_simple_status_msg
+
+        if mpi_cluster.status < 2:
+            status_class = 'info'
+        elif mpi_cluster.status == 2:
+            status_class = 'success'
+        if mpi_cluster.status == 5:
+            status_class = 'danger'
+        elif mpi_cluster.queued_for_deletion:
+            status_class = 'warning'
+            status_msg += ' (For deletion)'
+
+        data = {
+            'inner-fragments':{
+                '#mpi-task-queued-cell' : mpi_cluster.task_queued_count,
+                '#mpi-status-cell': status.format(status_class, status_msg)
+            },
+            'is_public': mpi_cluster.is_public,
+            'status_code': mpi_cluster.status,
+
+        }
+        return data
+
+    except MPICluster.DoesNotExist:
+        return {'error':'MPI cluster with pk={0} does not exist'.format(pk)}
+
+
+@login_required
+@ajax
 def refresh_task_list_table(request):
     if request.user.is_superuser:
         tasks = Task.objects.all().order_by('-updated')

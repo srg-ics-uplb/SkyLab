@@ -44,6 +44,9 @@ def setup_logging(
     else:
         logging.basicConfig(level=default_level)
 
+#todo: if task is created do not add queue toolset activation
+#       instead, when task is about to be executed check if toolset is activated else activate
+
 class MPIThreadManager(object):
     def __init__(self):
         self.threadHash = {}
@@ -396,7 +399,7 @@ class MPIThread(threading.Thread):
 
         # get tasks that are not finished yet
         tasks = Task.objects.filter(mpi_cluster=self.mpi_cluster).exclude(status_code=200).exclude(
-            status_code=401).order_by('priority', 'created')  # status 400 is not terminal, 401 is
+            status_code=401)#.order_by('priority', 'created')  # status 400 is not terminal, 401 is
         # lower priority value are prioritized
 
         for task in tasks:
@@ -423,7 +426,8 @@ class MPIThread(threading.Thread):
                 self.logger.info(self.log_prefix + 'Terminating ...')
             else:
                 try:
-                    queue_obj = self.task_queue.get_nowait() #non-blocking get
+                    # queue_obj = self.task_queue.get_nowait() #non-blocking get
+                    queue_obj = self.task_queue.get(block=True, timeout=60) #block wait for 60s, then raise exception
 
                     if queue_obj[0] == 1:  # p2c-tools activate are always priority # 1
                         self.logger.debug(self.log_prefix + "Running " + queue_obj[1])
@@ -493,6 +497,9 @@ class MPIThread(threading.Thread):
                                     self.logger.debug(self.log_prefix+'Waiting {0}s until next retry'.format(wait_time))
                                     time.sleep(wait_time)
 
+                        self.logger.info(self.log_prefix + ' Cluster deleted')
+                        self.mpi_cluster.cluster_name += ' (deleted)'
+                        self.mpi_cluster.save()
                         self.mpi_cluster.toolsets.clear()  # clear toolsets, toolactivation
                         self.mpi_cluster.change_status(5)
                     else:

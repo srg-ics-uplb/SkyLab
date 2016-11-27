@@ -44,7 +44,7 @@ class MPICluster(models.Model):
     MAX_MPI_CLUSTER_SIZE = settings.MAX_NODES_PER_CLUSTER
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
-    cluster_name = models.CharField(max_length=30, unique=True)
+    cluster_name = models.CharField(max_length=50, unique=True)
     cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
 
@@ -342,7 +342,7 @@ class Task(models.Model):
 
         for f in self.output_files.all():
             ext = os.path.splitext(f.filename)[1]
-            if ext.lower() in ['.jpg', '.jpeg', '.bmp', '.gif', '.png']:
+            if ext.lower() in ['.jpg', '.jpeg', '.gif', '.png']: # removed'.bmp'
                 output_images_urls.append(
                     {
                         'url': f.get_direct_url(),
@@ -354,7 +354,7 @@ class Task(models.Model):
     def get_output_files_urls(self):
         output_files_urls_dict = []
 
-        for f in self.output_files.all():
+        for f in self.output_files.order_by('filename').all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
                                                           kwargs={'task_id': self.id, 'type': 'output',
                                                                   'filename': f.filename}),

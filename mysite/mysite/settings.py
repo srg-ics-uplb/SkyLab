@@ -29,7 +29,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.9.9','skylab.localhost.com','127.0.0.1','127.0.9.9.xip.io', '192.168.1.2',
                  '192.168.1.2.xip.io','10.0.3.127.xip.io','10.0.3.231','10.0.3.231.xip.io',
-                 '10.0.3.172.xip.io']
+                 '10.0.3.172.xip.io', '10.0.3.140.xip.io','10.0.3.111.xip.io','10.0.3.176.xip.io']
 # ALLOWED_HOSTS = ['127.0.0.1']
 
 # Application definition
@@ -220,6 +220,7 @@ ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
+# JSMOL_SERVER_ROOT = "http://localhost/jsmol"
 JSMOL_SERVER_ROOT = "http://10.0.3.10/jsmol"
 
 # JSMOL_J2S_PATH = "http://localhost/jsmol/j2s"
