@@ -41,12 +41,9 @@
             {% for tool in toolset.subtools.all %}
                 <li>
                 <a href="{% url 'skylab_tool_view' toolset_simple_name=toolset.simple_name tool_simple_name=tool.simple_name %}">
-{#                   class="list-group-item">#}
-{#                    <h4> {# class="list-group-item-heading"> #}
-                        {{ tool.display_name }}
-{#                    </h4>#}
+                    {{ tool.display_name }}
                 </a>
-                 <p> {# class="list-group-item-text"> #}
+                 <p>
                         {{ tool.description }}
                 </p>
                 </li>

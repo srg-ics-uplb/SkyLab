@@ -27,13 +27,14 @@ class ImpiView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(ImpiView, self).get_context_data(**kwargs)
-        # context['select_mpi_form'] = SelectMPIFilesForm()
-        context['tool'] = Tool.objects.get(simple_name='impi')
-        context['input_formset'] = self.input_forms
+        context['tool'] = Tool.objects.get(simple_name='impi')  # pass tool to view context
+        context['input_formset'] = self.input_forms  # pass input formset to view context
         return context
 
 
     def post(self, request, *args, **kwargs):
+        # build command, strings, create SkylabFile instances for each input file
+
         form_class = self.get_form_class()
         select_mpi_form = self.get_form(form_class)
         input_formset = self.input_formset(request.POST, request.FILES)
@@ -72,7 +73,7 @@ class ImpiView(LoginRequiredMixin, FormView):
 
             task.refresh_from_db()
             task.task_data = json.dumps(task_data)
-            task.save()
+            task.save()  # send signal to queue this task to task queue
             send_to_queue(task=task)
 
             return redirect('task_detail_view', pk=task.id)

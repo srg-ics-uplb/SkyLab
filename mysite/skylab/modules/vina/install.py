@@ -1,7 +1,6 @@
 from skylab.bootskylab import add_tools_to_toolset
 from skylab.models import ToolSet
 
-
 def insert_to_db():
     toolset_dict = {
         'display_name': 'AutoDock Vina',
@@ -37,4 +36,4 @@ def insert_to_db():
          },
     ]
 
-    add_tools_to_toolset(tools, toolset)
+    add_tools_to_toolset(tools, toolset)  # add tool db entries and associate them with toolset

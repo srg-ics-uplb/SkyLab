@@ -5,18 +5,11 @@ from django.dispatch import receiver, Signal
 
 from skylab.models import SkyLabFile, Task, TaskLog, ToolSet, ToolActivation, MPICluster
 
-
-
 # @receiver(post_save, sender=MPICluster)
 # def auto_delete_related_models_on_task_delete(sender, instance, **kwargs):
 #     """"Delete related models on task delete"""
 #     if instance.status == 5:
 #         ToolActivation.objects.filter(mpi_cluster=instance).delete()
-
-
-
-
-
 
 # @receiver(post_save, sender=ToolSet)
 def auto_add_tool_activations_on_toolset_create(sender, instance, **kwargs):

@@ -27,10 +27,11 @@ SECRET_KEY = '34%6w9p0c(kmpgzuaqrl4fbc%=*b_!y63eoihloqjz$uh*v8&y'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+#allowed hosts to serve SkyLab
 ALLOWED_HOSTS = ['127.0.9.9','skylab.localhost.com','127.0.0.1','127.0.9.9.xip.io', '192.168.1.2',
                  '192.168.1.2.xip.io','10.0.3.127.xip.io','10.0.3.231','10.0.3.231.xip.io',
                  '10.0.3.172.xip.io', '10.0.3.140.xip.io','10.0.3.111.xip.io','10.0.3.176.xip.io']
-# ALLOWED_HOSTS = ['127.0.0.1']
+
 
 # Application definition
 
@@ -89,6 +90,7 @@ AUTHENTICATION_BACKENDS = (
     'allauth.account.auth_backends.AuthenticationBackend',
 )
 
+#config for django-allauth google
 SOCIALACCOUNT_PROVIDERS = \
     {'google':
         {
@@ -106,6 +108,7 @@ WSGI_APPLICATION = 'mysite.wsgi.application'
 
 # For final deployment
 
+#config for mysql/mariadb database
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -154,7 +157,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'Asia/Manila'
+TIME_ZONE = 'Asia/Manila' #local timezone
 
 USE_I18N = True
 
@@ -196,21 +199,26 @@ SENDFILE_URL = '/media'
 # SENDFILE_BACKEND = 'sendfile.backends.mod_wsgi'
 SENDFILE_BACKEND = 'sendfile.backends.xsendfile'
 
+#package name for modules
 SKYLAB_MODULES_PACKAGE = "skylab.modules"  # : skylab/modules
-MAX_NODES_PER_CLUSTER = 3 #value set to 3 for uat   # max nodes per cluster ? 5
-MAX_TOTAL_INSTANCES = 6  # current limit of vcluster : 16 instances #change this value with correct limit
 
+#mpi_cluster limits
+MAX_NODES_PER_CLUSTER = 5 #value set to 3 for uat   # max nodes per cluster ? 5
+MAX_TOTAL_INSTANCES = 11  # current limit of vcluster : 16 instances #change this value with correct limit
+
+#ssh auth parameters for frontend
 FRONTEND_IP = "10.0.3.101"
 FRONTEND_USERNAME = "user"
 FRONTEND_PASSWORD = "excellence"
 
+#ssh auth parameters for vCluster instance
 CLUSTER_USERNAME = "mpiuser"
 CLUSTER_PASSWORD = "mpiuser"
 
-CLUSTER_PASSWORD = "mpiuser"
-
 SITE_ID = 1
-SOCIALACCOUNT_ADAPTER = "skylab.authadapter.UniversityAccountAdapter"
+
+#AUTH PARAMETERS
+SOCIALACCOUNT_ADAPTER = "skylab.authadapter.UniversityAccountAdapter" #custom adapter for django-allauth
 SOCIALACCOUNT_QUERY_EMAIL = True
 LOGIN_URL = '/skylab/accounts/google/login/?process=login'
 LOGIN_REDIRECT_URL = '/skylab'
@@ -220,20 +228,20 @@ ACCOUNT_EMAIL_REQUIRED = True
 # ACCOUNT_LOGOUT_ON_GET = True  # bypass allauth logout confirmation screen
 SOCIALACCOUNT_STORE_TOKENS = False  # removes request offline access prompt
 
-# JSMOL_SERVER_ROOT = "http://localhost/jsmol"
-JSMOL_SERVER_ROOT = "http://10.0.3.10/jsmol"
+#JSMOL_SERVER_ROOT = "http://localhost/jsmol"
+JSMOL_SERVER_ROOT = "http://10.0.3.10/jsmol" #root url for jsmol server
 
 # JSMOL_J2S_PATH = "http://localhost/jsmol/j2s"
 # JSMOL_SERVER_URL = "http://localhost/jsmol/php/jsmol.php"
 # https://sourceforge.net/p/jmol/code/HEAD/tree/trunk/Jmol-datafiles/
-JSMOL_SUPPORTED_FILE_EXT = [
+JSMOL_SUPPORTED_FILE_EXT = [ #files with these extensions are rendered with jsmol by default
     '.pdbqt', '.mol2', '.pdb', '.mol', '.csf'
 ]
 
 TRY_WHILE_NOT_EXIT_MAX_TIME = 300  # in seconds, max wait time for try while not exit loops in project
-REMOTE_BASE_DIR = '/mirror'
-MPIEXEC_NODES_FILE = '/mirror/nodes.txt'
+REMOTE_BASE_DIR = '/mirror' #root path for remote cluster
+MPIEXEC_NODES_FILE = '/mirror/nodes.txt' #path for text file containing list of mpi nodes
 
 MESSAGE_TAGS = {
-    messages.ERROR: 'danger'
+    messages.ERROR: 'danger' #to django messages class similar to bootstrap
 }

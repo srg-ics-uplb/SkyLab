@@ -31,8 +31,8 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
     def get_context_data(self, **kwargs):
         context = super(QuantumEspressoView, self).get_context_data(**kwargs)
         context['input_formset'] = self.input_forms
-        context['tool'] = Tool.objects.get(simple_name='quantumespresso')
-        context['user'] = self.request.user
+        context['tool'] = Tool.objects.get(simple_name='quantumespresso')  # pass tool to view context
+        # context['user'] = self.request.user
         return context
 
     def post(self, request, *args, **kwargs):
@@ -41,8 +41,8 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
         input_formset = self.input_formset(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and input_formset.is_valid():
-            # do something with the cleaned_data on the formsets.
-            # print select_mpi_form.cleaned_data.get('mpi_cluster')
+            # build command strings, create skylabfile for each file input
+
             cluster = select_mpi_form.cleaned_data['mpi_cluster']
 
             # based on intial environment variables config on quantum espresso
@@ -98,9 +98,7 @@ class QuantumEspressoView(LoginRequiredMixin, FormView):
             task_data['jsmol_output_files'] = jsmol_output_files
             task.task_data = json.dumps(task_data)
             task.save()
-            send_to_queue(task=task)
-
-
+            send_to_queue(task=task)  # send signal to queue task to task queue
 
             return redirect('task_detail_view', pk=task.id)
         else:

@@ -17,21 +17,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mysite.settings")
 application = get_wsgi_application()
 
 from skylab.bootskylab import install_toolsets, setup_logging, MPIThreadManager
-from skylab.models import Task, ToolActivation, MPICluster
 
-install_toolsets()
-#
+install_toolsets() #check modules directory and run install.py
 setup_logging()  # setup logger, handlers
-# #
-# # TaskLog.objects.all().delete()
-# # # SkyLabFile.objects.all().delete()
-# #
-manager = MPIThreadManager()
+
+manager = MPIThreadManager() #spawn MPIThreads to handle tasks for each MPICluster
 
 
-# SkyLabFile.objects.get(task_id=20, type=2, filename='glyz_makefp.log')
-
-
-# for f in SkyLabFile.objects.filter(type=2, task_id=20):
-#     print ('Fname: ' + f.file.name + " URL: " + f.file.url + " PATH: " + f.file.path)
-#     print (f.filename)

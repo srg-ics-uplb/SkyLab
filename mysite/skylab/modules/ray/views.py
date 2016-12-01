@@ -28,7 +28,7 @@ class RayView(LoginRequiredMixin, FormView):
         context = super(RayView, self).get_context_data(**kwargs)
         context['input_formset'] = self.input_forms
         context['other_parameter_form'] = OtherParameterForm()
-        context['tool'] = Tool.objects.get(simple_name="ray")
+        context['tool'] = Tool.objects.get(simple_name="ray")  # pass tool to view context
         return context
 
     def post(self, request, *args, **kwargs):
@@ -38,8 +38,9 @@ class RayView(LoginRequiredMixin, FormView):
         other_parameter_form = OtherParameterForm(request.POST, request.FILES)
 
         if select_mpi_form.is_valid() and other_parameter_form.is_valid() and input_formset.is_valid():
-            cluster = select_mpi_form.cleaned_data['mpi_cluster']
+            # build command strings, create skylab file for each file input
 
+            cluster = select_mpi_form.cleaned_data['mpi_cluster']
 
             command_list = []
             # -n cluster_size
@@ -179,7 +180,7 @@ class RayView(LoginRequiredMixin, FormView):
 
             task.task_data = json.dumps({'command_list': command_list})
             task.save()
-            send_to_queue(task=task)
+            send_to_queue(task=task)  # send signal to queue this task to task queue
             return redirect('task_detail_view', pk=task.id)
 
             # return redirect(reverse('task_detailview', kwargs={'pk': task.id}))

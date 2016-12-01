@@ -24,13 +24,7 @@ import skylab.modules
 from skylab.models import MPICluster, Task, ToolSet, ToolActivation, Tool
 
 
-def populate_tools():
-    pass
-
-
 MAX_WAIT = settings.TRY_WHILE_NOT_EXIT_MAX_TIME
-
-
 
 def setup_logging(
         path=os.path.dirname(os.path.abspath(__file__)) + '/logs/skylab_log_config.json',
@@ -82,8 +76,6 @@ class MPIThreadManager(object):
 
         super(MPIThreadManager, self).__init__()
 
-
-
     def connect_to_frontend(self):
         if self.frontend_shell is None:
             self.frontend_shell = spur.SshShell(hostname=settings.FRONTEND_IP,
@@ -111,9 +103,6 @@ class MPIThreadManager(object):
                         wait_time = min(math.pow(2, retries), MAX_WAIT)
                         self.logger.debug('Waiting {0}s until next retry'.format(wait_time))
                         time.sleep(wait_time)
-
-
-
         return self.frontend_shell
 
     def get_frontend_shell(self):
@@ -142,8 +131,6 @@ class MPIThreadManager(object):
             self.threadHash[instance.id] = t
             t.start()
 
-
-
 class MPIThread(threading.Thread):
     def __init__(self, mpi_cluster, manager):
         # current implementation. task_queue only has a single consumer.
@@ -171,9 +158,6 @@ class MPIThread(threading.Thread):
 
         init_thread = threading.Thread(target=self.connect_or_create)
         init_thread.start()  # sets event _connection on finish
-
-
-
         super(MPIThread, self).__init__()
 
     def connect_or_create(self):
@@ -409,10 +393,7 @@ class MPIThread(threading.Thread):
         queued_toolset_activations = self.mpi_cluster.toolsets.filter(toolactivation__status=1)
         for toolset in queued_toolset_activations:
             self.add_task_to_queue(1, "self.activate_toolset({0})".format(toolset.id))
-
-
-        # block waiting for connected event to be set
-        self._ready.wait()
+        self._ready.wait()  # block waiting for connected event to be set
 
         while not self._stop.isSet():
 
@@ -426,7 +407,6 @@ class MPIThread(threading.Thread):
                 self.logger.info(self.log_prefix + 'Terminating ...')
             else:
                 try:
-                    # queue_obj = self.task_queue.get_nowait() #non-blocking get
                     queue_obj = self.task_queue.get(block=True, timeout=60) #block wait for 60s, then raise exception
 
                     if queue_obj[0] == 1:  # p2c-tools activate are always priority # 1
@@ -443,10 +423,6 @@ class MPIThread(threading.Thread):
                         cls = getattr(mod, current_task.tool.executable_name)
                         executable_obj = cls(shell=self.cluster_shell, task=current_task, logger=self.logger,
                                              log_prefix=self.log_prefix + task_log_prefix)
-                        # additional_dirs = ['/mirror/scr']
-                        # task_remote_subdirs = ['input', 'output']
-                        # executable_obj.clear_or_create_dirs(additional_dirs=additional_dirs,
-                        #                           task_remote_subdirs=task_remote_subdirs)
                         try:
                             executable_obj.run_tool()
                         except SSHException:
@@ -456,10 +432,6 @@ class MPIThread(threading.Thread):
                             self.logger.error(self.log_prefix + task_log_prefix + "SSH Connection dropped. Reconnecting to cluster and requeue task with lower priority.")
                             self.connect_to_cluster(init=False)
                             self.add_task_to_queue(current_task.priority, current_task)
-
-                        # executable_obj.clear_or_create_dirs()
-                        # executable_obj.handle_input_files()
-
                     self.task_queue.task_done()
                 except Queue.Empty:
                     if self.mpi_cluster.queued_for_deletion:  # if queue is empty and cluster is queued for deletion
@@ -513,7 +485,7 @@ class MPIThread(threading.Thread):
             self.logger.debug(self.log_prefix + 'Queued task [id:{0},priority:{1}]'.format(task.id, priority))
 
 
-def install_toolsets():
+def install_toolsets():  # searches for packages inside modules folder
     package = skylab.modules
     prefix = package.__name__ + "."
     for importer, modname, ispkg in pkgutil.iter_modules(package.__path__, prefix):
@@ -526,7 +498,7 @@ def install_toolsets():
                     mod.insert_to_db()
 
 
-def add_tools_to_toolset(tools, toolset):
+def add_tools_to_toolset(tools, toolset):  # creates db entries for tools and associates them with toolset
     for t in tools:
         display_name = t.get('display_name')
         simple_name = t.get('simple_name', re.sub(r'[\s_/-]+', '', display_name.lower()))

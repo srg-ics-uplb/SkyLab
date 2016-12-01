@@ -22,7 +22,7 @@ class Autodock4View(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(Autodock4View, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name='autodock4')
+        context['tool'] = Tool.objects.get(simple_name='autodock4')  # pass tool to view context
         return context
 
     def get_success_url(self):
@@ -32,13 +32,13 @@ class Autodock4View(LoginRequiredMixin, FormView):
     def form_valid(self, form):
         cluster = form.cleaned_data['mpi_cluster']
 
+        # BUILD COMMAND STRING, CREATE SKYLABFILE INSTANCES FOR FILE INPUTS
 
         exec_string = "autodock4 "
         task = Task.objects.create(
             mpi_cluster=cluster, tool=Tool.objects.get(simple_name='autodock4'), user=self.request.user
         )
         self.kwargs['id'] = task.id
-
 
         # SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_receptor_file'], task=task)
         SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_ligand_file'], task=task)
@@ -47,9 +47,6 @@ class Autodock4View(LoginRequiredMixin, FormView):
 
         for grid_file in form.cleaned_data['param_grid_files']:
             SkyLabFile.objects.create(type=1, file=grid_file, task=task)
-
-        # if form.cleaned_data.get('param_dat_file'):
-        #     SkyLabFile.objects.create(type=1, file=form.cleaned_data['param_dat_file'], task=task)
 
         if form.cleaned_data.get('param_dlg_filename'):
             exec_string += "-l ../output/%s.dlg " % (form.cleaned_data['param_dlg_filename'])
@@ -72,8 +69,7 @@ class Autodock4View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [exec_string]})
         task.save()
-        send_to_queue(task=task)
-        # find a way to know if thread is already running
+        send_to_queue(task=task)  # send signal to queue this task
         return super(Autodock4View, self).form_valid(form)
 
 
@@ -89,13 +85,15 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(Autogrid4View, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name='autogrid4')
+        context['tool'] = Tool.objects.get(simple_name='autogrid4')  # pass tool to view context
         return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
+        # BUILD COMMAND STRING, CREATE SKYLABFILE INSTANCES FOR FILE INPUTS
+
         cluster = form.cleaned_data['mpi_cluster']
         receptor_file = form.cleaned_data['param_receptor_file']
 
@@ -148,6 +146,6 @@ class Autogrid4View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [exec_string]})
         task.save()
-        send_to_queue(task=task)
+        send_to_queue(task=task) # send signal to queue this task
 
         return super(Autogrid4View, self).form_valid(form)

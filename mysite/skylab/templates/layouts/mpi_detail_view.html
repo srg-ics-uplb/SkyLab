@@ -208,12 +208,8 @@
 
         {% endif %}
 
-
-{#        todo: refresh cluster status  and task queued#}
         var refreshClusterStatus = function () {
             ajaxGet('{% url 'ajax_refresh_mpi_detail_view' pk=mpi_cluster.id %}', function (content) {
-{#                mpi_task_queued_cell#}
-{#                mpi_status_cell#}
                 {% if user == mpi_cluster.creator or user.is_superuser %}
                     visibility_switch.prop('checked', content.is_public);
                 {% else %}
@@ -230,8 +226,6 @@
         };
 
         var clusterStatusRefresher = setInterval(refreshClusterStatus, 10000); {# refresh cluster status every 10 seconds #}
-
-
 
         {# delete cluster via ajax post, update html            #}
         var deleteCluster = function () {

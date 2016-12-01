@@ -44,10 +44,9 @@ class GridForm(forms.Form):
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.layout = Layout(
+        self.helper.layout = Layout(  # crispy_forms layout
 
             Field('mpi_cluster', wrapper_class='col-xs-12'),
-
             Fieldset(
                 'Input',
                 Field('param_input_file', wrapper_class='col-xs-12'),
@@ -97,7 +96,7 @@ class Dock6Form(forms.Form):
                                                              reverse('create_mpi')))
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.layout = Layout(
+        self.helper.layout = Layout(  # crispy_forms layout
             Field('mpi_cluster', wrapper_class='col-xs-12'),
             Fieldset(
                 'Input parameters',

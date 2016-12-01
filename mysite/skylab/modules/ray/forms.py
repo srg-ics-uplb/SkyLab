@@ -34,10 +34,6 @@ class SelectMPIFilesForm(forms.Form):
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(    #crispy_forms layout
             Field('mpi_cluster', wrapper_class='col-xs-12'),
             Fieldset(
@@ -48,15 +44,6 @@ class SelectMPIFilesForm(forms.Form):
             ),
         )
 
-        # def clean(self):
-        #     if self.cleaned_data:
-        #         if self.cleaned_data['param_mini_ranks']:
-        #             if not self.cleaned_data["param_mini_ranks"]:
-        #                 raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
-        #                                             code="mini_ranks_no_value_set")
-
-
-
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
         ('', '---------'),
@@ -64,7 +51,7 @@ class InputParameterForm(forms.Form):
         ('-i','-i'),
         ('-s','-s'),
     )
-    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES) #todo: required = False, validate in custom formset
+    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
     input_file1 = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
     input_file2 = forms.FileField(label="Sequence file 2", validators=[ray_file_extension_validator], required=False)
 
@@ -74,10 +61,6 @@ class InputParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
-
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
@@ -208,18 +191,11 @@ class OtherParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
-        # self.helper.form_error_title = "Form Errors"
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
-        self.helper.layout = Layout(
-
+        self.helper.layout = Layout(  # crispy_forms layout
             Fieldset(
                 'K-mer length',
                 Field('param_kmer_length', wrapper_class='col-xs-12 col-md-4'),
                 css_class='col-xs-12'
-
             ),
             Fieldset(
                 'Ray Surveyor options',
@@ -234,11 +210,9 @@ class OtherParameterForm(forms.Form):
                 Field('subparam_search_files', wrapper_class='col-xs-12 col-md-4'),
                 Field('param_one_color_per_file', wrapper_class='col-xs-12'),
                 css_class='col-sm-12'
-
             ),
             Fieldset(
                 'Taxonomic profiling with colored de Bruijn graphs',
-
                 Field(
                     'param_with_taxonomy', wrapper_class='col-xs-12'
                 ),
@@ -251,7 +225,6 @@ class OtherParameterForm(forms.Form):
                 Field('param_gene_ontology', wrapper_class='col-xs-12 col-md-6'),
                 Field('subparam_annotations_file', wrapper_class='col-xs-12 col-md-5 col-md-offset-1'),
                 css_class='col-xs-12'
-
             ),
             Fieldset(
                 'Other outputs',
@@ -265,7 +238,6 @@ class OtherParameterForm(forms.Form):
                 Field('param_write_contig_paths', wrapper_class='col-xs-12'),
                 Field('param_write_marker_summary', wrapper_class='col-xs-12'),
                 css_class='col-xs-12'
-
             ),
             Fieldset(
                 'Memory usage',
@@ -280,7 +252,6 @@ class OtherParameterForm(forms.Form):
                 Field('param_show_distance_summary', wrapper_class='col-xs-12'),
                 Field('param_show_consensus', wrapper_class='col-xs-12'),
                 css_class='col-xs-12'
-
             )
         )
 

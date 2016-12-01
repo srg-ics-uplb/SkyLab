@@ -3,6 +3,7 @@ from django.forms import ValidationError
 
 from skylab.models import MPICluster
 
+# use to validate form inputs
 
 def cluster_name_unique_validator(cluster_name):
     if MPICluster.objects.filter(cluster_name=cluster_name).exists():  # exclude(status=5)
@@ -19,7 +20,6 @@ def cluster_size_validator(value):
         else:
             raise ValidationError(u'Sorry. The system has reached the limit for max active clusters.'.format(current_max),
                                   code="cluster_size_above_limit")
-
 
 
 def get_current_max_nodes():

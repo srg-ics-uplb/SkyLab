@@ -48,10 +48,6 @@ class SelectMPIFilesForm(forms.Form):
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
             'mpi_cluster',
             'param_pseudopotentials'
@@ -65,7 +61,6 @@ class InputParameterForm(forms.Form):
         ('cp.x', 'CPV / cp.x'),
         # ('pwcond.x','pwcond.x'),
         # ('bands.x','bands.x'),
-
         # ('neb.x', 'neb.x'),
         #('ph.x','ph.x'), #PHonon
 
@@ -82,10 +77,6 @@ class InputParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
-
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(

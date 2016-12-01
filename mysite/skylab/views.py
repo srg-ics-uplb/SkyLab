@@ -25,7 +25,6 @@ from skylab.validators import get_current_max_nodes
 
 
 def has_read_permission(request, task_id):
-
     "Only show to authenticated users - extend this as desired"
     if request.user.is_superuser:
         return True
@@ -53,11 +52,9 @@ def serve_skylabfile(request, task_id, type, filename):
         elif type == "output":
             requested_file = SkyLabFile.objects.get(type=2, task_id=task_id, filename=filename)
     except ObjectDoesNotExist:
-
         return Http404
 
     fullpath = os.path.join(settings.MEDIA_ROOT, requested_file.file.name)
-
     return sendfile(request, fullpath, attachment=True)
 
 
@@ -86,8 +83,6 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 # 	connection.close()
 
-
-
 class HomeView(TemplateView):
     template_name = "layouts/home.html"
 
@@ -104,7 +99,6 @@ class CreateMPIView(LoginRequiredMixin, FormView):
             messages.add_message(request, messages.WARNING,
                                  'Warning! The system has reached the limit for max  active clusters.',
                                  extra_tags='display_this')
-        # super(CreateMPIView, self).get(request, *args, **kwargs) #super does not work
         super(CreateMPIView, self).get(request, *args, **kwargs)
         return self.render_to_response(self.get_context_data())
 
@@ -372,7 +366,8 @@ def refresh_mpi_list_table(request):
 
 @login_required
 @ajax
-def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = request.POST['pk']
+def refresh_select_toolset_tool_options(request, toolset_simple_name):
+    # for create task modal
 
     try:
         toolset = ToolSet.objects.get(simple_name=toolset_simple_name)
@@ -401,6 +396,8 @@ def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = r
 @login_required
 @ajax
 def refresh_select_toolset(request):
+    # for create task modal
+
     toolsets = ToolSet.objects.all()
 
     select_items = ''

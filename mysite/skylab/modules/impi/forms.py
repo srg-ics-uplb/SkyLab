@@ -14,9 +14,6 @@ class SelectMPIFilesForm(forms.Form):
     input_files = MultiFileField(label="Image file(s) ", validators=[impi_files_validator],
                                  help_text="Only supports JPEG format (.jpeg, .jpg)")
 
-    # , validators=[in_file_extension_validator],
-
-
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')  # get user from form kwargs
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
@@ -27,13 +24,8 @@ class SelectMPIFilesForm(forms.Form):
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
-
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
 
             Field('mpi_cluster', wrapper_class="col-xs-12"),
@@ -63,10 +55,6 @@ class InputParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
-
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
 
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(

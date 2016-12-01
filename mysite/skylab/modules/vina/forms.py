@@ -29,9 +29,10 @@ class VinaForm(forms.Form):
     param_center_y = forms.DecimalField(label="Center Y coordinate")
     param_center_z = forms.DecimalField(label="Center Z coordinate")
 
-    param_size_x = forms.DecimalField(label="Size X (Angstroms)")
-    param_size_y = forms.DecimalField(label="Size Y (Angstroms)")
-    param_size_z = forms.DecimalField(label="Size Z (Angstroms)")
+    # size parameters must be positive
+    param_size_x = forms.DecimalField(label="Size X (Angstroms)", min_value=1)
+    param_size_y = forms.DecimalField(label="Size Y (Angstroms)", min_value=1)
+    param_size_z = forms.DecimalField(label="Size Z (Angstroms)", min_value=1)
 
     # Output (optional) removed because of the use-case aims to support multiple ligands
     # param_out = forms.CharField(required=False, label="Output model filename",
@@ -62,7 +63,7 @@ class VinaForm(forms.Form):
                                                 attrs={
                                                     'placeholder': '3.0'}))  # 1-3 default 3.0 float-value in cpp
 
-    # # Advanced
+    # # Advanced (removed since advanced parameters are not intended for actual use case)
     # param_score_only = forms.BooleanField(required=False, label="--score_only", help_text="Search space can be omitted")
     # param_local_only = forms.BooleanField(required=False, label="--local_only ", help_text="Do local search only    ")
     # param_randomize_only = forms.BooleanField(required=False, label="--randomize_only",
@@ -202,7 +203,7 @@ class VinaSplitForm(forms.Form):
         self.helper = FormHelper()
         self.helper.form_tag = False
 
-        self.helper.layout = Layout(
+        self.helper.layout = Layout(  #crispy_form layout
             'mpi_cluster',
             'param_input',
         )

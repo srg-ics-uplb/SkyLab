@@ -35,7 +35,7 @@ class GamessForm(forms.Form):
         self.helper.form_class = 'use-tool-forms'
         self.helper.form_method = 'post'
         self.helper.form_action = ''
-        self.helper.layout = Layout(
+        self.helper.layout = Layout(  # crispy_forms layout
                 Field('mpi_cluster', wrapper_class="col-xs-12"),
                 Field('input_files', wrapper_class="col-xs-12"),
                 HTML('<input name="submit" value="Submit task" type="submit" class="btn btn-primary btn-block">')

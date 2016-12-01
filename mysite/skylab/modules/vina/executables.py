@@ -285,27 +285,6 @@ class VinaSplitExecutable(P2CToolGeneric):
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
-        # For future use. zip > send to server > extract > attach as skylabfile (render_with_jsmol=True)
-        # Transfer via zip.
-        # zip_filename = self.task.task_dirname + "-output.zip"
-        # local_zip_filepath = os.path.join(media_root, "%s/output/%s" % (self.task.task_dirname, zip_filename))
-        # remote_zip_filepath = os.path.join(self.remote_task_dir, zip_filename)
-        #
-        # self.shell.run(["zip", "-r", zip_filename, "output"], cwd=self.remote_task_dir)
-        #
-        # sftp = self.shell._open_sftp_client()
-        # self.logger.debug(self.log_prefix + ' Retrieving ' + zip_filename)
-        # sftp.get(remote_zip_filepath, local_zip_filepath)  # get remote zip
-        # self.logger.debug(self.log_prefix + ' Received ' + zip_filename)
-        # sftp.remove(remote_zip_filepath)
-        # sftp.close()
-        #
-        # # attach transferred file to database
-        # new_file = SkyLabFile.objects.create(type=2, task=self.task)
-        # new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
-        #                                   zip_filename)
-        # new_file.save()
-
         self.shell.run(['rm', '-rf', self.remote_task_dir])  # Delete remote task directory
 
         if not self.task.status_code == 400:
@@ -318,6 +297,6 @@ class VinaSplitExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):  # the whole task process
         self.task.change_status(status_msg='Task started', status_code=150)
         self.clear_or_create_dirs(task_remote_subdirs=['output'])
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster

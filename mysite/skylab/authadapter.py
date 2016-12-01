@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.shortcuts import render
 
 
-class UniversityAccountAdapter(DefaultSocialAccountAdapter):
+class UniversityAccountAdapter(DefaultSocialAccountAdapter): # extend default adapter for social accounts of django-allauth
     def pre_social_login(self, request, sociallogin):  # before social auth
         email = sociallogin.account.extra_data['email'].lower()
         # print user_email(u)

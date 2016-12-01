@@ -2,6 +2,7 @@ import os.path
 
 from django import forms
 
+# THESE ARE VALIDATORS USED FOR FORM INPUTS
 
 def pdbqt_file_extension_validator(file):
     ext = os.path.splitext(file.name)[1]

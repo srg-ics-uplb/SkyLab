@@ -31,12 +31,7 @@ urlpatterns = [
     url(r'ajax/refresh-select-toolset$', views.refresh_select_toolset, name='ajax_refresh_select_toolset'),
     url(r'ajax/refresh-select-tools/(?P<toolset_simple_name>[a-z]\w+)', views.refresh_select_toolset_tool_options,
         name='ajax_refresh_select_tool'),
-
-    # url(r'^tools/')
-
-
     url(r'^$', views.index, name='skylab-home'),
-
 
     # skip logout confirmation
     url(r'^accounts/login/$', RedirectView.as_view(url="/skylab/accounts/google/login/?process=login", permanent=False),

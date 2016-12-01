@@ -7,7 +7,7 @@ def insert_to_db():
         'display_name': 'AutoDock 4',
         'package_name': __name__.replace('.install', ''),
         'p2ctool_name': 'autodock',
-        'description': 'AutoDock is a suite of automated docking tools. It is designed to predict how small molecules, ' \
+        'description': 'AutoDock is a suite of automated docking tools. It is designed to predict how small molecules, '
                        'such as substrates or drug candidates, bind to a receptor of known 3D structure.',
         'source_url': 'http://autodock.scripps.edu/'
     }
@@ -22,7 +22,8 @@ def insert_to_db():
                                                                   }
                                                         )
 
-    # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
+    # Ff you followed the naming convention for classes,
+    #   you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'autogrid4',
          # 'executable_name': 'AutoGrid4Executable',
@@ -36,4 +37,4 @@ def insert_to_db():
          },
     ]
 
-    add_tools_to_toolset(tools, toolset)
+    add_tools_to_toolset(tools, toolset)  # associate tools to toolset

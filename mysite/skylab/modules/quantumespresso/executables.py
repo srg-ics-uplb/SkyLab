@@ -56,7 +56,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                 try:
                     sftp.stat(os.path.join(self.pseudo_dir, pseudo_file))
                     self.logger.debug(self.log_prefix + pseudo_file + "already in pseudo_dir")
-                except IOError: #if pseudopoential file not found download
+                except IOError: #if pseudopotential file not found, download
                     url = os.path.join(self.network_pseudo_download_url, pseudo_file)
                     # pseudopotential_urls.append(url)
                     command = 'curl --max-time 300 -O ' + url
@@ -89,8 +89,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         for key, value in env_vars.iteritems():
             env_command += env_var_command_template.format(key=key, value=value)
 
-        task_data = json.loads(self.task.task_data)
-
+        task_data = json.loads(self.task.task_data)  # load from json
         command_list = task_data['command_list']
 
         error = False
@@ -175,8 +174,6 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                         self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
                         time.sleep(2)
 
-                #sftp.remove(remote_filepath)  # delete file after transfer
-
                 # register newly transferred file as skylabfile
                 # at the very least pw.x output files seems to be compatible with jsmol
                 new_file = SkyLabFile.objects.create(type=2, task=self.task)
@@ -212,7 +209,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         additional_dirs = ['/mirror/espresso-5.4.0/tempdir','/mirror/espresso-5.4.0/pseudo']
         task_remote_subdirs = ['input', 'output'] # 'pseudodir', 'tempdir'
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commandas
+        self.handle_output_files()  # retrieve output files from remote cluster
 

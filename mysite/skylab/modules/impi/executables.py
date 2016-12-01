@@ -14,8 +14,7 @@ from skylab.modules.basetool import P2CToolGeneric
 from cStringIO import StringIO
 # 6, 11, 12 (segmentation fault) inherent error
 # 3, 4 secondary numeric input needed
-#TODO: single sftp open call
-#TODO: change stdin_write to paramiko
+
 class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operations to run with
     def __init__(self, **kwargs):
         super(ImpiExecutable, self).__init__(**kwargs)
@@ -30,11 +29,10 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         self.logger.debug(self.log_prefix + "Opening SFTP client")
         sftp = self.shell._open_sftp_client()
 
-        # sftp.settimeout(300) #set sftp operations timeout to 300 secs
         sftp.chdir(os.path.join(self.remote_task_dir, 'input'))  # cd /mirror/task_xx/input
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
-        sftp.get_channel().settimeout(300.0)
+        sftp.get_channel().settimeout(300.0)  # set timeout for sftp operations
         self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
 
         for f in files:
@@ -47,7 +45,7 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                 except (socket.timeout, EOFError):
                     self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
                     time.sleep(2)
-        sftp.close()
+        sftp.close()  # close sftp client
         self.logger.debug(self.log_prefix + "Closed SFTP client")
 
     def run_commands(self, **kwargs):
@@ -70,6 +68,9 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         for filename in input_filenames:
             command = 'impi '+ os.path.join('../input', filename)
+            # running using mpirun causes execution to not terminate most of the time
+            # hypothesis: only one process receives stdin_write, additional process do not receive them, thus, the said
+            # processes won't terminate properly
 
             #command = "mpirun -np {0:d} -f {1:s} impi ../input/{2}".format(self.task.mpi_cluster.total_node_count,
             #                                                        settings.MPIEXEC_NODES_FILE, filename)
@@ -82,37 +83,21 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
                     exit_retries = 0
                     exec_shell = self.shell.spawn(
                         ['sh', '-c', env_command + command],  # run command with env_command
-                        cwd=self.working_dir, store_pid=True
+                        cwd=self.working_dir
                     )
 
                     for parameter in command_list:
                         self.logger.debug(self.log_prefix + 'input ' + str(parameter))
-                        exec_shell.stdin_write(str(parameter) + "\n")
+                        exec_shell.stdin_write(str(parameter) + "\n")  # stdin input of parameters
                         time.sleep(2)
 
-                    # force_exit_executed = False
-                    # while True:
                     self.logger.debug(self.log_prefix + 'Running exit operation')
-                    # time.sleep(10)
-                        # if exec_shell.is_running():
-                    exec_shell.stdin_write(str(0)+"\n")
-                            #exit_retries += 1
 
-                            # if exit_retries > 5:
-                            #     self.logger.debug(self.log_prefix + 'Force exit operation')
-                            #     if exec_shell.is_running() and not force_exit_executed:
-                            #         exec_shell.send_signal(9)
-                            #         force_exit_executed = True
-                            #         time.sleep(10)
-                            #         break
-                                #exit_loop = False
-                        #else:
+                    exec_shell.stdin_write(str(0)+"\n")
+
                     exec_shell.wait_for_result()
                     self.logger.debug(self.log_prefix + 'Exited operation')
 
-                            #break
-                    # if not force_exit_executed:
-                        # rename output file : (default output file: test_out.jpg)
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
                     if default_output_filename != new_output_filename:
                         sftp.rename(default_output_filename, new_output_filename)
@@ -222,6 +207,6 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         task_remote_subdirs = ['input', 'output']
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster

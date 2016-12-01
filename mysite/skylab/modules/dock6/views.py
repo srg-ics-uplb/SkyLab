@@ -23,15 +23,15 @@ class Dock6View(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(Dock6View, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name='dock6')
+        context['tool'] = Tool.objects.get(simple_name='dock6')  # pass tool to view context
         return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
+        # build command strings, create skylabfile for file inputs
         cluster = form.cleaned_data['mpi_cluster']
-
         tool = Tool.objects.get(simple_name='dock6')
 
         # -n cluster_size
@@ -60,7 +60,7 @@ class Dock6View(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
-        send_to_queue(task=task)
+        send_to_queue(task=task)  # send signal to queue this task to task queue
 
         return super(Dock6View, self).form_valid(form)
 
@@ -77,13 +77,15 @@ class GridView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(GridView, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name='grid')
+        context['tool'] = Tool.objects.get(simple_name='grid')  # pass tool to view context
         return context
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
+        # build command strings, create skylabfile for file inputs
+
         cluster = form.cleaned_data['mpi_cluster']
         tool = Tool.objects.get(simple_name='grid')
         command = "grid "
@@ -115,5 +117,5 @@ class GridView(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': [command]})
         task.save()
-        send_to_queue(task=task)
+        send_to_queue(task=task)  # send signal to queue this task to task queue
         return super(GridView, self).form_valid(form)

@@ -131,7 +131,7 @@ class Autogrid4Form(forms.Form):
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        self.helper.layout = Layout(
+        self.helper.layout = Layout(  # crispy_forms layout
             TabHolder(
                 Tab(
                     'autogrid4',

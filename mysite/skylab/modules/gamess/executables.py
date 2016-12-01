@@ -159,33 +159,12 @@ class GamessExecutable(P2CToolGeneric):
                         self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
                         time.sleep(2)
 
-                # no need to remove files since parent directory (task folder) will be deleted
-                # sftp.remove(remote_filepath)  # delete file after transfer
-
                 # register newly transferred file as skylabfile
                 new_file = SkyLabFile.objects.create(type=2, task=self.task,
                                                      render_with_jsmol=True)  # gamess output file can be rendered with jsmol
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
                                                   remote_file)  # manual assignment to model filefield
                 new_file.save()  # save changes
-
-        """
-        PER FILE RETRIEVAL (/mirror/scr)
-        remote_path = '/mirror/scr/'
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            local_filepath = os.path.join(local_path, remote_file)
-            self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-            sftp.get(remote_filepath, local_filepath)
-            self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-            with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task)
-                new_file.file.name = os.path.join(new_file.upload_path, remote_file)
-                new_file.save()
-
-            sftp.remove(remote_filepath)  # delete after transfer
-        """
 
         # retrieve then delete produced scratch files
         zip_filename = self.task.task_dirname + "-scratch_files.zip"
@@ -222,13 +201,10 @@ class GamessExecutable(P2CToolGeneric):
 
         additional_dirs = ['/mirror/scr']
         task_remote_subdirs = ['input', 'output']
+
+        # clear or create required remote directories
         self.clear_or_create_dirs(additional_dirs=additional_dirs, task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
 
-
-# created for testing purposes only
-class Dummy(object):
-    def __init__(self):
-        print ("Hello world")
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster
