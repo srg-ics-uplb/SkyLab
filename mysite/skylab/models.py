@@ -13,20 +13,16 @@ from django.db import models
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 
-
-
 def get_available_tools():
     module_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'modules')
     dirs = [(lst, lst) for lst in os.listdir(module_path) if
             not os.path.isfile(os.path.join(module_path, lst)) and not lst.startswith("_")]
     return dirs
 
-
 def get_sentinel_user():
     return User.objects.get_or_create(username='deleted_user')
 
-
-def generate_share_key(N=5):
+def generate_share_key(N=5):  # generates a share key of length N
     """
     Generate string [A-Z0-9]{N}
     :param N:
@@ -40,11 +36,11 @@ def generate_share_key(N=5):
 
 
 @python_2_unicode_compatible
-class MPICluster(models.Model):
+class MPICluster(models.Model):  # database model for mpi cluster
     MAX_MPI_CLUSTER_SIZE = settings.MAX_NODES_PER_CLUSTER
 
     cluster_ip = models.GenericIPAddressField(null=True, default=None)
-    cluster_name = models.CharField(max_length=30, unique=True)
+    cluster_name = models.CharField(max_length=50, unique=True)
     cluster_size = models.SmallIntegerField(default=1, validators=[MaxValueValidator(MAX_MPI_CLUSTER_SIZE)])
 
 
@@ -125,20 +121,18 @@ class ToolActivation(models.Model):
         elif self.status == 0:
             return 'Not selected for activation'
 
-
-
 def get_default_package_name(display_name):
     pattern = re.compile('[\W]+')
     pattern.sub('', display_name).lower()
 
 
 @python_2_unicode_compatible
-class ToolSet(models.Model):
+class ToolSet(models.Model):  # database model class for tool set
     display_name = models.CharField(max_length=50, unique=True)
     p2ctool_name = models.CharField(max_length=50, unique=True)
     simple_name = models.CharField(max_length=50, unique=True, blank=True, null=True)
     package_name = models.CharField(max_length=50, )
-    description = models.CharField(max_length=300, null=True, blank=True)
+    description = models.TextField(max_length=300, null=True, blank=True)
     source_url = models.URLField(blank=True)
     created = models.DateTimeField()
 
@@ -182,7 +176,7 @@ class Tool(models.Model):
     executable_name = models.CharField(max_length=50, blank=True)  # Executable
     simple_name = models.CharField(max_length=50, blank=True)
     view_name = models.CharField(max_length=50, blank=True)
-    description = models.CharField(max_length=300, default="No description provided")
+    description = models.TextField(max_length=300, default="No description provided")
     toolset = models.ForeignKey(ToolSet, on_delete=models.CASCADE, related_name='subtools')
     created = models.DateTimeField()
 
@@ -199,19 +193,9 @@ class Tool(models.Model):
         return self.display_name
 
     def save(self, *args, **kwargs):
-        # if self.simple_name is None:
-        #     self.simple_name = self.display_name.lower().replace(' ','')
-
         if not self.id:  # on instance created
             self.created = timezone.now()
-            # if not self.simple_name:
-            #     self.simple_name = re.sub(r'\s+|\_+','-',self.display_name).lower()
-
         super(Tool, self).save(*args, **kwargs)
-
-        # @property
-        # def simple_name(self):
-        #     return self.display_name.lower().replace(' ', '-')
 
 def get_sentinel_mpi():
     return MPICluster.objects.get_or_create(cluster_name="deleted cluster", defaults={'status': 5})[0]
@@ -220,13 +204,13 @@ def get_sentinel_mpi():
 @python_2_unicode_compatible
 class Task(models.Model):
     priority = models.PositiveSmallIntegerField(default=3)  # 1=(reserved) p2c tool activate, 2=high, 3=normal
-    task_data = models.CharField(max_length=500, blank=True)
+    task_data = models.TextField(max_length=500, blank=True)
     # additional_info = models.CharField(max_length=500, blank=True)
     tool = models.ForeignKey(Tool, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     mpi_cluster = models.ForeignKey(MPICluster, on_delete=models.CASCADE, null=True)
-    status_msg = models.CharField(default="Task Created", max_length=200)
+    status_msg = models.TextField(default="Task Created", max_length=300)
     status_code = models.SmallIntegerField(default=0)
 
     updated = models.DateTimeField()
@@ -243,16 +227,15 @@ class Task(models.Model):
             self.created = timezone.now()
 
         self.updated = timezone.now()
-
         # create toolactivation if does not exist
-        ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
+        obj, created = ToolActivation.objects.get_or_create(mpi_cluster_id=self.mpi_cluster_id, toolset_id=self.tool.toolset_id,
                                              defaults={'status': 1})
-        super(Task, self).save(*args, **kwargs)
+        if not created:
+            if obj.status == 0:
+                obj.status = 1
+                obj.save()
 
-        # placed below super since instance does not have pk until saved
-        if created:
-            # Create tasklog stating task is created
-            self.change_status(status_code=100, status_msg="Task created")
+        super(Task, self).save(*args, **kwargs)
 
     @property
     def simple_status_msg(self):
@@ -275,11 +258,11 @@ class Task(models.Model):
 
     def change_status(self, **kwargs):
         status_code = kwargs.get('status_code', self.status_code)
-        status_msg = kwargs.get('status_msg')
+        status_msg = kwargs.get('status_msg', None)
         self.status_code = status_code
-        self.status_msg = self.simple_status_msg
+        self.status_msg = status_msg if status_msg else self.simple_status_msg
         self.save()
-        TaskLog.objects.create(status_code=status_code, status_msg=status_msg, task=self)
+        TaskLog.objects.create(status_code=self.status_code, status_msg=self.status_msg, task=self)
 
     @property
     def task_dirname(self):
@@ -330,12 +313,12 @@ class Task(models.Model):
     def jsmol_input_files(self):
         return self.input_files.filter(render_with_jsmol=True)
 
-    def get_output_image_files_urls(self):
+    def get_output_image_files_urls(self):  # image urls for carousel
         output_images_urls = []
 
         for f in self.output_files.all():
             ext = os.path.splitext(f.filename)[1]
-            if ext.lower() in ['.jpg', '.jpeg', '.bmp', '.gif', '.png']:
+            if ext.lower() in ['.jpg', '.jpeg', '.gif', '.png']: # removed'.bmp'
                 output_images_urls.append(
                     {
                         'url': f.get_direct_url(),
@@ -347,7 +330,7 @@ class Task(models.Model):
     def get_output_files_urls(self):
         output_files_urls_dict = []
 
-        for f in self.output_files.all():
+        for f in self.output_files.order_by('filename').all():
             output_files_urls_dict.append({'url': reverse('skylab_file_url',
                                                           kwargs={'task_id': self.id, 'type': 'output',
                                                                   'filename': f.filename}),
@@ -355,7 +338,7 @@ class Task(models.Model):
 
         return output_files_urls_dict
 
-    def get_dict_jsmol_files_uris(self, request):
+    def get_dict_jsmol_files_uris(self, request):  # get absolute urls for files to be rendered with jsmol
         jsmol_files_absolute_uris = []
         if self.files.filter(render_with_jsmol=True).exists():
             output_files = self.output_files.filter(render_with_jsmol=True)
@@ -378,8 +361,6 @@ class Task(models.Model):
 
         return jsmol_files_absolute_uris
 
-
-
 def get_upload_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/user_<id>/<filename>
     upload_path = instance.upload_path
@@ -397,7 +378,6 @@ class SkyLabFile(models.Model):
     # @property
     # def filename(self):
     #     return os.path.basename(self.file.name)
-
 
     def __str__(self):
         return str(self.filename)
@@ -422,17 +402,14 @@ class SkyLabFile(models.Model):
                 return
             except SkyLabFile.DoesNotExist:
                 pass #No duplicates
-
-
         super(SkyLabFile, self).save(*args, **kwargs)
 
 @python_2_unicode_compatible
 class TaskLog(models.Model):
     status_code = models.PositiveSmallIntegerField()
-    status_msg = models.CharField(max_length=200)
+    status_msg = models.TextField(max_length=300)
     timestamp = models.DateTimeField()
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-
 
     def __str__(self):
         return "Log for Task {1} Date : {2}".format(self.task_id, self.task_id, self.timestamp.ctime())

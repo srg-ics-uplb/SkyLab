@@ -3,6 +3,7 @@ import math
 import os
 import stat
 import time
+import socket
 
 import spur
 from django.conf import settings
@@ -10,10 +11,10 @@ from django.conf import settings
 from skylab.models import SkyLabFile
 from skylab.modules.basetool import P2CToolGeneric
 
-
+from cStringIO import StringIO
 # 6, 11, 12 (segmentation fault) inherent error
 # 3, 4 secondary numeric input needed
-#TODO: single sftp open call
+
 class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operations to run with
     def __init__(self, **kwargs):
         super(ImpiExecutable, self).__init__(**kwargs)
@@ -27,14 +28,24 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # fetch input files for this task
         self.logger.debug(self.log_prefix + "Opening SFTP client")
         sftp = self.shell._open_sftp_client()
+
         sftp.chdir(os.path.join(self.remote_task_dir, 'input'))  # cd /mirror/task_xx/input
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
+        sftp.get_channel().settimeout(300.0)  # set timeout for sftp operations
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
-        sftp.close()
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except (socket.timeout, EOFError):
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
+        sftp.close()  # close sftp client
         self.logger.debug(self.log_prefix + "Closed SFTP client")
 
     def run_commands(self, **kwargs):
@@ -56,26 +67,37 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         self.logger.debug(self.log_prefix + "Opened SFTP client")
 
         for filename in input_filenames:
-            command = "impi ../input/" + filename
+            command = 'impi '+ os.path.join('../input', filename)
+            # running using mpirun causes execution to not terminate most of the time
+            # hypothesis: only one process receives stdin_write, additional process do not receive them, thus, the said
+            # processes won't terminate properly
+
+            #command = "mpirun -np {0:d} -f {1:s} impi ../input/{2}".format(self.task.mpi_cluster.total_node_count,
+            #                                                        settings.MPIEXEC_NODES_FILE, filename)
             retries = 0
             exit_loop = False
 
             while not exit_loop:  # try while not exit
                 self.logger.debug(self.log_prefix + u'Running {0:s}'.format(command))
                 try:
+                    exit_retries = 0
                     exec_shell = self.shell.spawn(
                         ['sh', '-c', env_command + command],  # run command with env_command
                         cwd=self.working_dir
                     )
 
                     for parameter in command_list:
-                        exec_shell.stdin_write(str(parameter) + "\n")
-                        time.sleep(3)
-                    self.logger.debug(self.log_prefix + 'Running exit operation')
-                    while exec_shell.is_running():
-                        exec_shell.stdin_write('0\n')
+                        self.logger.debug(self.log_prefix + 'input ' + str(parameter))
+                        exec_shell.stdin_write(str(parameter) + "\n")  # stdin input of parameters
+                        time.sleep(2)
 
-                    # rename output file : (default output file: test_out.jpg)
+                    self.logger.debug(self.log_prefix + 'Running exit operation')
+
+                    exec_shell.stdin_write(str(0)+"\n")
+
+                    exec_shell.wait_for_result()
+                    self.logger.debug(self.log_prefix + 'Exited operation')
+
                     new_output_filename = os.path.splitext(os.path.basename(filename))[0] + '_out.jpg'
                     if default_output_filename != new_output_filename:
                         sftp.rename(default_output_filename, new_output_filename)
@@ -113,7 +135,7 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         if error:
             self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
+                status_msg='Task execution error!', status_code=400)
         else:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -131,7 +153,8 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         self.logger.debug(self.log_prefix + "Opening SFTP client")
         sftp = self.shell._open_sftp_client()
-        self.logger.debug(self.log_prefix + "Opened SFTP client")
+        sftp.get_channel().settimeout(300.0)
+
         remote_path = os.path.join(self.remote_task_dir, 'output')
         sftp.chdir(remote_path)
 
@@ -140,16 +163,24 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
         # hangs on this command, used workaround instead
         # remote_files = sftp.listdir()  # list dirs and files in remote path
 
-        for remote_file in self.output_files:
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+        self.logger.debug(self.log_prefix + "Opened SFTP client")
+
+        for remote_file in self.output_files:  #sftp.listdir(path=remote_path):
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
-
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-                sftp.remove(remote_filepath)  # delete file after transfer
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except (socket.timeout, EOFError):
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
+                #sftp.remove(remote_filepath)  # delete file after transfer
 
                 # register newly transferred file as skylabfile
                 new_file = SkyLabFile.objects.create(type=2,
@@ -176,6 +207,6 @@ class ImpiExecutable(P2CToolGeneric):  # for multiple files with the same operat
 
         task_remote_subdirs = ['input', 'output']
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster

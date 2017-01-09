@@ -34,7 +34,7 @@
                         <th>Tasks queued</th>
                         <th>Status</th>
 
-                        {% if mpi_cluster.creator == user %}
+                        {% if mpi_cluster.creator == user or user.is_superuser %}
                             <th>Share key</th>
                         {% endif %}
                         <th>Visibility</th>
@@ -46,12 +46,12 @@
                         <td>{{ mpi_cluster.cluster_name }}</td>
                         <td>{{ mpi_cluster.total_node_count }}</td>
                         <td id="mpi-info-ip">{{ mpi_cluster.cluster_ip }}</td>
-                        <td>{{ mpi_cluster.task_queued_count }}</td>
-                        <td>
+                        <td id="mpi-task-queued-cell">{{ mpi_cluster.task_queued_count }}</td>
+                        <td id="mpi-status-cell">
                             <span id="mpi-info-status" class="
                             {% if mpi_cluster.status == 2 %}
                                 text-success
-                            {% elif mpi_cluster.status == 4 %}
+                            {% elif mpi_cluster.status == 4 or mpi_cluster.status == 5 %}
                                 text-danger
                             {% else %}
                                 text-info
@@ -65,11 +65,13 @@
 
                         </td>
 
-                        {% if mpi_cluster.creator == user %}
+                        {% if mpi_cluster.creator == user or user.is_superuser %}
                             <td>{{ mpi_cluster.share_key }}</td>{% endif %}
-                        <td>{% if user == mpi_cluster.creator %}
+                        <td id="mpi-visibility-cell">{% if user == mpi_cluster.creator or user.is_superuser %}
+                                {% if mpi_cluster.status != 5 %} {# disable checkbox if already cluster is already deleted #}
                                  <input type="checkbox" name="visibility-checkbox" data-label-text="Public"
                                    {% if mpi_cluster.is_public %}checked{% endif %}>
+                                {% endif %}
                             {% else %}
                                 {% if mpi_cluster.is_public %}
                                     Public
@@ -83,6 +85,15 @@
                     </tr>
                     </tbody>
                 </table>
+                {% if not mpi_cluster.queued_for_deletion or mpi_cluster.status != 5 %}
+                    {% if mpi_cluster.creator == user or user.is_superuser %}
+                        <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
+                                data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
+                            Delete this cluster
+                        </button>
+                    {% endif %}
+                {% endif %}
+
             </div>
 
             <div class="row">
@@ -103,9 +114,11 @@
                             <td id="tool-activation-status-cell-{{ tool_activation.toolset.id }}">
                                 {% if tool_activation.status == 0 %}
                                     <span class="text-muted">{{ tool_activation.current_status_msg }}</span>
+                                    {% if mpi_cluster.status != 5 %}
                                     <button class="btn btn-success pull-right toolset-activate-btn"
                                             data-toolset-pk="{{ tool_activation.toolset.id }}">Activate
                                     </button>
+                                    {% endif %}
                                     {# activate button                            #}
                                 {% elif tool_activation.status == 1 %}
                                     <span class="text-info"> {{ tool_activation.current_status_msg }}</span>
@@ -118,36 +131,33 @@
                     </tbody>
                 </table>
             </div>
-            {% if mpi_cluster.creator == user and not mpi_cluster.queued_for_deletion %}
-                <div class="row">
-                    <button id="delete-cluster-btn" class="btn btn-danger" data-toggle="modal"
-                            data-target="#delete-confirm-modal"><i class="fa fa-times" aria-hidden="true"></i>
-                        Delete this cluster
-                    </button>
-                </div>
-                <div class="modal fade" id="delete-confirm-modal" role="dialog">
-                    <div class="modal-dialog ">
-                        <div class="modal-content">
-                            <div class="modal-header bg-danger">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Confirm Deletion</h4>
-                            </div>
-                            <div class="modal-body">
-                                <p class="text-justify">You are about to schedule MPI Cluster
-                                    ({{ mpi_cluster.cluster_name }}) for deletion, this
-                                    procedure is irreversible. Cluster will be deleted after all tasks queued are
-                                    finished. </p>
-                            </div>
-                            <div class="modal-footer ">
+            {% if not mpi_cluster.queued_for_deletion or mpi_cluster.status != 5 %}
+                {% if mpi_cluster.creator == user or user.is_superuser %}
 
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                                <button type="button" class="btn btn-danger" onclick="deleteCluster()"
-                                        data-dismiss="modal">Delete
-                                </button>
+                    <div class="modal fade" id="delete-confirm-modal" role="dialog">
+                        <div class="modal-dialog ">
+                            <div class="modal-content">
+                                <div class="modal-header bg-danger">
+                                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <h4 class="modal-title">Confirm Deletion</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <p>You are about to schedule MPI Cluster
+                                        ({{ mpi_cluster.cluster_name }}) for deletion.<br>This
+                                        procedure is irreversible.<br>Cluster will be deleted after all tasks queued are
+                                        finished. </p>
+                                </div>
+                                <div class="modal-footer ">
+
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-danger" onclick="deleteCluster()"
+                                            data-dismiss="modal">Delete
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                {% endif %}
             {% endif %}
         </div>
     </div>
@@ -161,18 +171,20 @@
 
 {% block js %}
     {{ block.super }}
+    {% if mpi_cluster.status != 5 %}
     <script type="text/javascript"
             src="{% static 'bootstrap-switch-master/dist/js/bootstrap-switch.min.js' %}"></script>
     <script>
         {# if cluster is public hide share key column        #}
         mpi_info_table = $('#mpi-info-table');
-        {%  if mpi_cluster.is_public %}
+        {%  if mpi_cluster.is_public and not user.is_superuser %}
             mpi_info_table.find('th:nth-child(6)').hide();
             mpi_info_table.find('td:nth-child(6)').hide();
         {% endif %}
 
 
-        {% if user == mpi_cluster.creator %}
+
+        {% if user == mpi_cluster.creator or user.is_superuser %}
                 {# init as bootstrap switch #}
             visibility_switch = $("input[type=checkbox][name='visibility-checkbox']");
             visibility_switch.bootstrapSwitch();
@@ -186,15 +198,34 @@
                     'pk':{{mpi_cluster.id}}
                 }, function (content) {
     {#                todo: add progress icon#}
+                    {% if not user.is_superuser %}
                     mpi_info_table.find('th:nth-child(6)').toggle();
                     mpi_info_table.find('td:nth-child(6)').toggle();
+                    {% endif %}
                 });
 
             });
 
         {% endif %}
 
+        var refreshClusterStatus = function () {
+            ajaxGet('{% url 'ajax_refresh_mpi_detail_view' pk=mpi_cluster.id %}', function (content) {
+                {% if user == mpi_cluster.creator or user.is_superuser %}
+                    visibility_switch.prop('checked', content.is_public);
+                {% else %}
+                    if (content.is_public){
+                        $('#mpi-visibility-cell').html('Public');
+                    }else{
+                        $('#mpi-visibility-cell').html('Private');
+                    }
+                {% endif %}
+                if (content.status_code == 5){
+                    clearInterval(clusterStatusRefresher)
+                }
+            })
+        };
 
+        var clusterStatusRefresher = setInterval(refreshClusterStatus, 10000); {# refresh cluster status every 10 seconds #}
 
         {# delete cluster via ajax post, update html            #}
         var deleteCluster = function () {
@@ -245,5 +276,5 @@
             })
         })
     </script>
-
+    {% endif %}
 {% endblock %}

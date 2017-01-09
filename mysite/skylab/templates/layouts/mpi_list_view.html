@@ -95,15 +95,21 @@
                     return 2;
                 case 'Connection error':
                     return 3;
+                case 'Deleted':
+                    return 4;
                 default:
                     return 0;
             }
-
         };
 
         {# dataTable object init #}
         var table = $('#mpi-table').DataTable({
+            "order": [[4, 'asc']],
             "columnDefs": [
+                {
+                    "type" : "mpi-status",
+                    "targets": [4]
+                },
                 {
                     "targets": [4], {# status column #}
                     "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}
@@ -117,6 +123,7 @@
                                     $(td).addClass('text-success');
                                     break;
                                 case "Connection error":
+                                case "Deleted":
                                     $(td).addClass('text-danger');
                                     break;
                                 default:
@@ -132,16 +139,8 @@
                         $(td).html('<a href="'+url_mask+'">'+cellData+'</a>')
                     }
                 },
-            ]//,
-{#            "createdRow": function (row, data, dataIndex) { {# on row created #}
-{#                $(row).addClass('clickable-row');#}
-                {# make row clickable #}
-                {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
-                {#                var url_mask = "{% url 'mpi_detail_view' pk=911 %}".replace(/911/, data[0]);#}
-{#                var url_mask = "{% url 'mpi_detail_view' cluster_name='cluster_name_placeholder' %}".replace(/cluster_name_placeholder/, data[0]);#}
-                {# parse url #}
-{#                $(row).attr('data-href', url_mask);#}
-{#            }#}
+            ]
+
         });
 
         var refreshMPITable = function(){
@@ -152,14 +151,6 @@
         };
         refreshMPITable();
         setInterval( refreshMPITable, 10000);
-
-
-{#        $(document).ready(function () {#}
-{#            $("tbody").on('click', 'tr', function () { {# make table row clickable #}
-{#                window.location = $(this).data("href");#}
-                {# go to cluster detail view #}
-{#            });#}
-{#        });#}
 
         var addUserToCluster = function () {
             var share_key_form = $('input[type=text][name=share-key]');
@@ -179,8 +170,5 @@
                 }
             })
         };
-
     </script>
-
-
 {% endblock %}

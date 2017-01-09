@@ -30,4 +30,4 @@ def insert_to_db():
          },
     ]
 
-    add_tools_to_toolset(tools, toolset)
+    add_tools_to_toolset(tools, toolset)  # add tool db entries and associate them with toolset

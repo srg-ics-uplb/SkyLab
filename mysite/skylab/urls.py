@@ -5,7 +5,7 @@ from . import views
 
 urlpatterns = [
 
-    url(r'^mpi-clusters/create$', views.CreateMPIView.as_view(), name='create_mpi'),
+    url(r'^mpi-clusters/create-mpi-cluster$', views.CreateMPIView.as_view(), name='create_mpi'),
     url(r'^mpi-clusters$', views.MPIListView.as_view(), name='mpi_list_view'),
     url(r'^mpi-clusters/(?P<pk>\d+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
     url(r'^mpi-clusters/(?P<cluster_name>\w+)$', views.MPIDetailView.as_view(), name='mpi_detail_view'),
@@ -18,7 +18,7 @@ urlpatterns = [
         name="skylab_tool_view"),
     url(r'^toolsets/(?P<toolset_pk>\d+)/(?P<tool_pk>\d+)/$', views.tool_view, name='skylab_tool_view'),
 
-
+    url(r'^ajax/refresh-mpi-detail-fragments/(?P<pk>\d+)$', views.refresh_mpi_detail_view, name='ajax_refresh_mpi_detail_view'),
     url(r'^ajax/refresh-task-list-table$', views.refresh_task_list_table, name='ajax_refresh_task_list_table'),
     url(r'^ajax/refresh-mpi-list-table$', views.refresh_mpi_list_table, name='ajax_refresh_mpi_list_table'),
     url(r'^ajax/task-detail-fragments/(?P<pk>\d+)$', views.refresh_task_detail_view,
@@ -31,12 +31,7 @@ urlpatterns = [
     url(r'ajax/refresh-select-toolset$', views.refresh_select_toolset, name='ajax_refresh_select_toolset'),
     url(r'ajax/refresh-select-tools/(?P<toolset_simple_name>[a-z]\w+)', views.refresh_select_toolset_tool_options,
         name='ajax_refresh_select_tool'),
-
-    # url(r'^tools/')
-
-
     url(r'^$', views.index, name='skylab-home'),
-
 
     # skip logout confirmation
     url(r'^accounts/login/$', RedirectView.as_view(url="/skylab/accounts/google/login/?process=login", permanent=False),

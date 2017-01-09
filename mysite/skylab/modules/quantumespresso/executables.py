@@ -3,6 +3,7 @@ import math
 import os.path
 import stat
 import time
+import socket
 
 import spur
 from django.conf import settings
@@ -32,23 +33,30 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
         sftp.chdir(os.path.join(self.remote_task_dir, 'input'))  # cd /mirror/task_xx/input
 
-        for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+        sftp.get_channel().settimeout(180.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
 
+        for f in files:
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except (socket.timeout, EOFError):
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
 
         pseudopotentials = json.loads(self.task.task_data).get("pseudopotentials", None)
         if pseudopotentials:
             self.logger.debug(self.log_prefix + 'Downloading pseudopotentials')
             # pseudopotential_urls = []
 
-
             for pseudo_file in pseudopotentials:
                 try:
                     sftp.stat(os.path.join(self.pseudo_dir, pseudo_file))
                     self.logger.debug(self.log_prefix + pseudo_file + "already in pseudo_dir")
-                except IOError: #if pseudopoential file not found download
+                except IOError: #if pseudopotential file not found, download
                     url = os.path.join(self.network_pseudo_download_url, pseudo_file)
                     # pseudopotential_urls.append(url)
                     command = 'curl --max-time 300 -O ' + url
@@ -81,8 +89,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         for key, value in env_vars.iteritems():
             env_command += env_var_command_template.format(key=key, value=value)
 
-        task_data = json.loads(self.task.task_data)
-
+        task_data = json.loads(self.task.task_data)  # load from json
         command_list = task_data['command_list']
 
         error = False
@@ -98,8 +105,6 @@ class QuantumEspressoExecutable(P2CToolGeneric):
                         ['sh', '-c', env_command + command],  # run command with env_command
                         cwd=self.working_dir  # run at remote task dir
                     )
-
-
 
                     self.logger.debug(self.log_prefix + "Finished command exec")
                     exit_loop = True  # exit loop
@@ -127,7 +132,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
             if error:
                 self.task.change_status(
-                    status_msg='Task execution error! See .log file for more information', status_code=400)
+                    status_msg='Task execution error! See output file for more information', status_code=400)
             else:
                 self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -150,16 +155,24 @@ class QuantumEspressoExecutable(P2CToolGeneric):
 
         # retrieve then delete produced output files
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+
+        sftp.get_channel().settimeout(180.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
-
                 local_filepath = os.path.join(local_path, remote_file)
 
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-                sftp.remove(remote_filepath)  # delete file after transfer
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except (socket.timeout, EOFError):
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
 
                 # register newly transferred file as skylabfile
                 # at the very least pw.x output files seems to be compatible with jsmol
@@ -196,7 +209,7 @@ class QuantumEspressoExecutable(P2CToolGeneric):
         additional_dirs = ['/mirror/espresso-5.4.0/tempdir','/mirror/espresso-5.4.0/pseudo']
         task_remote_subdirs = ['input', 'output'] # 'pseudodir', 'tempdir'
         self.clear_or_create_dirs(task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commandas
+        self.handle_output_files()  # retrieve output files from remote cluster
 

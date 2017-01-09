@@ -8,7 +8,6 @@ def insert_to_db():
         'package_name': __name__.replace('.install', ''),
         'p2ctool_name': 'impi',
         'description': 'Image processing tool that runs in parallel via MPI',
-        # 'source_url': 'http://www.quantum-espresso.org/'
     }
 
     toolset, created = ToolSet.objects.update_or_create(package_name=toolset_dict['package_name'],
@@ -24,11 +23,8 @@ def insert_to_db():
     # if you followed the naming convention for classes, you do not need to provide values for executable_name and view_name
     tools = [
         {'display_name': 'Impi',
-         # "executable_name": "QuantumESPRESSOExecutable",
-         # "view_name":"QuantumESPRESSOView",
          'description': 'Image processing tool for JPEG format',
          },
-
     ]
 
-    add_tools_to_toolset(tools, toolset)
+    add_tools_to_toolset(tools, toolset)  #  add tool db entries and associate them with toolset

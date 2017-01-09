@@ -5,7 +5,7 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_for_task_submission
 from skylab.models import MPICluster, ToolSet
 from skylab.modules.impi.validators import impi_files_validator
 
@@ -14,41 +14,22 @@ class SelectMPIFilesForm(forms.Form):
     input_files = MultiFileField(label="Image file(s) ", validators=[impi_files_validator],
                                  help_text="Only supports JPEG format (.jpeg, .jpg)")
 
-    # , validators=[in_file_extension_validator],
-
-
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')  # get user from form kwargs
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
 
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
-
         toolset = ToolSet.objects.get(p2ctool_name="impi")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
-
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
-            Div(
-                Field('mpi_cluster'),
-                css_class="col-sm-12"
-            ),
-            Div(
-                Div('input_files'),
-                css_class='row-fluid col-sm-12'
-            )
+
+            Field('mpi_cluster', wrapper_class="col-xs-12"),
+            Field('input_files', wrapper_class="col-xs-12"),
         )
 
 
@@ -65,7 +46,7 @@ class InputParameterForm(forms.Form):
         ('9', 'Laplace (8-neighbor)'),
         ('10', 'Sobel')
     )
-    param_operation = forms.ChoiceField(label="Image processing operation", choices=OPTIONS, required=False)
+    param_operation = forms.ChoiceField(label="Image processing operation", choices=OPTIONS) #todo: required=False, validate in custom formset
     param_value = forms.IntegerField(label="Value", help_text="Select from 1-100", required=False, max_value=100,
                                      min_value=1)
 
@@ -75,16 +56,12 @@ class InputParameterForm(forms.Form):
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
 
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('param_operation', css_class='parameter'), css_class='col-xs-5'),
-                Div(Field('param_value', wrapper_class='hidden'), css_class='col-xs-5 col-xs-offset-1'),
+                Field('param_operation', css_class='parameter', wrapper_class='col-xs-10 col-sm-5'),
+                Div(Field('param_value', wrapper_class='hidden'), css_class='col-xs-10 col-sm-5 col-sm-offset-1'),
 
-                css_class='row-fluid col-sm-12 form-container'
+                css_class='col-xs-12 form-container'
             ),
         )
 

@@ -9,6 +9,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.gamess.forms import GamessForm
+from skylab.signals import send_to_queue
 
 
 class GamessView(LoginRequiredMixin, FormView):
@@ -26,10 +27,12 @@ class GamessView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(GamessView, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name='gamess')
+        context['tool'] = Tool.objects.get(simple_name='gamess')  # pass tool in view context
         return context
 
     def form_valid(self, form):
+        # build command strings, create SkylabFiles for form input files
+
         cluster = form.cleaned_data['mpi_cluster']
         tool = Tool.objects.get(simple_name='gamess')
         task = Task.objects.create(
@@ -46,6 +49,7 @@ class GamessView(LoginRequiredMixin, FormView):
         task.refresh_from_db()
         task.task_data = json.dumps({'command_list': command_list})
         task.save()
+        send_to_queue(task=task)  # send signal to queue this task to task queue
 
         self.kwargs['id'] = task.id
         return super(GamessView, self).form_valid(form)

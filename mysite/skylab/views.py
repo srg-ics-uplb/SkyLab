@@ -9,6 +9,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.urlresolvers import reverse
 from django.db.models import Q
+from django.utils import timezone
 from django.http import Http404
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
@@ -24,9 +25,10 @@ from skylab.validators import get_current_max_nodes
 
 
 def has_read_permission(request, task_id):
-
     "Only show to authenticated users - extend this as desired"
-    if Task.objects.get(pk=task_id).user_id == request.user.id:
+    if request.user.is_superuser:
+        return True
+    elif Task.objects.get(pk=task_id).user_id == request.user.id:
         return True
     else:
         return False
@@ -50,11 +52,9 @@ def serve_skylabfile(request, task_id, type, filename):
         elif type == "output":
             requested_file = SkyLabFile.objects.get(type=2, task_id=task_id, filename=filename)
     except ObjectDoesNotExist:
-
         return Http404
 
     fullpath = os.path.join(settings.MEDIA_ROOT, requested_file.file.name)
-
     return sendfile(request, fullpath, attachment=True)
 
 
@@ -83,8 +83,6 @@ def serve_skylabfile(request, task_id, type, filename):
 # 	print(" [x] Sent %r:%r" % (routing_key, "body:%r" % body))
 # 	connection.close()
 
-
-
 class HomeView(TemplateView):
     template_name = "layouts/home.html"
 
@@ -101,7 +99,6 @@ class CreateMPIView(LoginRequiredMixin, FormView):
             messages.add_message(request, messages.WARNING,
                                  'Warning! The system has reached the limit for max  active clusters.',
                                  extra_tags='display_this')
-        # super(CreateMPIView, self).get(request, *args, **kwargs) #super does not work
         super(CreateMPIView, self).get(request, *args, **kwargs)
         return self.render_to_response(self.get_context_data())
 
@@ -144,9 +141,11 @@ class MPIListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super(MPIListView, self).get_queryset()
-        user_allowed = Q(allowed_users=self.request.user)
-        cluster_is_public = Q(is_public=True)
-        return qs.filter(user_allowed | cluster_is_public).order_by('-updated')
+        if not self.request.user.is_superuser:
+            user_allowed = Q(allowed_users=self.request.user)
+            cluster_is_public = Q(is_public=True)
+            qs =  qs.filter(user_allowed | cluster_is_public).order_by('-updated')
+        return qs
 
 
 class MPIDetailView(LoginRequiredMixin, DetailView):
@@ -180,9 +179,11 @@ class MPIDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         qs = super(MPIDetailView, self).get_queryset()
-        user_allowed = Q(allowed_users=self.request.user)
-        cluster_is_public = Q(is_public=True)
-        return qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+        if not self.request.user.is_superuser:
+            user_allowed = Q(allowed_users=self.request.user)
+            cluster_is_public = Q(is_public=True)
+            qs = qs.exclude(status=5).filter(user_allowed | cluster_is_public)
+        return qs
 
 
 class TaskListView(LoginRequiredMixin, ListView):
@@ -192,7 +193,9 @@ class TaskListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         qs = super(TaskListView, self).get_queryset()
-        return qs.filter(user=self.request.user).order_by('-updated')
+        if not self.request.user.is_superuser:
+            qs =  qs.filter(user=self.request.user)
+        return qs.order_by('-updated')
 
 
 class TaskDetailView(LoginRequiredMixin, DetailView):
@@ -220,7 +223,9 @@ class TaskDetailView(LoginRequiredMixin, DetailView):
 
     def get_queryset(self):
         qs = super(TaskDetailView, self).get_queryset()
-        return qs.filter(user=self.request.user)
+        if not self.request.user.is_superuser: #all tasks are visible to the admin
+            qs =  qs.filter(user=self.request.user)
+        return qs
 
 
 class ToolSetDetailView(LoginRequiredMixin, DetailView):
@@ -277,8 +282,44 @@ def tool_view(request, toolset_simple_name=None, tool_simple_name=None, toolset_
 
 @login_required
 @ajax
+def refresh_mpi_detail_view(request, pk):
+    try:
+        mpi_cluster = MPICluster.objects.get(pk=pk)
+        status = '<span class="text-{0}">{1}</span>'
+        status_msg = mpi_cluster.current_simple_status_msg
+
+        if mpi_cluster.status < 2:
+            status_class = 'info'
+        elif mpi_cluster.status == 2:
+            status_class = 'success'
+        if mpi_cluster.status == 5:
+            status_class = 'danger'
+        elif mpi_cluster.queued_for_deletion:
+            status_class = 'warning'
+            status_msg += ' (For deletion)'
+
+        data = {
+            'inner-fragments':{
+                '#mpi-task-queued-cell' : mpi_cluster.task_queued_count,
+                '#mpi-status-cell': status.format(status_class, status_msg)
+            },
+            'is_public': mpi_cluster.is_public,
+            'status_code': mpi_cluster.status,
+
+        }
+        return data
+
+    except MPICluster.DoesNotExist:
+        return {'error':'MPI cluster with pk={0} does not exist'.format(pk)}
+
+
+@login_required
+@ajax
 def refresh_task_list_table(request):
-    tasks = Task.objects.filter(user=request.user).order_by('-updated')
+    if request.user.is_superuser:
+        tasks = Task.objects.all().order_by('-updated')
+    else:
+        tasks = Task.objects.filter(user=request.user).order_by('-updated')
     rows = []
     for task in tasks:  # build array of arrays containing info for each cluster
         rows.append([
@@ -286,8 +327,8 @@ def refresh_task_list_table(request):
             task.tool.display_name,
             task.mpi_cluster.cluster_name,
             task.simple_status_msg,
-            task.updated.strftime('%x %I:%M %p'),
-            task.created.strftime('%x %I:%M %p')
+            timezone.localtime(task.created).strftime('%x %I:%M %p'),
+            timezone.localtime(task.updated).strftime('%x %I:%M %p')
         ])
     return {'rows': rows}
 
@@ -295,10 +336,13 @@ def refresh_task_list_table(request):
 @login_required
 @ajax
 def refresh_mpi_list_table(request):
-    user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
-    cluster_is_public = Q(is_public=True)
-    qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
-    qs = qs.exclude(status=5)
+    if request.user.is_superuser:   #all clusters are visible to the admin
+        qs = MPICluster.objects.all()
+    else:
+        user_allowed = Q(allowed_users=request.user)  # filter all visible clusters that are not deleted
+        cluster_is_public = Q(is_public=True)
+        qs = MPICluster.objects.filter(user_allowed | cluster_is_public)
+        qs = qs.exclude(status=5)
 
     rows = []
     for cluster in qs:  # build array of arrays containing info for each cluster
@@ -308,9 +352,10 @@ def refresh_mpi_list_table(request):
             cluster.total_node_count,
             cluster.cluster_ip,
             cluster.task_queued_count,
-            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+            cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
             'Public' if cluster.is_public else 'Private',
-            cluster.created.strftime('%x %I:%M %p'),
+
+            timezone.localtime(cluster.created).strftime('%x %I:%M %p'),
         ])
 
     return {'rows':rows}
@@ -321,8 +366,9 @@ def refresh_mpi_list_table(request):
 
 @login_required
 @ajax
-def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = request.POST['pk']
-    print toolset_simple_name
+def refresh_select_toolset_tool_options(request, toolset_simple_name):
+    # for create task modal
+
     try:
         toolset = ToolSet.objects.get(simple_name=toolset_simple_name)
         tools = Tool.objects.filter(toolset=toolset)
@@ -350,6 +396,8 @@ def refresh_select_toolset_tool_options(request, toolset_simple_name):  # pk = r
 @login_required
 @ajax
 def refresh_select_toolset(request):
+    # for create task modal
+
     toolsets = ToolSet.objects.all()
 
     select_items = ''
@@ -397,9 +445,9 @@ def post_allow_user_access_to_mpi(request):
                     cluster.total_node_count,
                     cluster.cluster_ip,
                     cluster.task_queued_count,
-                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion else cluster.current_simple_status_msg,
+                    cluster.current_simple_status_msg + ' (Scheduled for deletion)' if cluster.queued_for_deletion and cluster.status != 5 else cluster.current_simple_status_msg,
                     'Public' if cluster.is_public else 'Private',
-                    cluster.created.strftime('%x %I:%M %p'),
+                    timezone.localtime(cluster.created).strftime('%x %I:%M %p'),
                 ])
             data['rows'] = rows
 
@@ -425,7 +473,7 @@ def post_mpi_toolset_activate(request):
             'status_msg': obj.current_status_msg
         }
         return data
-    return None
+    return {}
 
 
 @login_required
@@ -434,8 +482,9 @@ def post_mpi_delete(request):
     pk = request.POST.get('pk')
     if pk:
         mpi_cluster = MPICluster.objects.get(pk=pk)
-        mpi_cluster.queued_for_deletion = True
-        mpi_cluster.save()
+        if request.user.is_superuser or mpi_cluster.creator == request.user: #ensure that only the creator or the admin can delete the cluster
+            mpi_cluster.queued_for_deletion = True
+            mpi_cluster.save()
 
         data = {
             'cluster_ip': mpi_cluster.cluster_ip,
@@ -443,7 +492,7 @@ def post_mpi_delete(request):
             'status': mpi_cluster.status
         }
         return data
-    return None
+    return {}
 
 
 @login_required
@@ -455,15 +504,19 @@ def post_mpi_visibility(request):
     if is_public and pk:
         is_public = is_public == 'true'
         mpi_cluster = MPICluster.objects.get(pk=pk)
-        mpi_cluster.is_public = is_public
-        mpi_cluster.save()
-    return None
+        if request.user.is_superuser or request.user == mpi_cluster.creator: #only admin and creator can change visibility
+            mpi_cluster.is_public = is_public
+            mpi_cluster.save()
+    return {}
 
 
 @login_required
 @ajax
 def refresh_nav_task_list(request):
-    tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
+    if request.user.is_superuser:
+        tasks = Task.objects.all().order_by('-updated')[:3]
+    else:
+        tasks = Task.objects.filter(user=request.user.id).order_by('-updated')[:3]
     list_items = []
     if tasks:
 
@@ -509,6 +562,7 @@ def refresh_nav_task_list(request):
         list_items.append(  # link to task list view
             '<li><a class="text-center" href="#" data-toggle="modal" data-target="#create-task-modal"><i class="fa fa-plus-circle text-success" aria-hidden="true"></i> <strong>Create New Task </strong></span></li>'
         )
+
         # list_items.append(  # link to task list view
         #     '<li><a class="text-center" href="{url}"><strong>See All Tasks </strong><i class="fa fa-angle-right"></i></a></li>'.format(
         #         url=task_list_url))
@@ -523,7 +577,6 @@ def refresh_nav_task_list(request):
             '#nav-task-list': '<li class="divider"></li>'.join(list_items)
         }
     }
-
     return data
 
 
@@ -531,7 +584,10 @@ def refresh_nav_task_list(request):
 @ajax
 def refresh_task_detail_view(request, pk=None):
     if pk is not None:
-        task = Task.objects.get(pk=pk, user=request.user.id)
+        if request.user.is_superuser:
+            task = Task.objects.get(pk=pk)
+        else:
+            task = Task.objects.get(pk=pk, user=request.user)
         # print task.id
         # print "Status code", task.status_code
 
@@ -540,15 +596,35 @@ def refresh_task_detail_view(request, pk=None):
             task_output_file_list += '<a class="list-group-item" href="%s">%s</a>' % (
                 item.get("url"), item.get("filename"))
 
+        progress_bar_template = '<div id="task-view-progress-bar" class="progress progress-striped {active}">' \
+                                '<div class="progress-bar progress-bar-{class_type}" role="progressbar" aria-valuenow="{task_completion_rate}" aria-valuemin="0" aria-valuemax="100" style="width: {task_completion_rate}%">' \
+                                '</div></div>'
+
         if task.status_code < 200:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-info pull-right">' + task.simple_status_msg + '</span>'
+            active = 'active'
+            class_type = 'info'
+            # progress_bar_class = "info"
+            # task_status_class = 'info'
         elif task.status_code == 200:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-success pull-right">' + task.simple_status_msg + '</span>'
+            active = ''
+            class_type = 'success'
+            # progress_bar_class = "success"
+            # task_status_class = 'success'
         elif task.status_code >= 400:
-            progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
-            status_msg = '<span id="task-status" class="text-danger pull-right">' + task.simple_status_msg + '</span>'
+            active = ''
+            class_type = 'danger'
+            # progress_bar_class = "danger"
+            # task_status_class = 'success'
+
+        # if task.status_code < 200:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped active"><div class="progress-bar" role="progressbar" aria-valuenow="100" aria-valuemin="0"aria-valuemax="100" style="width: 100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-info pull-right">' + task.status_msg + '</span>'
+        # elif task.status_code == 200:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-success pull-right">' + task.status_msg + '</span>'
+        # elif task.status_code >= 400:
+        #     progress_bar = '<div id="task-view-progress-bar" class="progress progress-striped"><div class="progress-bar progress-bar-danger" role="progressbar" aria-valuenow="100"aria-valuemin="0" aria-valuemax="100" style="width:100%"></div></div>'
+        #     status_msg = '<span id="task-status" class="text-danger pull-right">' + task.status_msg + '</span>'
         # progress_bar
 
         output_image_urls = task.get_output_image_files_urls()
@@ -566,11 +642,11 @@ def refresh_task_detail_view(request, pk=None):
                 '#output-carousel-div': carousel_cells,
             },
             'fragments': {
-                '#task-view-progress-bar': progress_bar,
-                '#task-status': status_msg,
+                '#task-view-progress-bar': progress_bar_template.format(active=active, class_type=class_type, task_completion_rate=task.completion_rate),
+                '#task-status': '<span id="task-status" class="text-{class_type} pull-right">{status_msg}</span>'.format(class_type=class_type, status_msg=task.status_msg),
             },
             'status_code': task.status_code,
-            'progress': progress_bar,
+            #'progress': progress_bar,
             # 'has_jsmol_file': task.has_jsmol_file,
             'uri_dict': jsmol_file_absolute_uris,
             'jsmol_display': bool(jsmol_file_absolute_uris),
@@ -579,3 +655,4 @@ def refresh_task_detail_view(request, pk=None):
         }
 
         return data
+    return {}

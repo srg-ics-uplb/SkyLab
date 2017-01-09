@@ -19,11 +19,15 @@ class RayExecutable(P2CToolGeneric):
         self.task.change_status(status_msg='Uploading input files', status_code=151)
         self.logger.debug(self.log_prefix + 'Uploading input files')
 
-
         files = SkyLabFile.objects.filter(type=1, task=self.task)  # input files for this task
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()  # open sftp client
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
+        #no timeouts will be implemented for ray since input files used are too large
+        # sftp.get_channel().settimeout(900.0) #
+        # self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         for f in files:
             sftp.chdir(self.remote_task_dir)  # cd /mirror/task_xx
             self.logger.debug(self.log_prefix + 'Uploading ' + f.filename )
@@ -127,6 +131,6 @@ class RayExecutable(P2CToolGeneric):
     def run_tool(self, **kwargs):  # the whole task process
         self.task.change_status(status_msg='Task started', status_code=150)
         self.clear_or_create_dirs(task_remote_subdirs=['input', 'output'])
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
+        self.handle_input_files()  # upload files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster

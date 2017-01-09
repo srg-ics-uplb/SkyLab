@@ -7,6 +7,7 @@ from django.views.generic import FormView
 
 from skylab.models import Task, SkyLabFile, Tool
 from skylab.modules.vina.forms import VinaForm, VinaSplitForm
+from skylab.signals import send_to_queue
 
 
 class VinaView(LoginRequiredMixin, FormView):
@@ -21,14 +22,15 @@ class VinaView(LoginRequiredMixin, FormView):
 
     def get_context_data(self, **kwargs):
         context = super(VinaView, self).get_context_data(**kwargs)
-        context['tool'] = Tool.objects.get(simple_name="vina")
+        context['tool'] = Tool.objects.get(simple_name="vina")  # pass tool to view context
         return context
-
 
     def get_success_url(self):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs['task_id']})
 
     def form_valid(self, form):
+        # build command strings, create skylabfile for each file input
+
         cluster = form.cleaned_data['mpi_cluster']
 
         # exec_string_template = "mkdir -p {outpath}; vina " #todo: test if runs properly
@@ -121,6 +123,7 @@ class VinaView(LoginRequiredMixin, FormView):
 
         task.task_data = json.dumps({'command_list': command_list, 'task_remote_subdirs': task_remote_subdirs})
         task.save()
+        send_to_queue(task=task)
         self.kwargs['task_id'] = task.id
         return super(VinaView, self).form_valid(form)
 
@@ -143,6 +146,7 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         return reverse('task_detail_view', kwargs={'pk': self.kwargs.pop('id')})
 
     def form_valid(self, form):
+        # build command strings, create skylabfile for each file input
         cluster = form.cleaned_data['mpi_cluster']
 
         input_file = form.cleaned_data['param_input']
@@ -170,5 +174,6 @@ class VinaSplitView(LoginRequiredMixin, FormView):
         self.kwargs['id'] = task.id  # pass to get_success_url
 
         SkyLabFile.objects.create(type=1, file=input_file, task=task)
+        send_to_queue(task=task)
 
         return super(VinaSplitView, self).form_valid(form)

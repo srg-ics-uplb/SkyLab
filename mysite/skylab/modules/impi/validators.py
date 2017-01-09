@@ -2,6 +2,7 @@ import os.path
 
 from django import forms
 
+# VALIDATORS USED WITH FORM INPUTS
 
 def impi_files_validator(files):
     for f in files:

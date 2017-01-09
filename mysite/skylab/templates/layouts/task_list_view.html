@@ -62,9 +62,23 @@
                 window.location = $(this).data("href");
                 {# go to task detail view #}
             });
+            $.fn.dataTable.ext.type.order['task-status-pre'] = function ( d ) {
+                switch ( d ) {
+                    case 'Queued': return 1;
+                    case 'Success': return 2;
+                    case 'Error':   return 3;
+{#                    default: return 0;#}
+                }
+                return 0;
+            };
+
             var table = $('#task-list-table').DataTable({
                 "order": [],
                 "columnDefs": [
+                    {
+                        "type" : "task-status",
+                        "targets": [3]
+                    },
                     {
                         "targets": [3], {# status column #}
                         "createdCell": function (td, cellData, rowData, row, col) { {# add bootstrap txt-class to status column #}
@@ -80,13 +94,12 @@
                                 default:
                                     $(td).addClass('text-info');
                             }
-
                         }
                     },
                     {
                         "targets":[0],
                         "createdCell": function (td, cellData, rowData, row, col) { {# make cluster name a link #}
-                            var url_mask = "{% url 'task_detail_view' pk=0 %}".replace(/0/, cellData);
+                            var url_mask = "{% url 'task_detail_view' pk=99999 %}".replace(/99999/, cellData);
                             $(td).html('<a href="'+url_mask+'">'+cellData+'</a>')
                         }
                     },
@@ -105,13 +118,11 @@
 
                     {# make row clickable #}
                     {# reference: http://stackoverflow.com/questions/17832194/get-javascript-variables-value-in-django-url-template-tag #}
-                    var url_mask = "{% url 'task_detail_view' pk=911 %}".replace(/911/, data[0]);
+                    var url_mask = "{% url 'task_detail_view' pk=99999 %}".replace(/99999/, data[0]);
                     {# parse url #}
                     $(row).attr('data-href', url_mask);
                 }
             });
-
-
 
             var refreshTaskTable = function(){ {# refresh task table #}
                  ajaxGet('{% url 'ajax_refresh_task_list_table' %}', function (content) {
@@ -122,13 +133,5 @@
             refreshTaskTable();
             setInterval(refreshTaskTable, 10000); {# refresh data every 10 secs #}
         });
-
-
-
-
-
-
-
     </script>
-
 {% endblock %}

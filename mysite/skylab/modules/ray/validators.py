@@ -2,6 +2,7 @@ import os.path
 
 from django import forms
 
+# used to validate form inputs
 
 def ray_file_extension_validator(file):
     # using .conf is also not supported because it does not fit with the use-case abstraction

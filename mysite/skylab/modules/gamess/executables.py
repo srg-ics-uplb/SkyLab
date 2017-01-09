@@ -4,6 +4,7 @@ import os
 import re
 import stat
 import time
+import socket
 
 import spur
 from django.conf import settings
@@ -25,12 +26,22 @@ class GamessExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
+
         sftp.chdir(self.working_dir)  # cd /mirror/task_xx/input
 
         for f in files:
-            self.logger.debug(self.log_prefix + "Uploading " + f.filename)
-            sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
-            self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+            while True:
+                try:
+                    self.logger.debug(self.log_prefix + "Uploading " + f.filename)
+                    sftp.putfo(f.file, f.filename, callback=self.sftp_file_transfer_callback)  # copy file object to cluster as f.filename in the current dir
+                    self.logger.debug(self.log_prefix + "Uploaded " + f.filename)
+                    break
+                except (socket.timeout, EOFError):
+                    self.logger.debug(self.log_prefix + "Retrying for " + f.filename)
+                    time.sleep(2)
+
         sftp.close()
         self.logger.debug(self.log_prefix + 'Closed SFTP client')
 
@@ -106,7 +117,7 @@ class GamessExecutable(P2CToolGeneric):
 
         if error:
             self.task.change_status(
-                status_msg='Task execution error! See .log file for more information', status_code=400)
+                status_msg='Task execution error! See output file for more information', status_code=400)
         else:
             self.logger.debug(self.log_prefix + 'Finished command list execution')
 
@@ -125,21 +136,28 @@ class GamessExecutable(P2CToolGeneric):
         self.logger.debug(self.log_prefix + 'Opening SFTP client')
         sftp = self.shell._open_sftp_client()
         self.logger.debug(self.log_prefix + 'Opened SFTP client')
+
+
         remote_path = os.path.join(self.remote_task_dir, 'output')
 
         # retrieve then delete produced output files
         remote_files = sftp.listdir(path=remote_path)  # list dirs and files in remote path
+        sftp.get_channel().settimeout(300.0)
+        self.logger.debug(self.log_prefix + "Set timeout to {0}".format(sftp.get_channel().gettimeout()))
         for remote_file in remote_files:
             remote_filepath = os.path.join(remote_path, remote_file)
             if not stat.S_ISDIR(sftp.stat(remote_filepath).st_mode):  # if regular file
 
                 local_filepath = os.path.join(local_path, remote_file)
-
-                self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-                sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
-                self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-                # no need to remove files since parent directory (task folder) will be deleted
-                # sftp.remove(remote_filepath)  # delete file after transfer
+                while True:
+                    try:
+                        self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
+                        sftp.get(remote_filepath, local_filepath, callback=self.sftp_file_transfer_callback)  # transfer file
+                        self.logger.debug(self.log_prefix + ' Received ' + remote_file)
+                        break
+                    except (socket.timeout, EOFError):
+                        self.logger.debug(self.log_prefix + ' Retrying for ' + remote_file)
+                        time.sleep(2)
 
                 # register newly transferred file as skylabfile
                 new_file = SkyLabFile.objects.create(type=2, task=self.task,
@@ -147,24 +165,6 @@ class GamessExecutable(P2CToolGeneric):
                 new_file.file.name = os.path.join(os.path.join(self.task.task_dirname, 'output'),
                                                   remote_file)  # manual assignment to model filefield
                 new_file.save()  # save changes
-
-        """
-        PER FILE RETRIEVAL (/mirror/scr)
-        remote_path = '/mirror/scr/'
-        remote_files = sftp.listdir(path=remote_path)
-        for remote_file in remote_files:
-            remote_filepath = os.path.join(remote_path, remote_file)
-            local_filepath = os.path.join(local_path, remote_file)
-            self.logger.debug(self.log_prefix + ' Retrieving ' + remote_file)
-            sftp.get(remote_filepath, local_filepath)
-            self.logger.debug(self.log_prefix + ' Received ' + remote_file)
-            with open(local_filepath, "rb") as local_file:
-                new_file = SkyLabFile.objects.create(type=2, task=self.task)
-                new_file.file.name = os.path.join(new_file.upload_path, remote_file)
-                new_file.save()
-
-            sftp.remove(remote_filepath)  # delete after transfer
-        """
 
         # retrieve then delete produced scratch files
         zip_filename = self.task.task_dirname + "-scratch_files.zip"
@@ -201,13 +201,10 @@ class GamessExecutable(P2CToolGeneric):
 
         additional_dirs = ['/mirror/scr']
         task_remote_subdirs = ['input', 'output']
+
+        # clear or create required remote directories
         self.clear_or_create_dirs(additional_dirs=additional_dirs, task_remote_subdirs=task_remote_subdirs)
-        self.handle_input_files()
-        self.run_commands()
-        self.handle_output_files()
 
-
-# created for testing purposes only
-class Dummy(object):
-    def __init__(self):
-        print ("Hello world")
+        self.handle_input_files()  # upload input files to remote cluster
+        self.run_commands()  # execute tool commands
+        self.handle_output_files()  # retrieve output files from remote cluster

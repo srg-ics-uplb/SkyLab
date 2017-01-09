@@ -33,6 +33,7 @@
                 <hr>
                 <form id="quantum-espresso-form" action="" method="post" enctype="multipart/form-data">
                     {% crispy form %}
+                    <p class="help-block">Please set the following parameters in your input files as specified:<br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br>outdir='/mirror/espresso-5.4.0/tempdir/'</p>
                     {{ input_formset.management_form }}
                     <div id="input-formset-container">
                         {% for form in input_formset.forms %}
@@ -50,10 +51,6 @@
 {% block js %}
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
     <script type="text/javascript">
-        {#  edit how form_errors are displayed   #}
-        $('.alert-block').addClass("col-sm-12");
-
-
         {# for dynamic formset add/remove        #}
         $(function () {
             $('.form-container').formset({
@@ -64,43 +61,5 @@
                 deleteCssClass: 'btn btn-danger'
             });
         });
-
-        {# for parameter dropdown use-case abstraction; hide input_file2 if parameter != '-p'#}
-
-        {#        $('.row').on('change', "select", function () {#}
-        {#            if (match = $(this).attr('name').match(/form-(\d+)-parameter/)) {#}
-        {#                param_value_div_id = '#div_id_form-' + match[1] + '-input_file1';#}
-        {#                inp_file2_div_id = '#div_id_form-' + match[1] + '-input_file2';#}
-        {#                parameter = $(this).val();#}
-        {#                input_file1_label = 'id_form-' + match[1] + '-input_file1';#}
-        {#                input_file2_label = 'id_form-' + match[1] + '-input_file2';#}
-        {#                $(param_value_div_id).removeClass('hidden');#}
-        {#                $(inp_file2_div_id).removeClass('hidden');#}
-        {##}
-        {#                if (parameter == '') {#}
-        {#                    $(inp_file2_div_id).hide();#}
-        {#                    $(param_value_div_id).hide();#}
-        {#                    $(inp_file2_div_id).hide();#}
-        {#                }#}
-        {#                else {#}
-        {#                    $(param_value_div_id).show();#}
-        {#                    if (parameter === "-p") {#}
-        {#                        $(inp_file2_div_id).show();#}
-        {##}
-        {#                        $("label[for=" + input_file1_label + "]").text("Left sequence file");#}
-        {#                        $("label[for=" + input_file2_label + "]").text("Right sequence file");#}
-        {##}
-        {#                    }#}
-        {#                    else {#}
-        {#                        $(inp_file2_div_id).hide();#}
-        {#                        if (parameter === "-i") {#}
-        {#                            $("label[for=" + input_file1_label + "]").text("Interleaved sequence file");#}
-        {#                        } else if (parameter === "-s") {#}
-        {#                            $("label[for=" + input_file1_label + "]").text("Sequence file");#}
-        {#                        }#}
-        {#                    }#}
-        {#                }#}
-        {#            }#}
-        {#        });#}
     </script>
 {% endblock %}

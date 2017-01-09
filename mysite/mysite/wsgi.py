@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/1.9/howto/deployment/wsgi/
 import os
 
 from django.core.wsgi import get_wsgi_application
+import logging
 
 
 
@@ -17,20 +18,9 @@ application = get_wsgi_application()
 
 from skylab.bootskylab import install_toolsets, setup_logging, MPIThreadManager
 
-install_toolsets()
-
-#
+install_toolsets() #check modules directory and run install.py
 setup_logging()  # setup logger, handlers
 
-# TaskLog.objects.all().delete()
-# # SkyLabFile.objects.all().delete()
-manager = MPIThreadManager()
+manager = MPIThreadManager() #spawn MPIThreads to handle tasks for each MPICluster
 
 
-
-# SkyLabFile.objects.get(task_id=20, type=2, filename='glyz_makefp.log')
-
-
-# for f in SkyLabFile.objects.filter(type=2, task_id=20):
-#     print ('Fname: ' + f.file.name + " URL: " + f.file.url + " PATH: " + f.file.path)
-#     print (f.filename)

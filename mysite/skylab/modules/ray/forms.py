@@ -6,7 +6,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_for_task_submission
 from skylab.models import MPICluster, ToolSet
 from validators import odd_number_validator, txt_file_validator, tsv_file_validator, ray_file_extension_validator, \
     multi_graph_files_validator, multi_ray_files_validator
@@ -17,7 +17,7 @@ class SelectMPIFilesForm(forms.Form):
                                       help_text="Launch processes one per node, cycling by node in a round-robin fashion.")  # This spreads processes evenly among nodes and assigns MPI_COMM_WORLD ranks in a round-robin, 'by node' manner. ")
     # mini-ranks max set to 4
     param_mini_ranks = forms.IntegerField(required=False, min_value=1, max_value=4, label="Mini-ranks per rank",
-                                          help_text="Mini ranks can be thought as ranks within ranks. <a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>",
+                                          help_text="Mini ranks can be thought as ranks within ranks.<br><a href='https://github.com/sebhtml/RayPlatform/blob/master/Documentation/MiniRanks.txt'>See documentation</a>",
                                           validators=[MinValueValidator(1), MaxValueValidator(4)],
                                           widget=forms.NumberInput(attrs={'placeholder': '1'}))
 
@@ -25,54 +25,24 @@ class SelectMPIFilesForm(forms.Form):
         self.user = kwargs.pop('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
-
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
         toolset = ToolSet.objects.get(p2ctool_name="ray")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
-
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(    #crispy_forms layout
-
-
-            Div(
-                Field('mpi_cluster', wrapper_class='col-xs-12'),
-                css_class="row"
-            ),
-
+            Field('mpi_cluster', wrapper_class='col-xs-12'),
             Fieldset(
                 'MiniRanks',
-                Div(
-                    Div('param_mini_ranks', css_class='col-xs-12 col-md-4'),
-                    Div('param_bynode', css_class='col-xs-12 col-xs-offset-0 col-md-6 col-md-offset-2'),
-                    css_class='row-fluid col-sm-12'
-                ),
-
+                Field('param_mini_ranks', wrapper_class='col-xs-12 col-sm-8'),
+                Field('param_bynode', wrapper_class='col-xs-12'),
+                css_class='col-xs-12'
             ),
-
-
         )
-
-        # def clean(self):
-        #     if self.cleaned_data:
-        #         if self.cleaned_data['param_mini_ranks']:
-        #             if not self.cleaned_data["param_mini_ranks"]:
-        #                 raise forms.ValidationError(u'-mini-ranks-per-rank: No value provided',
-        #                                             code="mini_ranks_no_value_set")
-
-
 
 class InputParameterForm(forms.Form):
     PARAMETER_CHOICES = (   #input parameter args
@@ -81,7 +51,7 @@ class InputParameterForm(forms.Form):
         ('-i','-i'),
         ('-s','-s'),
     )
-    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES, required=False)
+    parameter = forms.ChoiceField(choices=PARAMETER_CHOICES)
     input_file1 = forms.FileField(label="Sequence file 1", validators=[ray_file_extension_validator], required=False)
     input_file2 = forms.FileField(label="Sequence file 2", validators=[ray_file_extension_validator], required=False)
 
@@ -92,18 +62,13 @@ class InputParameterForm(forms.Form):
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
 
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('parameter', wrapper_class='col-xs-12 col-md-6', css_class='parameter'),
-                    css_class='col-xs-12'),
-                Div(Field('input_file1', wrapper_class="hidden"), css_class='col-xs-5 col-xs-offset-1'),
-                Div(Field('input_file2', wrapper_class="hidden"), css_class='col-xs-5 '),
+                Field('parameter', wrapper_class='col-xs-10', css_class='parameter'),
+                Field('input_file1', wrapper_class="hidden col-xs-12 col-sm-5 col-sm-offset-1"),
+                Field('input_file2', wrapper_class="hidden col-xs-12 col-sm-6"),
 
-                css_class='row-fluid col-sm-12 form-container'
+                css_class='col-xs-12 form-container'
             ),
         )
 
@@ -160,12 +125,12 @@ class OtherParameterForm(forms.Form):
     subparam_search_files = MultiFileField(min_num=1, required=False, label='Upload search files', validators=[
         multi_ray_files_validator])  # save to task_x/input/search
     param_one_color_per_file = forms.BooleanField(required=False, label="-one-color-per-file",
-                                                  help_text="Sets one color per file instead of one per sequence. For files with large numbers of sequences, using one single color per file may be more efficient.")
+                                                  help_text="Sets one color per file instead of one per sequence.<br>For files with large numbers of sequences, using one single color per file may be more efficient.")
 
     # Taxonomic profiling with colored de Bruijn graphs
     # Computes and writes detailed taxonomic profiles. See Documentation/Taxonomy.txt for details.
     param_with_taxonomy = forms.BooleanField(required=False, label='-with-taxonomy',
-                                             help_text='Computes and writes detailed taxonomic profiles. <a href="https://github.com/sebhtml/ray/blob/master/Documentation/Taxonomy.txt">See documentation</a>')
+                                             help_text='Computes and writes detailed taxonomic profiles. <br><a href="https://github.com/sebhtml/ray/blob/master/Documentation/Taxonomy.txt">See documentation</a>')
     subparam_genome_to_taxon_file = forms.FileField(required=False, validators=[tsv_file_validator],
                                                     label="Genome-to-Taxon")
     subparam_tree_of_life_edges_file = forms.FileField(required=False, validators=[tsv_file_validator],
@@ -174,11 +139,11 @@ class OtherParameterForm(forms.Form):
 
     # Provides an ontology and annotations. See Documentation/GeneOntology.txt
     param_gene_ontology = forms.BooleanField(required=False, label="-gene-ontology",
-                                             help_text='Provides an ontology and annotations. OntologyTerms.txt is automatically fetched from geneontology.org . <a href="https://github.com/sebhtml/ray/blob/master/Documentation/GeneOntology.txt">See documentation</a>')
+                                             help_text='Provides an ontology and annotations.<br>OntologyTerms.txt is automatically fetched from geneontology.org .<br><a href="https://github.com/sebhtml/ray/blob/master/Documentation/GeneOntology.txt">See documentation</a>')
 
 
     subparam_annotations_file = forms.FileField(required=False, validators=[txt_file_validator], label="Annotations",
-                                                help_text="The annotation file must be derived from Uniprot-GOA (http://www.ebi.ac.uk/GOA/).")
+                                                help_text='The annotation file must be derived from <a href="http://www.ebi.ac.uk/GOA/">Uniprot-GOA</a>.')
 
     # Other outputs
     param_enable_neighbourhoods = forms.BooleanField(required=False, label="-enable-neighbourhoods",
@@ -210,7 +175,7 @@ class OtherParameterForm(forms.Form):
     param_show_extension_choice = forms.BooleanField(required=False, label="-show-extension-choice",
                                                      help_text="Shows the choice made (with other choices) during the extension.")
     param_show_ending_context = forms.BooleanField(required=False, label="-show-ending-context",
-                                                   help_text="Shows the ending context of each extension. Shows the children of the vertex where extension was too difficult.")
+                                                   help_text="Shows the ending context of each extension.<br>Shows the children of the vertex where extension was too difficult.")
     param_show_distance_summary = forms.BooleanField(required=False, label="-show-distance-summary",
                                                      help_text="Shows summary of outer distances used for an extension path.")
     param_show_consensus = forms.BooleanField(required=False, label="-show-consensus",
@@ -226,110 +191,67 @@ class OtherParameterForm(forms.Form):
         self.helper = FormHelper()
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
-        # self.helper.form_error_title = "Form Errors"
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
-        self.helper.layout = Layout(
-
+        self.helper.layout = Layout(  # crispy_forms layout
             Fieldset(
                 'K-mer length',
-                Div(
-                    Div(Field('param_kmer_length', wrapper_class='col-xs-12 col-md-4'), css_class='col-xs-12'),
-                    css_class='row-fluid col-xs-12'
-                )
+                Field('param_kmer_length', wrapper_class='col-xs-12 col-md-4'),
+                css_class='col-xs-12'
             ),
             Fieldset(
                 'Ray Surveyor options',
-                Div(
-                    Div('param_run_surveyor', css_class='col-xs-12'),
-                    css_class='col-sm-12'
-                ),
-                Div(
-                    Div('param_read_sample_graph', css_class='col-xs-12 col-md-6'),
-                    Div('subparam_graph_files', css_class='col-xs-12 col-md-4'),
-                    css_class='row-fluid col-sm-12'
-                ),
+                Field('param_run_surveyor', wrapper_class='col-xs-12'),
+                Field('param_read_sample_graph', wrapper_class='col-xs-12 col-md-6'),
+                Field('subparam_graph_files', wrapper_class='col-xs-12 col-md-4'),
+                css_class='col-xs-12'
             ),
             Fieldset(
-
                 'Biological abundances',
-                Div(
-                    Div('param_search', css_class='col-xs-12 col-md-6'),
-                    Div('subparam_search_files', css_class='col-xs-12 col-md-4'),
-                    css_class='row-fluid col-sm-12'
-                ),
-                Div(
-                    Div('param_one_color_per_file', css_class='col-xs-12'),
-                    css_class='col-sm-12'
-                ),
+                Field('param_search', wrapper_class='col-xs-12 col-md-6'),
+                Field('subparam_search_files', wrapper_class='col-xs-12 col-md-4'),
+                Field('param_one_color_per_file', wrapper_class='col-xs-12'),
+                css_class='col-sm-12'
             ),
             Fieldset(
                 'Taxonomic profiling with colored de Bruijn graphs',
-                Div(
-                    Div(
-                        'param_with_taxonomy', css_class='col-xs-12'
-                    ),
-                    Div(
-                        Field('subparam_genome_to_taxon_file', wrapper_class='col-xs-10 col-xs-offset-1'),
-                        Field('subparam_tree_of_life_edges_file', wrapper_class='col-xs-10 col-xs-offset-1'),
-                        Field('subparam_taxon_names_file', wrapper_class='col-xs-10 col-xs-offset-1'),
-                        css_id='param_with_taxonomy_files',
-
-                    ),
-                    css_class='row-fluid col-sm-12'
+                Field(
+                    'param_with_taxonomy', wrapper_class='col-xs-12'
                 ),
                 Div(
-                    Div(
-                        'param_gene_ontology',
-                        css_class='col-xs-12 col-md-6',
-
-                    ),
-                    Div('subparam_annotations_file', css_class='col-xs-12 col-md-4'),
-                    css_class='row-fluid col-sm-12'
-                )
+                    Field('subparam_genome_to_taxon_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                    Field('subparam_tree_of_life_edges_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                    Field('subparam_taxon_names_file', wrapper_class='col-xs-10 col-xs-offset-1'),
+                    css_id='param_with_taxonomy_files',
+                ),
+                Field('param_gene_ontology', wrapper_class='col-xs-12 col-md-6'),
+                Field('subparam_annotations_file', wrapper_class='col-xs-12 col-md-5 col-md-offset-1'),
+                css_class='col-xs-12'
             ),
             Fieldset(
                 'Other outputs',
-                Div(
-                    Div('param_enable_neighbourhoods', css_class='col-xs-12'),
-                    Div('param_amos', css_class='col-xs-12'),
-                    Div('param_write_kmers', css_class='col-xs-12'),
-                    Div('param_graph_only', css_class='col-xs-12'),
-                    # css_class='row-fluid col-sm-12'
-                    # ),
-                    # Div(
-                    Div('param_write_read_markers', css_class='col-xs-12'),
-                    Div('param_write_seeds', css_class='col-xs-12'),
-                    Div('param_write_extensions', css_class='col-xs-12'),
-                    Div('param_write_contig_paths', css_class='col-xs-12'),
-                    css_class='row-fluid col-sm-12'
-                ),
-                Div(
-                    Div('param_write_marker_summary', css_class='col-xs-3'),
-                    css_class='col-sm-12'
-                )
+                Field('param_enable_neighbourhoods', wrapper_class='col-xs-12'),
+                Field('param_amos', wrapper_class='col-xs-12'),
+                Field('param_write_kmers', wrapper_class='col-xs-12'),
+                Field('param_graph_only', wrapper_class='col-xs-12'),
+                Field('param_write_read_markers', wrapper_class='col-xs-12'),
+                Field('param_write_seeds', wrapper_class='col-xs-12'),
+                Field('param_write_extensions', wrapper_class='col-xs-12'),
+                Field('param_write_contig_paths', wrapper_class='col-xs-12'),
+                Field('param_write_marker_summary', wrapper_class='col-xs-12'),
+                css_class='col-xs-12'
             ),
             Fieldset(
                 'Memory usage',
-                Div(
-                    Div(
-                        Div('param_show_memory_usage', css_class='col-xs-12'),
-                        Div('param_show_memory_allocations', css_class='col-xs-12'),
-                    ),
-                    css_class="row-fluid col-sm-12"
-                )
+                Field('param_show_memory_usage', wrapper_class='col-xs-12'),
+                Field('param_show_memory_allocations', wrapper_class='col-xs-12'),
+                css_class="col-xs-12"
             ),
             Fieldset(
                 'Algorithm verbosity',
-                Div(
-                    Div('param_show_extension_choice', css_class='col-xs-12'),
-                    Div('param_show_ending_context', css_class='col-xs-12'),
-                    Div('param_show_distance_summary', css_class='col-xs-12'),
-                    Div('param_show_consensus', css_class='col-xs-12'),
-                    css_class='row-fluid col-sm-12'
-                )
+                Field('param_show_extension_choice', wrapper_class='col-xs-12'),
+                Field('param_show_ending_context', wrapper_class='col-xs-12'),
+                Field('param_show_distance_summary', wrapper_class='col-xs-12'),
+                Field('param_show_consensus', wrapper_class='col-xs-12'),
+                css_class='col-xs-12'
             )
         )
 

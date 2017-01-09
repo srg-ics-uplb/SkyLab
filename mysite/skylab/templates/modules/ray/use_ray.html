@@ -58,10 +58,7 @@
                         <hr>
 
                     </div>
-
                     <input name="submit" value="Submit task" type="submit" class="btn btn-primary btn-block">
-
-
                 </div>
 
             </form>
@@ -74,9 +71,6 @@
 {% block js %}
     <script src="{% static 'jquery/js/jquery.formset.js' %}"></script>
     <script type="text/javascript">
-        {#  edit how form_errors are displayed   #}
-        {#        $('.alert-block').addClass("col-sm-12");#}
-
         {# for dynamic formset add/remove        #}
         $(function () {
             {# init using django-formset js            #}
@@ -176,7 +170,5 @@
                 }
             }
         });
-
-
     </script>
 {% endblock %}

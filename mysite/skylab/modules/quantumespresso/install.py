@@ -6,9 +6,9 @@ def insert_to_db():
     toolset_dict = {
         'display_name': 'Quantum ESPRESSO',
         'package_name': __name__.replace('.install', ''),
-        'p2ctool_name': 'quantum-espresso',
-        'description': 'Quantum Espresso is an integrated suite of Open-Source computer codes for electronic-structure ' \
-                       'calculations and materials modeling at the nanoscale. It is based on density-functional theory, ' \
+        'p2ctool_name': 'espresso',
+        'description': 'Quantum Espresso is an integrated suite of Open-Source computer codes for electronic-structure '
+                       'calculations and materials modeling at the nanoscale. It is based on density-functional theory, '
                        'plane waves, and pseudopotentials.',
         'source_url': 'http://www.quantum-espresso.org/'
     }
@@ -31,4 +31,4 @@ def insert_to_db():
 
     ]
 
-    add_tools_to_toolset(tools, toolset)
+    add_tools_to_toolset(tools, toolset)  # add tool db entries and associate them with toolset

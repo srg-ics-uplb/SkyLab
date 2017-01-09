@@ -8,14 +8,14 @@ from django.core.urlresolvers import reverse
 from django.db.models import Q
 from multiupload.fields import MultiFileField
 
-from skylab.forms import MPIModelChoiceField
+from skylab.forms import MPIModelChoiceField, get_mpi_queryset_for_task_submission
 from skylab.models import MPICluster, ToolSet
-from validators import in_files_validator
+from validators import in_file_extension_validator
 
 
 class SelectMPIFilesForm(forms.Form):
-    param_pseudopotentials = forms.CharField(label="Pseudopotentials", required=False, validators=[],
-                                             help_text="UPF files separated by a comma. (xx.UPF,yy.UPF)")
+    param_pseudopotentials = forms.CharField(label="Pseudopotentials", validators=[],
+                                             help_text="Required UPF files separated by commas. (xx.UPF,yy.UPF)")
 
     def clean_param_pseudopotentials(self):
         pseudopotentials = self.cleaned_data.get('param_pseudopotentials', None)
@@ -31,43 +31,26 @@ class SelectMPIFilesForm(forms.Form):
                     raise forms.ValidationError("Invalid UPF file : {0}".format(upf_file))
 
             return json.dumps({"pseudopotentials": pseudopotentials.split(' ')})
+        else: raise forms.ValidationError("No pseudopotentials specified")
+
 
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user')
         super(SelectMPIFilesForm, self).__init__(*args, **kwargs)
         # self.fields['mpi_cluster'].queryset = MPICluster.objects.filter(creator=self.user)
-        user_allowed = Q(allowed_users=self.user)
-        cluster_is_public = Q(is_public=True)
 
-        q = MPICluster.objects.filter(user_allowed | cluster_is_public)
-        q = q.exclude(status=5).exclude(queued_for_deletion=True)
-        toolset = ToolSet.objects.get(p2ctool_name="quantum-espresso")
+        toolset = ToolSet.objects.get(p2ctool_name="espresso")
 
-        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=q, label="MPI Cluster",
+        self.fields['mpi_cluster'] = MPIModelChoiceField(queryset=get_mpi_queryset_for_task_submission(self.user), label="MPI Cluster",
                                                          toolset=toolset,
                                                          help_text="Getting an empty list? Try <a href='{0}'>creating an MPI Cluster</a> first.".format(
                                                              reverse('create_mpi')))
 
         self.helper = FormHelper()
         self.helper.form_tag = False
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-        # self.helper.form_action = ''
         self.helper.layout = Layout(  # crispy_forms layout
-
-
-            Div(
-                Field('mpi_cluster'),
-                css_class="col-sm-12"
-            ),
-
-            Div(
-                Div('param_pseudopotentials'),
-                css_class='row-fluid col-sm-12'
-            )
-            ,
-
+            'mpi_cluster',
+            'param_pseudopotentials'
         )
 
 
@@ -78,15 +61,15 @@ class InputParameterForm(forms.Form):
         ('cp.x', 'CPV / cp.x'),
         # ('pwcond.x','pwcond.x'),
         # ('bands.x','bands.x'),
-
         # ('neb.x', 'neb.x'),
         #('ph.x','ph.x'), #PHonon
 
     )
-    param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES, required=False)
-    param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
-                                       required=False,
-                                       help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
+    param_executable = forms.ChoiceField(label="Executable", choices=EXECUTABLE_CHOICES) #todo: required=False, validate formset
+    param_input_file = forms.FileField(label="Input file (.in)", validators=[in_file_extension_validator])
+    # param_input_files = MultiFileField(label="Input files (.in)", validators=[in_files_validator],
+    #                                    required=False)#,
+                                      # help_text="Please set the following parameters as specified: <br>pseudo_dir = '/mirror/espresso-5.4.0/pseudo/',<br> outdir='/mirror/espresso-5.4.0/tempdir/'",)
                                      #  help_text="Please set the following parameters as specified: pseudo_dir = '$PSEUDO_DIR/', outdir='$TMP_DIR/'")
 
     def __init__(self, *args, **kwargs):
@@ -95,16 +78,12 @@ class InputParameterForm(forms.Form):
         self.helper.disable_csrf = True
         self.helper.form_tag = False  # remove form headers
 
-        # self.helper.form_id = 'id-rayForm'
-        # self.helper.form_class = 'use-tool-forms'
-        # self.helper.form_method = 'post'
-
         self.helper.layout = Layout(  # layout using crispy_forms
             Div(
-                Div(Field('param_executable', css_class='parameter'), css_class='col-xs-12 col-md-5'),
-                Div(Field('param_input_files'), css_class='col-xs-12 col-md-5 col-md-offset-1'),
+                Field('param_executable', css_class='parameter', wrapper_class='col-xs-10 col-sm-5'),
+                Div(Field('param_input_file'), css_class='col-xs-12 col-sm-5 col-sm-offset-1'),
 
-                css_class='row-fluid col-xs-12 form-container'
+                css_class='col-xs-12 form-container'
             ),
         )
 

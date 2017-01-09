@@ -2,6 +2,7 @@ import os.path
 
 from django import forms
 
+#validators used for form inputs
 
 def dock6_in_extension_validator(file):
     ext = os.path.splitext(file.name)[1]
